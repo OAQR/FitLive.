@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitLive - Sistema de Facturación</title>
+    <link rel="stylesheet" href="../css/facturacion.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body>
+
+<header class="main-header">
+    <a href="#" class="logo">
+        <i class="bi bi-activity"></i> FitLive
+    </a>
+    <nav class="main-nav">
+        <a href="../index.html">Otros Servicios</a>
+        <a href="../../index.html">Portal Gimnasio</a>
+    </nav>
+</header>
+
+<div class="container">
+    <h1>Sistema de Facturación Electrónica</h1>
+
+    <!-- SECCIÓN 1: BÚSQUEDA DE CLIENTE -->
+    <div class="seccion">
+        <h2>1. Datos del Cliente</h2>
+        <div class="form-group">
+            <label for="inputDocumento">DNI (8 dígitos) o RUC (11 dígitos):</label>
+            <input type="text" id="inputDocumento" placeholder="Ingrese DNI o RUC">
+            <button id="btnBuscarCliente">Buscar Cliente</button>
+        </div>
+        <div id="infoCliente" class="info-box" style="display: none;">
+            <!-- Aquí mostraremos los datos del cliente con JavaScript -->
+        </div>
+    </div>
+
+    <!-- SECCIÓN 2: AÑADIR ITEMS -->
+    <div class="seccion">
+        <h2>2. Añadir Productos</h2>
+        <div class="form-group-inline">
+            <input type="text" id="inputProducto" placeholder="Descripción del producto">
+            <input type="number" id="inputCantidad" placeholder="Cant.">
+            <input type="number" id="inputPrecio" placeholder="Precio Unit. (sin IGV)">
+            <button id="btnAnadirItem">Añadir a la Factura</button>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 3: DETALLE DE LA FACTURA -->
+    <div class="seccion">
+        <h2>3. Detalle de la Factura</h2>
+        <table id="tablaItems">
+            <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unit.</th>
+                <th>Subtotal</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Las filas se añadirán aquí con JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SECCIÓN 4: GENERAR COMPROBANTE -->
+    <div class="seccion">
+        <button id="btnGenerarFactura" disabled>Generar Comprobante PDF</button>
+        <div id="resultadoFactura" class="info-box" style="display: none;">
+            <!-- Contenido dinámico -->
+        </div>
+    </div>
+</div>
+
+<!-- Tu script de JavaScript -->
+<script src="../js/factura.js"></script>
+
+</body>
+</html>

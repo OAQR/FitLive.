@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>FitLife · Cliente</title>
+    <link rel="stylesheet" href="css/cliente-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jsPDF para boleta PDF -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+
+</head>
+<body>
+<div class="container">
+    <header class="nav">
+        <div class="brand">
+            <div class="logo">FL</div>
+            <h1>FitLife · Cliente</h1>
+        </div>
+        <div class="tabs" id="tabs">
+            <button class="tab active" data-view="routines">Rutinas</button>
+            <button class="tab" data-view="exercises">Ejercicios</button>
+            <button class="tab" data-view="coaches">Entrenadores</button>
+            <button class="tab" data-view="gyms">Gyms</button>
+            <button class="tab" data-view="payments">Pagos</button>
+        </div>
+    </header>
+
+    <!-- RUTINAS -->
+    <section id="view-routines" class="view">
+        <div class="cards">
+            <div class="card">
+                <h2>Elige tu rutina o pide una recomendación</h2>
+                <div class="row" style="margin-bottom:12px">
+                    <input id="rt-search" class="input" placeholder="Buscar rutina…">
+                    <button id="rt-search-btn" class="btn">Buscar</button>
+                    <button id="rt-reco" class="btn ghost">Recomiéndame</button>
+                </div>
+                <div id="rt-list" class="routine-select"></div>
+                <div id="rt-empty" class="empty" hidden>No hay rutinas disponibles.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- EJERCICIOS -->
+    <section id="view-exercises" class="view hide">
+        <div class="cards">
+            <div class="card">
+                <h2>Ejercicios</h2>
+                <div class="row" style="margin-bottom:10px">
+                    <input id="ex-search" class="input" placeholder="Buscar por nombre…">
+                    <select id="ex-goal" class="select" style="max-width:220px">
+                        <option value="hipertrofia">Objetivo: Hipertrofia</option>
+                        <option value="fuerza">Objetivo: Fuerza</option>
+                        <option value="resistencia">Objetivo: Resistencia</option>
+                        <option value="grasa">Objetivo: Pérdida de grasa</option>
+                    </select>
+                    <button id="ex-refresh" class="btn">Actualizar</button>
+                </div>
+                <div id="ex-grid" class="ex-grid"></div>
+                <div id="ex-empty" class="empty" hidden>No se encontraron ejercicios.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Ejercicio -->
+    <div class="modal" id="ex-modal">
+        <div class="box">
+            <div class="row" style="justify-content:space-between;align-items:center">
+                <h3 id="exm-title" style="margin:0">Ejercicio</h3>
+                <button id="exm-close" class="btn ghost">Cerrar</button>
+            </div>
+            <p class="muted" id="exm-sub" style="margin:6px 0 10px"></p>
+            <div id="exm-body"></div>
+        </div>
+    </div>
+
+    <!-- ENTRENADORES -->
+    <section id="view-coaches" class="view hide">
+        <div class="cards">
+            <div class="card">
+                <h2>Nuestros entrenadores</h2>
+                <div id="co-grid" class="co-grid"></div>
+                <div id="co-empty" class="empty" hidden>No hay entrenadores disponibles.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GYMS -->
+    <section id="view-gyms" class="view hide">
+        <div class="cards">
+            <div class="card">
+                <h2>Encuentra tu sede</h2>
+                <div class="gym-wrap">
+                    <div class="gym-left">
+                        <div class="row" style="margin-bottom:10px">
+                            <input id="gym-query" class="input" placeholder="Ingresa tu zona o ciudad (ej. Miraflores)…" style="flex:2;min-width:220px">
+                            <button id="find-nearby" class="btn">Buscar cercanos</button>
+                            <button id="near-me" class="btn ghost">Cerca de mí</button>
+                            <button id="show-official" class="btn ghost">Mostrar oficiales</button>
+                        </div>
+                        <div class="grid-3" style="margin-bottom:12px">
+                            <div class="kpi"><div class="n" id="kpi-clients">–</div><div class="l">Clientes</div></div>
+                            <div class="kpi"><div class="n" id="kpi-free">–</div><div class="l">Máquinas libres</div></div>
+                            <div class="kpi"><div class="n" id="kpi-total">–</div><div class="l">Máquinas totales</div></div>
+                        </div>
+                        <div id="gym-list" class="gym-list"></div>
+                    </div>
+                    <div class="gym-right">
+                        <iframe id="map" class="map-embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PAGOS -->
+    <section id="view-payments" class="view hide">
+        <div class="cards">
+            <!-- Step 1: Planes -->
+            <div class="card step show" id="step-plans">
+                <h2>Elige tu plan</h2>
+                <div class="grid-3" id="plans-grid"></div>
+                <div class="row" style="margin-top:12px;justify-content:flex-end">
+                    <button id="to-checkout" class="btn" disabled>Siguiente</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Pasarela -->
+            <div class="card step" id="step-pay">
+                <h2>Pago seguro</h2>
+                <div class="grid-2">
+                    <div class="pay-form card" style="background:#0d1529">
+                        <div class="field">
+                            <label class="label">Nombre y apellido</label>
+                            <input id="pay-name" class="input" placeholder="Ej. Ana Pérez">
+                        </div>
+                        <div class="field">
+                            <label class="label">Correo electrónico</label>
+                            <input id="pay-email" type="email" class="input" placeholder="ana@mail.com">
+                        </div>
+                        <div class="field">
+                            <label class="label">Número de tarjeta</label>
+                            <input id="pay-card" class="input" inputmode="numeric" placeholder="•••• •••• •••• ••••">
+                        </div>
+                        <div class="row">
+                            <div class="field" style="flex:1;min-width:140px">
+                                <label class="label">Vencimiento (MM/AA)</label>
+                                <input id="pay-exp" class="input" placeholder="12/27">
+                            </div>
+                            <div class="field" style="flex:1;min-width:140px">
+                                <label class="label">CVV</label>
+                                <input id="pay-cvv" class="input" inputmode="numeric" placeholder="123">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Monto</label>
+                            <input id="pay-amount" class="input" readonly>
+                        </div>
+                        <div class="row" style="justify-content:space-between;margin-top:8px">
+                            <button class="btn ghost" id="back-to-plans">Atrás</button>
+                            <button class="btn" id="pay-now">Pagar</button>
+                        </div>
+                    </div>
+
+                    <div class="card" style="background:#0d1529">
+                        <h3 style="margin-top:0">Resumen de compra</h3>
+                        <div id="summary-plan" class="muted">Selecciona un plan…</div>
+                        <div id="summary-feats" style="margin-top:8px"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="site-footer" role="contentinfo">
+        <div class="sf-wrap">
+            <div class="sf-col sf-brand">
+                <div class="sf-logo" aria-label="FitLife"><span>FL</span></div>
+                <div>
+                    <h3 class="sf-title">FitLife Gym</h3>
+                    <p class="sf-copy">Entrenamiento inteligente, bienestar real. Programas, rutinas y acompañamiento profesional.</p>
+                </div>
+                <div class="sf-social" aria-label="Redes sociales">
+                    <a href="#" aria-label="Instagram" class="sf-icn" title="Instagram">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5A5.5 5.5 0 1 1 6.5 13 5.51 5.51 0 0 1 12 7.5zm0 2A3.5 3.5 0 1 0 15.5 13 3.5 3.5 0 0 0 12 9.5zm5.75-2.25a1.25 1.25 0 1 1-1.25 1.25 1.25 1.25 0 0 1 1.25-1.25z"/></svg>
+                    </a>
+                    <a href="#" aria-label="Facebook" class="sf-icn" title="Facebook">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-8h2.5l.5-3h-3V9a1 1 0 0 1 1-1h2V5h-2.5A3.5 3.5 0 0 0 10 8.5V11H8v3h2v8z"/></svg>
+                    </a>
+                    <a href="#" aria-label="X/Twitter" class="sf-icn" title="X">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h4.7l4.3 6.1L16.7 3H21l-7.5 10.4L21 21h-4.7l-4.6-6.5L7.3 21H3l7.8-10.6z"/></svg>
+                    </a>
+                    <a href="#" aria-label="WhatsApp" class="sf-icn" title="WhatsApp">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A10 10 0 0 0 3.6 17.6L3 21l3.5-.6A10 10 0 1 0 20.5 3.5zm-8.5 16a8 8 0 0 1-4-.9l-.3-.1-2.4.4.4-2.3-.1-.3a8 8 0 1 1 6.4 3.2zm4.3-5.7c-.2-.1-1.3-.6-1.4-.6s-.3-.1-.4.1-.5.6-.7.7-.3.1-.5 0a6.5 6.5 0 0 1-1.9-1.2 7.4 7.4 0 0 1-1.3-1.6c-.1-.2 0-.3.1-.4l.3-.4c.1-.2.1-.3 0-.5S9.4 9 9.3 8.8s-.3-.2-.4-.2h-.3a.8.8 0 0 0-.6.3 2.5 2.5 0 0 0-.8 1.9c0 1.1.8 2.2.9 2.3s1.6 2.6 4 3.6l.6.2c.2 0 1 .1 1.4-.2s1-1 1.2-1.3.2-.6.1-.7-.2-.2-.4-.3z"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <nav class="sf-col sf-links" aria-label="Navegación de pie">
+                <h4>Explorar</h4>
+                <ul>
+                    <li><a href="#">Planes & Precios</a></li>
+                    <li><a href="#">Clases & Rutinas</a></li>
+                    <li><a href="#">Entrenadores</a></li>
+                    <li><a href="#">Sucursales</a></li>
+                </ul>
+            </nav>
+
+            <div class="sf-col sf-support">
+                <h4>Soporte</h4>
+                <ul>
+                    <li><a href="mailto:soporte@fitlife.com">soporte@fitlife.com</a></li>
+                    <li><a href="tel:+34999999999">+34 999 999 999</a></li>
+                    <li>Atención: Lun–Sáb 7:00–21:00</li>
+                    <li>Calle Salud 123, Ciudad</li>
+                </ul>
+            </div>
+
+            <div class="sf-col sf-legal">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Términos & Condiciones</a></li>
+                    <li><a href="#">Política de Privacidad</a></li>
+                    <li><a href="#">Política de Cookies</a></li>
+                    <li><a href="#">Libro de Reclamaciones</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="sf-bottom">
+            <p>© <span id="year"></span> <strong>FitLife Gym S.A.C.</strong> · Todos los derechos reservados.</p>
+            <p class="sf-mini">RUC/NIF 000000000 · Hecho con <span aria-hidden="true">❤</span> por FitLife Tech</p>
+        </div>
+    </footer>
+</div>
+<script src="js/cliente-app.js"></script>
+</body>
+</html>

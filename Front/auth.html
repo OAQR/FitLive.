@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>FitLife · Acceso</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+<div class="container">
+    <header class="header" aria-label="Encabezado">
+        <div class="brand">
+            <div class="logo">FL</div>
+            <h1>FitLife · Acceso</h1>
+        </div>
+    </header>
+
+    <main class="auth-wrap">
+        <section class="auth-card" aria-label="Autenticación">
+            <!-- Izquierda -->
+            <div class="auth-left">
+                <div class="hero">
+                    <div>
+                        <h2>Bienvenido a FitLife</h2>
+                        <p>Entrena mejor, vive mejor. Accede a tus <strong>rutinas</strong> y <strong>entrenadores</strong>.</p>
+                        <div class="hero-badges" style="margin-top:10px">
+                            <span class="badge">Seguridad JWT</span>
+                            <span class="badge">UI unificada</span>
+                            <span class="badge">Admin / Cliente</span>
+                        </div>
+                    </div>
+                    <!-- Imagen integrada -->
+                    <div class="hero-photo" role="img" aria-label="Personas entrenando en un gimnasio profesional"></div>
+                    <div class="small">¿No tienes cuenta? Crea una en la pestaña “Crear cuenta”.</div>
+                </div>
+            </div>
+
+            <!-- Derecha -->
+            <div class="auth-right">
+                <div class="tabs" role="tablist" aria-label="Cambiar entre Iniciar sesión y Crear cuenta">
+                    <button id="tab-login" class="tab active" role="tab" aria-selected="true">Iniciar sesión</button>
+                    <button id="tab-register" class="tab" role="tab" aria-selected="false">Crear cuenta</button>
+                </div>
+
+                <!-- LOGIN -->
+                <form id="form-login" class="form" autocomplete="on" novalidate>
+                    <div id="login-error" class="err" style="display:none"></div>
+                    <label class="small" for="lg-user">Usuario o email</label>
+                    <input id="lg-user" class="input" placeholder="usuario o correo" required autocomplete="username">
+
+                    <label class="small" for="lg-pass">Contraseña</label>
+                    <div class="row" style="align-items:center">
+                        <input id="lg-pass" class="input" type="password" placeholder="••••••••" required autocomplete="current-password" style="flex:1">
+                        <button id="toggle-pass" class="btn ghost" type="button" aria-label="Mostrar u ocultar contraseña">Ver</button>
+                    </div>
+
+                    <div class="helper">
+                        <label class="small"><input id="remember" type="checkbox" checked> Recordarme</label>
+                        <a class="small" href="#" onclick="alert('Contacta a soporte@fitlife.com');return false;">¿Olvidaste tu contraseña?</a>
+                    </div>
+
+                    <div class="row">
+                        <button id="btn-login" class="btn" type="submit" style="flex:1">Entrar</button>
+                    </div>
+                    <p class="note">Al iniciar sesión aceptas nuestros <a href="#" class="small">Términos y Condiciones</a>.</p>
+                </form>
+
+                <!-- REGISTER -->
+                <form id="form-register" class="form" style="display:none" novalidate>
+                    <div id="reg-msg" class="succ" style="display:none"></div>
+                    <div id="reg-err" class="err" style="display:none"></div>
+
+                    <label class="small" for="rg-name">Nombre completo</label>
+                    <input id="rg-name" class="input" placeholder="Ej. Ana Pérez" autocomplete="name">
+                    <label class="small" for="rg-username">Usuario</label>
+                    <input id="rg-username" class="input" placeholder="anap" autocomplete="username">
+                    <label class="small" for="rg-email">Correo</label>
+                    <input id="rg-email" class="input" type="email" placeholder="ana@mail.com" autocomplete="email">
+                    <label class="small" for="rg-pass">Contraseña</label>
+                    <input id="rg-pass" class="input" type="password" placeholder="••••••••" autocomplete="new-password">
+
+                    <div class="row">
+                        <button id="btn-register" class="btn" type="submit" style="flex:1">Crear cuenta</button>
+                        <button id="btn-register-cancel" class="btn ghost" type="button">Cancelar</button>
+                    </div>
+                    <p class="note">Se creará una cuenta de <strong>Cliente</strong>. Un administrador puede ascenderte a Admin desde el panel.</p>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer" role="contentinfo">
+        <div class="sf-wrap">
+            <div class="sf-col sf-brand">
+                <div style="display:flex;gap:10px">
+                    <div class="sf-logo" aria-label="FitLife"><span>FL</span></div>
+                    <div>
+                        <h3 class="sf-title">FitLife Gym</h3>
+                        <p class="sf-copy">Entrenamiento inteligente, bienestar real. Programas, rutinas y acompañamiento profesional.</p>
+                    </div>
+                </div>
+                <div class="sf-social" aria-label="Redes sociales" style="margin-top:6px">
+                    <a href="#" aria-label="Instagram" class="sf-icn" title="Instagram">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5A5.5 5.5 0 1 1 6.5 13 5.51 5.51 0 0 1 12 7.5zm0 2A3.5 3.5 0 1 0 15.5 13 3.5 3.5 0 0 0 12 9.5zm5.75-2.25a1.25 1.25 0 1 1-1.25 1.25 1.25 1.25 0 0 1 1.25-1.25z"/></svg>
+                    </a>
+                    <a href="#" aria-label="Facebook" class="sf-icn" title="Facebook">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-8h2.5l.5-3h-3V9a1 1 0 0 1 1-1h2V5h-2.5A3.5 3.5 0 0 0 10 8.5V11H8v3h2v8z"/></svg>
+                    </a>
+                    <a href="#" aria-label="X/Twitter" class="sf-icn" title="X">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h4.7l4.3 6.1L16.7 3H21l-7.5 10.4L21 21h-4.7l-4.6-6.5L7.3 21H3l7.8-10.6z"/></svg>
+                    </a>
+                    <a href="#" aria-label="WhatsApp" class="sf-icn" title="WhatsApp">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A10 10 0 0 0 3.6 17.6L3 21l3.5-.6A10 10 0 1 0 20.5 3.5zm-8.5 16a8 8 0 0 1-4-.9l-.3-.1-2.4.4.4-2.3-.1-.3a8 8 0 1 1 6.4 3.2zm4.3-5.7c-.2-.1-1.3-.6-1.4-.6s-.3-.1-.4.1-.5.6-.7.7-.3.1-.5 0a6.5 6.5 0 0 1-1.9-1.2 7.4 7.4 0 0 1-1.3-1.6c-.1-.2 0-.3.1-.4l.3-.4c.1-.2.1-.3 0-.5S9.4 9 9.3 8.8s-.3-.2-.4-.2h-.3a.8.8 0 0 0-.6.3 2.5 2.5 0 0 0-.8 1.9c0 1.1.8 2.2.9 2.3s1.6 2.6 4 3.6l.6.2c.2 0 1 .1 1.4-.2s1-1 1.2-1.3.2-.6.1-.7-.2-.2-.4-.3z"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <nav class="sf-col sf-links" aria-label="Navegación de pie">
+                <h4>Explorar</h4>
+                <ul>
+                    <li><a href="#">Planes & Precios</a></li>
+                    <li><a href="#">Clases & Rutinas</a></li>
+                    <li><a href="#">Entrenadores</a></li>
+                    <li><a href="#">Sucursales</a></li>
+                </ul>
+            </nav>
+
+            <div class="sf-col sf-support">
+                <h4>Soporte</h4>
+                <ul>
+                    <li><a href="mailto:soporte@fitlife.com">soporte@fitlife.com</a></li>
+                    <li><a href="tel:+34999999999">+34 999 999 999</a></li>
+                    <li>Atención: Lun–Sáb 7:00–21:00</li>
+                    <li>Calle Salud 123, Ciudad</li>
+                </ul>
+            </div>
+
+            <div class="sf-col sf-legal">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Términos & Condiciones</a></li>
+                    <li><a href="#">Política de Privacidad</a></li>
+                    <li><a href="#">Política de Cookies</a></li>
+                    <li><a href="#">Libro de Reclamaciones</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="sf-bottom">
+            <p>© <span id="year"></span> <strong>FitLife Gym S.A.C.</strong> · Todos los derechos reservados.</p>
+            <p class="sf-mini">RUC/NIF 000000000 · Hecho con <span aria-hidden="true">❤</span> por FitLife Tech</p>
+        </div>
+    </footer>
+</div>
+
+<script src="js/auth.js"></script>
+
+</body>
+</html>

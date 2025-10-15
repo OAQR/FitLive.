@@ -1,0 +1,18 @@
+# Ignorar carpetas del IDE
+.idea/
+.vscode/
+
+# Ignorar carpetas de compilación de Java/Maven
+out/
+**/target/
+
+# Ignorar la carpeta de Base de Datos, como pediste
+DB/
+
+# Ignorar archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos de logs
+*.log
+logs/

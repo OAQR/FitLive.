@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FitLife · Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin-styles.css">
+
+</head>
+<body>
+<div class="container">
+    <header class="nav">
+        <div class="brand">
+            <div class="logo">FL</div>
+            <h1>FitLife · Admin</h1>
+        </div>
+        <div class="tabs" id="tabs">
+            <button class="tab active" data-view="dashboard">Dashboard</button>
+            <button class="tab" data-view="exercises">Ejercicios</button>
+            <button class="tab" data-view="routines">Rutinas</button>
+            <button class="tab" data-view="users">Usuarios</button>
+            <button class="tab" data-view="coaches">Entrenadores</button>
+            <button class="tab" data-view="security">Seguridad</button>
+        </div>
+    </header>
+
+    <!-- DASHBOARD -->
+    <section id="view-dashboard" class="view">
+        <div class="cards">
+            <div class="card h6">
+                <h2>Resumen</h2>
+                <div class="row" style="margin-bottom:10px">
+                    <div class="kpi" style="min-width:140px"><div class="n" id="kpi-ex">–</div><div class="l">Ejercicios</div></div>
+                    <div class="kpi" style="min-width:140px"><div class="n" id="kpi-rt">–</div><div class="l">Rutinas</div></div>
+                    <div class="kpi" style="min-width:140px"><div class="n" id="kpi-re">–</div><div class="l">Vínculos</div></div>
+                </div>
+                <p class="muted">Cifras obtenidas del API de FitLife.</p>
+            </div>
+            <div class="card h6">
+                <h2>Probar API</h2>
+                <div class="row" style="margin-bottom:8px">
+                    <select id="probe-endpoint" class="select" style="max-width:280px">
+                        <option value="/api/exercises">GET /api/exercises</option>
+                        <option value="/api/routines">GET /api/routines</option>
+                        <option value="/api/routine-exercises">GET /api/routine-exercises</option>
+                        <option value="/api/users">GET /api/users</option>
+                        <option value="/api/coaches">GET /api/coaches</option>
+                    </select>
+                    <button id="probe-btn" class="btn">Consultar</button>
+                    <button id="probe-clear" class="btn ghost">Limpiar</button>
+                </div>
+                <pre id="probe-output" class="empty">Resultado aquí…</pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- EJERCICIOS -->
+    <section id="view-exercises" class="view hide">
+        <div class="cards">
+            <div class="card">
+                <h2>Ejercicios · Gestión de inventario</h2>
+                <div class="row" style="margin-bottom:10px">
+                    <input id="ex-search" class="input" placeholder="Buscar por nombre…">
+                    <button id="ex-search-btn" class="btn">Buscar</button>
+                    <button id="ex-new" class="btn ghost">Agregar</button>
+                </div>
+                <table>
+                    <thead><tr>
+                        <th>Nombre</th><th>Tipo/Grupo</th><th>Nivel</th><th>Descripción</th><th>Calorías (est.)</th>
+                        <th class="actions">Acciones</th>
+                    </tr></thead>
+                    <tbody id="ex-table"></tbody>
+                </table>
+                <div id="ex-empty" class="empty" hidden>No se encontraron ejercicios.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Ejercicio -->
+    <div class="modal" id="ex-modal">
+        <div class="box">
+            <div class="row" style="justify-content:space-between;align-items:center">
+                <h3 id="exm-title" style="margin:0">Ejercicio</h3>
+                <div class="row">
+                    <button id="exm-cancel" class="btn ghost">Cancelar</button>
+                    <button id="exm-save" class="btn">Guardar</button>
+                </div>
+            </div>
+            <p class="muted" id="exm-hint" style="margin:6px 0 10px">
+                Campos: <span class="badge">name</span>, <span class="badge">type/muscleGroup</span>, <span class="badge">level</span>,
+                <span class="badge">description</span>, <span class="badge">estCalories</span>.
+            </p>
+            <div class="form-grid">
+                <div class="field f-6"><label class="label">Nombre</label><input id="exm-name" class="input"></div>
+                <div class="field f-6"><label class="label">Tipo / Grupo</label><input id="exm-type" class="input"></div>
+                <div class="field f-6"><label class="label">Nivel</label><input id="exm-level" class="input" placeholder="Beginner / Intermediate / Advanced"></div>
+                <div class="field f-6"><label class="label">Calorías estimadas</label><input id="exm-cal" class="input" type="number" min="0" step="1"></div>
+                <div class="field f-12"><label class="label">Descripción</label><textarea id="exm-desc" class="input"></textarea></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RUTINAS -->
+    <section id="view-routines" class="view hide">
+        <div class="cards">
+            <div class="card">
+                <h2>Rutinas</h2>
+                <div class="row" style="margin-bottom:10px">
+                    <input id="rt-search" class="input" placeholder="Buscar…">
+                    <button id="rt-search-btn" class="btn">Buscar</button>
+                    <button id="rt-new" class="btn ghost">Nueva</button>
+                </div>
+                <table>
+                    <thead><tr>
+                        <th>Título / Nombre</th><th>Nivel / Objetivo</th><th>Duración</th><th>Descripción</th>
+                        <th class="actions">Acciones</th>
+                    </tr></thead>
+                    <tbody id="rt-table"></tbody>
+                </table>
+                <div id="rt-empty" class="empty" hidden>No se encontraron rutinas.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Rutina -->
+    <div class="modal" id="rt-modal">
+        <div class="box">
+            <div class="row" style="justify-content:space-between;align-items:center">
+                <h3 id="rtm-title" style="margin:0">Rutina</h3>
+                <div class="row">
+                    <button id="rtm-cancel" class="btn ghost">Cancelar</button>
+                    <button id="rtm-save" class="btn">Guardar</button>
+                </div>
+            </div>
+            <p class="muted" style="margin:6px 0 10px">
+                Campos: <span class="badge">name/title</span>, <span class="badge">level/goal</span>,
+                <span class="badge">duration/durationMinutes</span>, <span class="badge">description</span>.
+            </p>
+
+            <div class="form-grid" style="margin-bottom:12px">
+                <div class="field f-6"><label class="label">Nombre / Título</label><input id="rtm-name" class="input"></div>
+                <div class="field f-3"><label class="label">Nivel / Objetivo</label><input id="rtm-level" class="input"></div>
+                <div class="field f-3"><label class="label">Duración (min)</label><input id="rtm-dur" class="input" type="number" min="1" step="1" placeholder="30"></div>
+                <div class="field f-12"><label class="label">Descripción</label><textarea id="rtm-desc" class="input"></textarea></div>
+            </div>
+
+            <div class="builder">
+                <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+                    <h3 style="margin:0">Constructor de rutina</h3>
+                    <span class="muted">Agrega ejercicios existentes (sets, reps, seg, orden).</span>
+                </div>
+
+                <div class="builder-head">
+                    <select id="b-ex" class="select"></select>
+                    <input id="b-sets" class="input" type="number" min="1" placeholder="Sets">
+                    <input id="b-reps" class="input" type="number" min="1" placeholder="Reps">
+                    <input id="b-sec" class="input" type="number" min="0" placeholder="Seg">
+                    <input id="b-ord" class="input" type="number" min="1" placeholder="Orden">
+                    <button id="b-add" class="btn">Agregar</button>
+                </div>
+
+                <div class="builder-list" id="b-list"></div>
+                <div class="empty" id="b-empty">Aún no has agregado ejercicios.</div>
+            </div>
+            <p class="muted" id="rtm-note" style="margin-top:10px;display:none"></p>
+        </div>
+    </div>
+
+    <!-- USUARIOS -->
+    <section id="view-users" class="view hide">
+        <div class="cards">
+            <div class="card">
+                <h2>Usuarios</h2>
+                <div class="row" style="margin-bottom:10px">
+                    <input id="us-search" class="input" placeholder="Buscar por nombre, usuario o email…">
+                    <button id="us-search-btn" class="btn">Buscar</button>
+                    <button id="us-new" class="btn ghost">Nuevo</button>
+                </div>
+                <table>
+                    <thead><tr>
+                        <th>Nombre</th><th>Usuario</th><th>Email</th><th>Roles</th><th>Estado</th>
+                        <th class="actions">Acciones</th>
+                    </tr></thead>
+                    <tbody id="us-table"></tbody>
+                </table>
+                <div id="us-empty" class="empty" hidden>No se encontraron usuarios.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Usuario -->
+    <div class="modal" id="us-modal">
+        <div class="box">
+            <div class="row" style="justify-content:space-between;align-items:center">
+                <h3 id="usm-title" style="margin:0">Usuario</h3>
+                <div class="row">
+                    <button id="usm-cancel" class="btn ghost">Cancelar</button>
+                    <button id="usm-save" class="btn">Guardar</button>
+                </div>
+            </div>
+            <p class="muted" style="margin:6px 0 10px">
+                Campos: <span class="badge">fullName/full_name/name</span>, <span class="badge">username</span>, <span class="badge">email</span>, <span class="badge">enabled</span>, <span class="badge">roles</span>.
+            </p>
+            <div class="form-grid">
+                <div class="field f-6"><label class="label">Nombre completo</label><input id="usm-name" class="input"></div>
+                <div class="field f-3"><label class="label">Usuario</label><input id="usm-username" class="input"></div>
+                <div class="field f-3"><label class="label">Email</label><input id="usm-email" class="input" type="email"></div>
+                <div class="field f-6" id="usm-pass-row"><label class="label">Contraseña (solo crear)</label><input id="usm-pass" class="input" type="password"></div>
+                <div class="field f-3">
+                    <label class="label">Estado</label>
+                    <select id="usm-enabled" class="select">
+                        <option value="true">Activo</option>
+                        <option value="false">Inactivo</option>
+                    </select>
+                </div>
+                <div class="field f-3">
+                    <label class="label">Roles</label>
+                    <div class="row">
+                        <label><input type="checkbox" id="role-admin"> Admin</label>
+                        <label><input type="checkbox" id="role-client" checked> Cliente</label>
+                    </div>
+                </div>
+            </div>
+            <p class="muted" id="usm-note" style="margin-top:10px;display:none"></p>
+        </div>
+    </div>
+
+    <!-- ENTRENADORES -->
+    <section id="view-coaches" class="view hide">
+        <div class="cards">
+            <div class="card">
+                <h2>Entrenadores</h2>
+                <div class="row" style="margin-bottom:10px">
+                    <input id="co-search" class="input" placeholder="Buscar por nombre o email…">
+                    <button id="co-search-btn" class="btn">Buscar</button>
+                    <button id="co-new" class="btn ghost">Nuevo</button>
+                </div>
+                <table>
+                    <thead><tr>
+                        <th>Foto</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Bio</th><th>Redes</th>
+                        <th class="actions">Acciones</th>
+                    </tr></thead>
+                    <tbody id="co-table"></tbody>
+                </table>
+                <div id="co-empty" class="empty" hidden>No se encontraron entrenadores.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Entrenador -->
+    <div class="modal" id="co-modal">
+        <div class="box">
+            <div class="row" style="justify-content:space-between;align-items:center">
+                <h3 id="com-title" style="margin:0">Entrenador</h3>
+                <div class="row">
+                    <button id="com-cancel" class="btn ghost">Cancelar</button>
+                    <button id="com-save" class="btn">Guardar</button>
+                </div>
+            </div>
+            <p class="muted" style="margin:6px 0 10px">
+                Campos tolerantes: <span class="badge">name/fullName/full_name</span>, <span class="badge">email</span>, <span class="badge">phone</span>, <span class="badge">bio</span>,
+                <span class="badge">instagram</span>, <span class="badge">whatsapp</span>, <span class="badge">website</span>, y <span class="badge">photoUrl</span> (o <span class="badge">avatarUrl/imageUrl/pictureUrl</span>).
+            </p>
+
+            <div class="form-grid">
+                <div class="field f-6"><label class="label">Nombre</label><input id="com-name" class="input"></div>
+                <div class="field f-3"><label class="label">Email</label><input id="com-email" class="input" type="email"></div>
+                <div class="field f-3"><label class="label">Teléfono</label><input id="com-phone" class="input"></div>
+
+                <div class="field f-12"><label class="label">Bio</label><textarea id="com-bio" class="input"></textarea></div>
+
+                <div class="field f-4"><label class="label">Instagram</label><input id="com-ig" class="input" placeholder="@usuario"></div>
+                <div class="field f-4"><label class="label">WhatsApp</label><input id="com-wa" class="input" placeholder="+51…"></div>
+                <div class="field f-4"><label class="label">Website</label><input id="com-web" class="input" placeholder="https://…"></div>
+
+                <div class="field f-12">
+                    <label class="label">Foto de perfil</label>
+                    <div class="avatar-up">
+                        <img id="com-preview" alt="Vista previa" src="" />
+                        <input id="com-photo" type="file" accept="image/*" class="input" style="max-width:360px">
+                        <button id="com-clear-photo" type="button" class="btn ghost">Quitar</button>
+                    </div>
+                    <small class="muted">Puedes subir JPG/PNG. Si tu API tiene endpoint de archivos lo detectaremos; si no, se guardará como URL/base64 en <em>photoUrl</em>.</small>
+                </div>
+
+                <div class="field f-12" id="com-user-field" style="display:none">
+                    <label class="label">Usuario vinculado (opcional)</label>
+                    <select id="com-user" class="select"></select>
+                </div>
+            </div>
+            <p class="muted" id="com-note" style="margin-top:10px;display:none"></p>
+        </div>
+    </div>
+
+    <!-- SEGURIDAD -->
+    <section id="view-security" class="view hide">
+        <div class="cards">
+            <div class="card h6">
+                <h2>Estado</h2>
+                <div class="row" style="margin-bottom:10px">
+                    <button class="btn" id="sec-probe">Ping API</button>
+                    <a class="btn ghost" href="/swagger-ui/index.html" target="_blank" rel="noopener">Swagger</a>
+                    <a class="btn ghost" href="/actuator/health" target="_blank" rel="noopener">Health</a>
+                </div>
+                <div id="sec-probe-out" class="empty">Sin probar.</div>
+            </div>
+            <div class="card h6">
+                <h2>Token (navegador)</h2>
+                <div class="row" style="margin-bottom:10px">
+                    <button id="sec-clear" class="btn ghost">Borrar token local</button>
+                </div>
+                <div id="sec-token-box" class="empty">No hay token guardado</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="site-footer" role="contentinfo">
+        <div class="sf-wrap">
+            <div class="sf-col sf-brand">
+                <div class="sf-logo" aria-label="FitLife"><span>FL</span></div>
+                <div>
+                    <h3 class="sf-title">FitLife Gym</h3>
+                    <p class="sf-copy">Entrenamiento inteligente, bienestar real. Programas, rutinas y acompañamiento profesional.</p>
+                </div>
+                <div class="sf-social" aria-label="Redes sociales">
+                    <a href="#" aria-label="Instagram" class="sf-icn" title="Instagram">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5A5.5 5.5 0 1 1 6.5 13 5.51 5.51 0 0 1 12 7.5zm0 2A3.5 3.5 0 1 0 15.5 13 3.5 3.5 0 0 0 12 9.5zm5.75-2.25a1.25 1.25 0 1 1-1.25 1.25 1.25 1.25 0 0 1 1.25-1.25z"/></svg>
+                    </a>
+                    <a href="#" aria-label="Facebook" class="sf-icn" title="Facebook">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-8h2.5l.5-3h-3V9a1 1 0 0 1 1-1h2V5h-2.5A3.5 3.5 0 0 0 10 8.5V11H8v3h2v8z"/></svg>
+                    </a>
+                    <a href="#" aria-label="X/Twitter" class="sf-icn" title="X">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h4.7l4.3 6.1L16.7 3H21l-7.5 10.4L21 21h-4.7l-4.6-6.5L7.3 21H3l7.8-10.6z"/></svg>
+                    </a>
+                    <a href="#" aria-label="WhatsApp" class="sf-icn" title="WhatsApp">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A10 10 0 0 0 3.6 17.6L3 21l3.5-.6A10 10 0 1 0 20.5 3.5zm-8.5 16a8 8 0 0 1-4-.9l-.3-.1-2.4.4.4-2.3-.1-.3a8 8 0 1 1 6.4 3.2zm4.3-5.7c-.2-.1-1.3-.6-1.4-.6s-.3-.1-.4.1-.5.6-.7.7-.3.1-.5 0a6.5 6.5 0 0 1-1.9-1.2 7.4 7.4 0 0 1-1.3-1.6c-.1-.2 0-.3.1-.4l.3-.4c.1-.2.1-.3 0-.5S9.4 9 9.3 8.8s-.3-.2-.4-.2h-.3a.8.8 0 0 0-.6.3 2.5 2.5 0 0 0-.8 1.9c0 1.1.8 2.2.9 2.3s1.6 2.6 4 3.6l.6.2c.2 0 1 .1 1.4-.2s1-1 1.2-1.3.2-.6.1-.7-.2-.2-.4-.3z"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <nav class="sf-col sf-links" aria-label="Navegación de pie">
+                <h4>Explorar</h4>
+                <ul>
+                    <li><a href="#">Planes & Precios</a></li>
+                    <li><a href="#">Clases & Rutinas</a></li>
+                    <li><a href="#">Entrenadores</a></li>
+                    <li><a href="#">Sucursales</a></li>
+                </ul>
+            </nav>
+
+            <div class="sf-col sf-support">
+                <h4>Soporte</h4>
+                <ul>
+                    <li><a href="mailto:soporte@fitlife.com">soporte@fitlife.com</a></li>
+                    <li><a href="tel:+34999999999">+34 999 999 999</a></li>
+                    <li>Atención: Lun–Sáb 7:00–21:00</li>
+                    <li>Calle Salud 123, Ciudad</li>
+                </ul>
+            </div>
+
+            <div class="sf-col sf-legal">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Términos & Condiciones</a></li>
+                    <li><a href="#">Política de Privacidad</a></li>
+                    <li><a href="#">Política de Cookies</a></li>
+                    <li><a href="#">Libro de Reclamaciones</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="sf-bottom">
+            <p>© <span id="year"></span> <strong>FitLife Gym S.A.C.</strong> · Todos los derechos reservados.</p>
+            <p class="sf-mini">RUC/NIF 000000000 · Hecho con <span aria-hidden="true">❤</span> por FitLife Tech</p>
+        </div>
+    </footer>
+</div>
+<script src="js/admin-app.js"></script>
+</body>
+</html>

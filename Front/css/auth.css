@@ -1,0 +1,163 @@
+:root{
+  /* Paleta FitLive (carbón + glass + verde neón) */
+  --bg:#0b0d10;
+  --card:#0e141a;
+  --muted:#9fb0c5;
+  --brand:#2AF598;
+  --brand2:#0FE6A5;
+  --text:#eef6ff;
+  --line:rgba(255,255,255,.12);
+
+  --danger:#ff6b6b;
+  --warn:#ffb020;
+}
+*{box-sizing:border-box} html,body{height:100%}
+body{
+  margin:0;font-family:Inter,system-ui,Arial,Helvetica,sans-serif;color:var(--text);
+  /* Fondo carbón con halo glass (sin azul) */
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(255,255,255,.07) 0%, transparent 60%),
+    linear-gradient(180deg,#0b0d10,#0b0d10 60%,#0a0c10 100%);
+}
+.container{min-height:100vh;display:flex;flex-direction:column}
+
+/* Header minimal */
+.header{
+  max-width:1150px;margin:0 auto;padding:22px 28px 0;display:flex;justify-content:space-between;align-items:center
+}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  color:#072217;font-weight:900;background:linear-gradient(135deg,var(--brand),var(--brand2))}
+h1{font-size:20px;margin:0}
+
+/* Auth layout */
+.auth-wrap{flex:1;display:grid;place-items:center;padding:24px 16px}
+.auth-card{
+  width:100%;max-width:940px;
+  background:rgba(14,20,26,.7);backdrop-filter: blur(8px);
+  border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.35);
+  display:grid;grid-template-columns:repeat(12,1fr);overflow:hidden
+}
+.auth-left{grid-column:span 12;background:
+  radial-gradient(600px 300px at -20% -20%, rgba(255,255,255,.06) 0%, transparent 60%),
+  linear-gradient(180deg,#0e141a,#0b0d10);
+  padding:22px}
+@media(min-width:960px){.auth-left{grid-column:span 6}}
+.hero{
+  min-height:280px;border:1px solid var(--line);border-radius:14px;padding:16px;
+  display:flex;flex-direction:column;gap:14px;
+  background:
+    radial-gradient(1000px 500px at 120% -40%, rgba(42,245,152,.14) 0%, transparent 60%),
+    linear-gradient(180deg,#0e141a,#0e141a)
+}
+.hero h2{margin:0;font-size:28px;letter-spacing:.2px}
+.hero p{margin:0;color:#cfe0f5}
+.hero-badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:#d7e6ff;font-size:12px}
+.hero-photo{
+  margin-top:6px;
+  border-radius:12px;border:1px solid var(--line);
+  aspect-ratio: 16 / 9;
+  background:
+    linear-gradient(180deg, rgba(11,16,32,0) 0%, rgba(11,16,32,.35) 100%),
+    url("https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1400&q=80") center/cover no-repeat;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+/* Right panel */
+.auth-right{grid-column:span 12;padding:22px}
+@media(min-width:960px){.auth-right{grid-column:span 6;border-left:1px solid var(--line)}}
+
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--line);cursor:pointer}
+.tab.active,.tab:hover{color:var(--text);border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.10)}
+
+.form{display:grid;gap:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.input{
+  width:100%;min-width:160px;height:44px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff
+}
+.input:focus{outline:none;border-color:rgba(42,245,152,.85);box-shadow:0 0 0 2px rgba(42,245,152,.25)}
+.btn{padding:12px 14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#062a18;font-weight:800;cursor:pointer;height:44px}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.18);color:#e9f3ff}
+.small{font-size:12px;color:#b4c3db}
+.helper{display:flex;justify-content:space-between;align-items:center}
+.err{color:#ffd1d1;background:#2a1216;border:1px solid #5a1a22;padding:10px;border-radius:10px}
+.succ{color:#d6ffea;background:#0f2e23;border:1px solid #1a5a48;padding:10px;border-radius:10px}
+.note{color:#b4c3db;font-size:12px;margin-top:8px}
+
+/* =========================
+   Footer compacto — FitLive
+   ========================= */
+.site-footer{
+  /* fondo carbón con halo sutil verde */
+  background:
+    radial-gradient(700px 240px at 12% 0%, rgba(42,245,152,.08) 0%, transparent 60%),
+    linear-gradient(180deg,#0d1117 0%, #0a0d12 100%);
+  border-top:1px solid rgba(255,255,255,.10);
+  border-radius:18px 18px 0 0;
+  color:var(--text);
+  margin-top:auto !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+}
+.sf-wrap{
+  display:grid;gap:18px;
+  grid-template-columns:repeat(12,1fr);
+  max-width:1150px;margin:0 auto;padding:18px;
+}
+.sf-col{grid-column:span 12}
+@media(min-width:900px){
+  .sf-brand{grid-column:span 6}
+  .sf-links,.sf-support,.sf-legal{grid-column:span 2}
+}
+
+/* enlaces en footer */
+.site-footer a{color:#d8e7fa;text-decoration:none}
+.site-footer a:hover{color:var(--brand);text-decoration:underline}
+
+/* logo footer */
+.sf-logo{
+  position:relative;overflow:hidden;width:36px;height:36px;border-radius:10px;
+  display:grid;place-items:center;
+  background:conic-gradient(from 210deg, var(--brand), var(--brand2));
+  border:1px solid rgba(0,200,83,.45);
+  box-shadow:0 3px 12px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.08);
+  margin-right:10px
+}
+.sf-logo::before{
+  content:"";position:absolute;inset:-30%;
+  background:radial-gradient(100% 100% at 30% 0%, rgba(255,255,255,.25), transparent 55%);
+  opacity:.6;pointer-events:none
+}
+.sf-logo span{
+  color:#062a19;font-weight:900;letter-spacing:.4px;font-size:12px;
+  filter:drop-shadow(0 1px 0 rgba(255,255,255,.25))
+}
+
+/* textos y columnas del footer */
+.sf-brand{display:flex;gap:10px;align-items:flex-start}
+.sf-title{margin:0;font-size:14px;font-weight:700;line-height:1.2;color:#ebf4ff}
+.sf-copy{margin:6px 0 0;color:#a9b7cd;max-width:520px;font-size:11px;line-height:1.5}
+.sf-col h4{margin:0 0 6px;color:#ebf4ff;font-size:12px}
+.sf-col ul{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.sf-col ul li{font-size:11.5px;color:#c6d3e6}
+
+/* iconos sociales */
+.sf-social{display:flex;gap:8px;margin-top:10px}
+.sf-icn{
+  width:30px;height:30px;border:1px solid rgba(255,255,255,.14);
+  border-radius:10px;display:grid;place-items:center;
+  background:rgba(255,255,255,.03)
+}
+.sf-icn:hover{border-color:rgba(42,245,152,.5);background:rgba(42,245,152,.06)}
+.sf-icn svg{width:14px;height:14px;fill:#d8e7fa}
+
+/* franja inferior */
+.sf-bottom{
+  border-top:1px solid rgba(255,255,255,.08);
+  padding:8px 18px;
+  display:flex;flex-direction:column;gap:0;
+  align-items:center;text-align:center;color:#a9b7cd
+}
+.sf-bottom p{margin:2px 0;font-size:12px;line-height:1.3}
+.sf-mini{font-size:10px;margin:0;color:#8fa0ba}

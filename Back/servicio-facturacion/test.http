@@ -1,0 +1,19 @@
+### Crear una nueva factura
+POST http://localhost:8081/api/facturas/crear
+Content-Type: application/json
+
+{
+  "rucCliente": "20601261031",
+  "items": [
+    {
+      "producto": "Laptop Gamer",
+      "cantidad": 1,
+      "precioUnitario": 5500.50
+    },
+    {
+      "producto": "Mouse Inalámbrico",
+      "cantidad": 2,
+      "precioUnitario": 120.00
+    }
+  ]
+}

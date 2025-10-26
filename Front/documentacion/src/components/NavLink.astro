@@ -1,0 +1,43 @@
+---
+/**
+ * Renderiza un elemento de la lista de navegación (`<li>`).
+ * Es un componente recursivo: si el elemento tiene `children`, se renderiza
+ * a sí mismo dentro de una sub-lista `<ul>` para crear el anidamiento.
+ */
+import type { NavItem } from "../types/navigation";
+
+interface Props {
+    /** URL del enlace. */
+    href: string;
+    /** Texto visible del enlace. */
+    text: string;
+    /** Lista opcional de sub-elementos de navegación. */
+    children?: NavItem[];
+    /** Ruta actual de la página, para determinar el estado `active`. */
+    currentPath: string;
+}
+
+const { href, text, children, currentPath } = Astro.props;
+
+// Un enlace está activo si su ruta coincide exactamente o si es un ancestro de la ruta actual.
+const isActive =
+    href === currentPath ||
+    (href !== "/" && currentPath.startsWith(href + "/"));
+---
+
+<li>
+    <a href={href} class:list={{ active: isActive }}>
+        {text}
+    </a>
+
+    {/* Si hay hijos, renderiza una sub-lista anidada recursivamente. */}
+    {
+        children && children.length > 0 && (
+            <ul class="nested">
+                {children.map((child) => (
+                    <Astro.self {...child} currentPath={currentPath} />
+                ))}
+            </ul>
+        )
+    }
+</li>

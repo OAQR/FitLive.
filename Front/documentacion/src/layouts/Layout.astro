@@ -1,0 +1,52 @@
+---
+/**
+ * Layout principal que envuelve todas las páginas.
+ * Proporciona la estructura HTML base, <head>, header y la disposición de
+ * los sidebars y el contenido principal.
+ */
+import type { Heading } from "../types/navigation";
+import { SITE_CONFIG } from "../config/site";
+import Header from "../components/Header.astro";
+import SidebarLeft from "../components/SidebarLeft.astro";
+import SidebarRight from "../components/SidebarRight.astro";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import "../styles/main.scss";
+
+interface Props {
+    /** Título principal de la página, usado en la etiqueta <title>. */
+    title: string;
+    /** Breve descripción para metadatos SEO. */
+    description?: string;
+    /** Lista de encabezados de la página para la Tabla de Contenidos. */
+    headings?: Heading[];
+}
+
+const {
+    title,
+    description = SITE_CONFIG.description,
+    headings = [],
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang={SITE_CONFIG.lang}>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content={description} />
+        <title>{title} - {SITE_CONFIG.title}</title>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    </head>
+
+    <body>
+        <Header />
+
+        <div class="container">
+            <SidebarLeft />
+            <main class="main-content">
+                <slot />
+            </main>
+            <SidebarRight headings={headings} />
+        </div>
+    </body>
+</html>

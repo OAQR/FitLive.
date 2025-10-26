@@ -1,0 +1,37 @@
+---
+/**
+ * Renderiza la barra lateral derecha con la Tabla de Contenidos (TOC) de la página.
+ * Filtra los encabezados según la configuración global y los muestra como una
+ * lista ordenada.
+ */
+import type { Heading } from "../types/navigation";
+import { SITE_CONFIG } from "@config/site";
+import TocEntry from "./TocEntry.astro";
+
+interface Props {
+    /** Lista completa de encabezados extraídos de la página actual. */
+    headings?: Heading[];
+}
+
+const { headings = [] } = Astro.props;
+
+const { minDepth, maxDepth, heading: tocHeading } = SITE_CONFIG.toc;
+
+// Filtra los encabezados para incluir solo los niveles definidos en la configuración.
+const filteredHeadings = headings.filter(
+    (h) => h.depth >= minDepth && h.depth <= maxDepth
+);
+---
+
+{
+    filteredHeadings.length > 0 && (
+        <aside class="sidebar-right" aria-label={tocHeading}>
+            <h3>{tocHeading}</h3>
+            <ol>
+                {filteredHeadings.map((heading) => (
+                    <TocEntry heading={heading} />
+                ))}
+            </ol>
+        </aside>
+    )
+}

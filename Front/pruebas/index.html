@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumen - Documentación de FitLive</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <nav class="sidebar">
+        <h1>Docs de FitLive</h1>
+        <ul>
+            <li><a href="index.html" class="active">Resumen</a></li>
+            <!-- Estos enlaces apuntarán a futuras páginas -->
+            <li><a href="#">Primeros Pasos</a></li>
+            <li><a href="#">Arquitectura del Sistema</a></li>
+            <li><a href="#">Servicio: Gestión de Clientes</a></li>
+            <li><a href="#">Endpoints de la API REST</a></li>
+            <li><a href="#">Objetos de Transferencia (DTOs)</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <section id="overview">
+            <h2 id="overview-title">Resumen</h2>
+            <details>
+                <summary>Archivos fuente relevantes</summary>
+                <div class="source-box">
+                    <a href="#" class="source-link">.gitignore</a>
+                    <a href="#" class="source-link">Back/servicio-clientes/pom.xml</a>
+                    <a href="#" class="source-link">Back/servicio-facturacion/pom.xml</a>
+                </div>
+            </details>
+
+            <h3 id="purpose-scope">Propósito y Alcance</h3>
+            <p>Este documento proporciona una introducción de alto nivel al repositorio FitLive, que contiene un sistema de facturación basado en microservicios, diseñado para operaciones comerciales peruanas. El sistema consiste en dos servicios de backend principales que manejan la gestión de clientes y la generación de facturas con capacidades de PDF y códigos QR.</p>
+            <p>Esta descripción general cubre los componentes del sistema, el stack tecnológico, la organización del repositorio y las capacidades principales. Para información detallada, consulta <strong>Arquitectura del Sistema</strong>.</p>
+            <div class="source-footer">
+                <span>Fuentes:</span>
+                <a href="#" class="source-link">Back/servicio-clientes/pom.xml <span>1-93</span></a>
+                <a href="#" class="source-link">Back/servicio-facturacion/pom.xml <span>1-105</span></a>
+            </div>
+        </section>
+
+        <section id="components">
+            <h2 id="components-title">Componentes del Sistema</h2>
+            <p>El repositorio contiene dos microservicios independientes de Spring Boot que juntos forman un sistema de facturación:</p>
+            <table>
+                <thead><tr><th>Servicio</th><th>ID de Artefacto</th><th>Puerto</th><th>Responsabilidad Principal</th></tr></thead>
+                <tbody>
+                <tr><td>Gestión de Clientes</td><td><code>servicio-clientes</code></td><td>8080</td><td>Gestión de datos de clientes, validación RUC/DNI</td></tr>
+                <tr><td>Gestión de Facturas</td><td><code>servicio-facturacion</code></td><td>TBD</td><td>Generación de facturas, creación de PDF, códigos QR</td></tr>
+                </tbody>
+            </table>
+            <h3 id="component-diagram">Diagrama de Arquitectura de Componentes</h3>
+            <figure>
+                <img src="../documentacion/images/architecture-diagram.svg" class="zoomable" alt="Diagrama de Arquitectura de Microservicios">
+            </figure>
+            <div class="source-footer">
+                <span>Fuentes:</span>
+                <a href="#" class="source-link">Back/servicio-clientes/pom.xml <span>12-15</span></a>
+            </div>
+        </section>
+
+        <section id="stack">
+            <h2 id="stack-title">Stack Tecnológico</h2>
+            <p>Ambos microservicios comparten una base tecnológica común construida sobre Java moderno y Spring Boot:</p>
+            <h3 id="core-framework">Framework Principal</h3>
+            <table>
+                <thead><tr><th>Tecnología</th><th>Versión</th><th>Propósito</th></tr></thead>
+                <tbody>
+                <tr><td>Java</td><td>22</td><td>Entorno de ejecución</td></tr>
+                <tr><td>Spring Boot</td><td>3.5.6</td><td>Framework de aplicación</td></tr>
+                <tr><td>Spring MVC</td><td>3.5.6</td><td>Capa de API REST</td></tr>
+                <tr><td>Spring Data JPA</td><td>3.5.6</td><td>Persistencia de datos</td></tr>
+                <tr><td>Hibernate</td><td>(vía Spring Boot)</td><td>Implementación de ORM</td></tr>
+                </tbody>
+            </table>
+            <h3 id="data-layer">Capa de Datos</h3>
+            <table>
+                <thead><tr><th>Tecnología</th><th>Versión</th><th>Alcance</th><th>Propósito</th></tr></thead>
+                <tbody>
+                <tr><td>PostgreSQL</td><td>42.7.8</td><td>runtime</td><td>Base de datos de producción</td></tr>
+                <tr><td>H2 Database</td><td>2.4.240</td><td>runtime</td><td>Base de datos para desarrollo/pruebas</td></tr>
+                <tr><td>Flyway</td><td>11.14.0</td><td>all</td><td>Gestión de migraciones de base de datos</td></tr>
+                </tbody>
+            </table>
+            <h3 id="service-dependencies">Dependencias Específicas del Servicio</h3>
+            <p><strong>servicio-clientes:</strong></p>
+            <table>
+                <thead><tr><th>Tecnología</th><th>Versión</th><th>Propósito</th></tr></thead>
+                <tbody>
+                <tr><td>SpringDoc OpenAPI</td><td>2.8.13</td><td>Documentación de API (Swagger UI)</td></tr>
+                </tbody>
+            </table>
+            <p><strong>servicio-facturacion:</strong></p>
+            <table>
+                <thead><tr><th>Tecnología</th><th>Versión</th><th>Propósito</th></tr></thead>
+                <tbody>
+                <tr><td>OpenPDF</td><td>3.0.0</td><td>Generación de PDF</td></tr>
+                <tr><td>ZXing Core</td><td>3.5.3</td><td>Generación de códigos QR</td></tr>
+                <tr><td>ZXing JavaSE</td><td>3.5.3</td><td>Soporte de imagen para códigos QR</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="repository">
+            <h2 id="repository-title">Estructura del Repositorio</h2>
+            <figure>
+                <img src="../documentacion/images/repository-structure.svg" class="zoomable" alt="Diagrama de Estructura del Repositorio">
+            </figure>
+            <div class="source-footer">
+                <span>Fuentes:</span>
+                <a href="#" class="source-link">.gitignore <span>1-18</span></a>
+                <a href="#" class="source-link">Back/servicio-clientes/pom.xml <span>11-15</span></a>
+            </div>
+        </section>
+
+        <section id="capabilities">
+            <h2 id="capabilities-title">Capacidades Principales</h2>
+            <h3 id="client-service">Servicio de Gestión de Clientes (<code>servicio-clientes</code>)</h3>
+            <p>El microservicio <code>servicio-clientes</code> proporciona gestión de información de clientes con capacidades de validación externa:</p>
+            <ol>
+                <li><strong>Operaciones CRUD de Datos de Clientes</strong> - Crear, leer, actualizar y eliminar registros de clientes vía API REST.</li>
+                <li><strong>Validación de RUC</strong> - Consultar y validar números de identificación fiscal peruanos (RUC) usando APIs externas.</li>
+                <li><strong>Validación de DNI</strong> - Consultar y validar números de identificación nacional peruanos (DNI).</li>
+                <li><strong>Estrategia de Caché</strong> - Caché en base de datos local de datos de clientes obtenidos externamente para minimizar llamadas a la API.</li>
+                <li><strong>Documentación de API</strong> - UI interactiva de Swagger para exploración y prueba de la API.</li>
+            </ol>
+            <h3 id="invoice-service">Servicio de Gestión de Facturas (<code>servicio-facturacion</code>)</h3>
+            <p>El microservicio <code>servicio-facturacion</code> maneja la creación de facturas y la generación de documentos:</p>
+            <ol>
+                <li><strong>Generación de Facturas</strong> - Crear y gestionar registros de facturas.</li>
+                <li><strong>Generación de PDF</strong> - Generar documentos de factura imprimibles usando la librería OpenPDF.</li>
+                <li><strong>Incrustación de Códigos QR</strong> - Generar e incrustar códigos QR en facturas para validación/seguimiento usando ZXing.</li>
+                <li><strong>Referencia de Cliente</strong> - Vincular facturas a registros de clientes desde <code>servicio-clientes</code>.</li>
+            </ol>
+        </section>
+
+        <section id="build">
+            <h2 id="build-title">Infraestructura de Compilación y Desarrollo</h2>
+            <h3 id="maven-structure">Estructura de Proyecto Maven</h3>
+            <figure>
+                <img src="../documentacion/images/build-system.svg" class="zoomable" alt="Diagrama del Sistema de Compilación">
+            </figure>
+            <p>Ambos servicios utilizan Maven con el Plugin Spring Boot Maven para construir archivos JAR ejecutables.</p>
+            <h3 id="dev-env-support">Soporte para Entorno de Desarrollo</h3>
+            <table>
+                <thead><tr><th>Aspecto</th><th>Configuración</th></tr></thead>
+                <tbody>
+                <tr><td>IDEs Ignorados</td><td>IntelliJ IDEA (<code>.idea/</code>), VS Code (<code>.vscode/</code>)</td></tr>
+                <tr><td>Salida de Compilación</td><td>Directorios <code>target/</code> ignorados</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="architecture">
+            <h2 id="architecture-title">Principios de Arquitectura</h2>
+            <h3 id="microservices-pattern">Patrón de Microservicios</h3>
+            <p>Cada servicio es desplegable de forma independiente con su propio:</p>
+            <ul><li>Configuración POM de Maven</li><li>Punto de entrada de aplicación Spring Boot</li><li>Esquema de base de datos (gestionado vía migraciones Flyway)</li></ul>
+            <h3 id="layered-architecture">Arquitectura en Capas</h3>
+            <p>Ambos servicios siguen las mejores prácticas de Spring Boot con una clara separación:</p>
+            <figure>
+                <img src="../documentacion/images/layered-architecture.svg" class="zoomable" alt="Diagrama de Arquitectura por Capas">
+            </figure>
+            <h3 id="db-migration">Gestión de Migración de Base de Datos</h3>
+            <p>Ambos servicios usan Flyway para una evolución del esquema de base de datos controlada por versiones.</p>
+            <h3 id="multi-env-config">Configuración Multi-Entorno</h3>
+            <p>Los servicios soportan diferentes configuraciones de base de datos.</p>
+        </section>
+
+        <section id="integration">
+            <h2 id="integration-title">Puntos de Integración</h2>
+            <h3 id="external-api">Integración con API Externa</h3>
+            <p>El servicio <code>servicio-clientes</code> se integra con la API externa PeruDevs para validación de RUC y DNI.</p>
+            <h3 id="inter-service-comm">Comunicación entre Servicios</h3>
+            <p>El servicio <code>servicio-facturacion</code> puede hacer referencia a datos de clientes de <code>servicio-clientes</code>.</p>
+        </section>
+
+        <section id="version">
+            <h2 id="version-title">Información de Versión y Lanzamiento</h2>
+            <p>Ambos servicios están actualmente en estado snapshot/desarrollo, indicando desarrollo activo antes del primer lanzamiento a producción.</p>
+        </section>
+    </main>
+
+    <aside class="toc-sidebar">
+        <h4>EN ESTA PÁGINA</h4>
+        <ul id="toc-list">
+            <!-- El JavaScript generará los enlaces aquí -->
+        </ul>
+    </aside>
+</div>
+
+<div id="imageModal" class="modal">
+    <span class="close">&times;</span>
+    <img class="modal-content" id="modalImage">
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

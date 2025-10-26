@@ -1,0 +1,65 @@
+---
+import { SITE_CONFIG } from "../config/site";
+
+interface Props {
+  /** Ruta al archivo dentro del repositorio, sin la URL base. */
+  path: string;
+  /** Rango de líneas opcional para enlazar (ej. "1-93"). */
+  lines?: string;
+  /** Modo de clases: 
+   * 'normal'    => "source-btn"
+   * 'inline' => "source-buttons inline-source-button inline-padding-button"
+   * 'custom' => usa `extraClass` tal cual
+  */
+  buttonMode?: 'normal'| 'inline' | 'inline-/n' | 'custom';
+  /** Clases adicionales (usado si buttonMode === 'custom' o para añadir más clases) */
+  extraClass?: string;
+  /** Texto para aria-label opcional (si quieres personalizar) */
+  ariaLabel?: string;
+}
+
+const {
+  path,
+  lines,
+  buttonMode = 'inline',
+  extraClass = '',
+  ariaLabel = ''
+} = Astro.props;
+
+/* Normaliza base + path para evitar dobles slashes */
+const base = SITE_CONFIG.sourceRepo?.replace(/\/$/, '') ?? '';
+const cleanPath = (path ?? '').replace(/^\/+/, '');
+let href = `${base}/${cleanPath}`;
+
+if (lines) {
+  const [start, end] = lines.split('-');
+  href += `#L${start}`;
+  if (end) href += `-L${end}`;
+}
+
+/* Decide las clases según buttonMode */
+const getButtonClasses = (mode: string, extra = '') => {
+  if (mode === 'inline') return `source-buttons inline-source-button inline-padding-button ${extra}`.trim();
+  if (mode === 'inline-/n') return `inline-source-button ${extra}`.trim();
+  if (mode === 'custom') return `${extra}`.trim() || 'source-btn';
+  // default: 'normal'
+  return `source-btn ${extra}`.trim();
+};
+
+const classes = getButtonClasses(buttonMode, extraClass);
+
+/* Accesibilidad: etiqueta por defecto si no se pasa ariaLabel */
+const computedAria = ariaLabel || `Abrir ${path} en repositorio${lines ? ` (líneas ${lines})` : ''}`;
+---
+<a
+  href={href}
+  class={classes}
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label={computedAria}
+  data-mode={buttonMode}
+>
+  <span class="file-icon" aria-hidden="true"><i class="bi bi-github"></i></span>
+  <span class="file-name">{path}</span>
+  {lines && <span class="line-numbers">{lines}</span>}
+</a>

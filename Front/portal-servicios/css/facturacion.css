@@ -1,15 +1,3 @@
-/* --- Variables de Color Globales --- */
-:root {
-    --dark-bg: #1E1D2B;
-    --dark-card: #2A283E;
-    --text-primary: #EAE8FF;
-    --text-secondary: #9E98C3;
-    --accent-primary: #BB86FC;
-    --accent-secondary: #FFD700;
-    --border-color: #3E3B5B;
-    --shadow-color: rgba(187, 134, 252, 0.15);
-}
-
 /* --- Reseteo y Fuentes Globales --- */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
@@ -21,8 +9,8 @@
 
 body {
     font-family: 'Roboto', sans-serif;
-    background-color: var(--dark-bg);
-    color: var(--text-primary);
+    background-color: #1a1a2e; /* Fondo principal oscuro */
+    color: #e0e0e0; /* Color de texto principal claro */
     font-size: 16px;
 }
 
@@ -33,27 +21,27 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--dark-card);
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: 0 2px 8px var(--shadow-color);
+    background-color: #161625;
+    border-bottom: 1px solid #2c2c44;
 }
 
 .logo {
     font-size: 1.8rem;
     font-weight: bold;
-    color: var(--accent-primary);
+    color: #ffffff;
 }
 
 .main-nav a {
-    color: var(--text-secondary);
+    color: #b0b0d0;
     text-decoration: none;
     margin-left: 1.5rem;
     transition: color 0.3s;
 }
 
 .main-nav a:hover {
-    color: var(--accent-primary);
+    color: #ffffff;
 }
+
 
 /* --- Contenedor Principal --- */
 .container {
@@ -61,9 +49,6 @@ body {
     max-width: 900px;
     margin: 2rem auto;
     padding: 2rem;
-    background-color: var(--dark-card);
-    border-radius: 8px;
-    box-shadow: 0 4px 10px var(--shadow-color);
 }
 
 h1 {
@@ -71,9 +56,8 @@ h1 {
     font-weight: 700;
     text-align: left;
     margin-bottom: 2.5rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid #2c2c44;
     padding-bottom: 1rem;
-    color: var(--accent-secondary);
 }
 
 .seccion {
@@ -84,7 +68,6 @@ h2 {
     font-size: 1.8rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
-    color: var(--accent-primary);
 }
 
 /* --- Formularios y Botones --- */
@@ -96,20 +79,19 @@ label {
     display: block;
     margin-bottom: 0.5rem;
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: #b0b0d0;
 }
 
 input[type="text"],
 input[type="number"] {
-    background-color: #fff;
-    border: 1px solid var(--border-color);
-    color: var(--dark-bg);
+    background-color: #ffffff;
+    border: 1px solid #333;
+    color: #1a1a2e;
     padding: 0.8rem;
     border-radius: 4px;
     width: 100%;
     font-size: 1rem;
     margin-bottom: 1rem;
-    box-shadow: inset 0 1px 3px var(--shadow-color);
 }
 
 input::placeholder {
@@ -128,21 +110,19 @@ input::placeholder {
 }
 
 button {
-    background-color: var(--accent-primary);
-    color: var(--dark-bg);
+    background-color: #4a69bd; /* Azul de los botones */
+    color: #ffffff;
     border: none;
     padding: 0.8rem 1.5rem;
     border-radius: 4px;
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
-    box-shadow: 0 2px 6px var(--shadow-color);
+    transition: background-color 0.3s;
 }
 
 button:hover:not(:disabled) {
-    background-color: var(--accent-secondary);
-    transform: translateY(-2px);
+    background-color: #5d5fef; /* Un azul más brillante al pasar el mouse */
 }
 
 button:disabled {
@@ -160,27 +140,22 @@ button:disabled {
 
 #tablaItems th,
 #tablaItems td {
-    border: 1px solid var(--border-color);
+    border: 1px solid #2c2c44;
     padding: 0.8rem;
     text-align: left;
 }
 
 #tablaItems th {
-    background-color: var(--dark-card);
+    background-color: #161625;
     font-weight: bold;
-    color: var(--accent-secondary);
-}
-
-#tablaItems tr:nth-child(even) {
-    background-color: rgba(255, 255, 255, 0.02);
+    color: #ffffff;
 }
 
 /* --- Cajas de Información --- */
 .info-box {
-    background-color: rgba(234, 232, 255, 0.05);
-    border: 1px solid var(--border-color);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid #2c2c44;
     padding: 1rem;
     margin-top: 1rem;
     border-radius: 4px;
-    box-shadow: 0 2px 6px var(--shadow-color);
 }

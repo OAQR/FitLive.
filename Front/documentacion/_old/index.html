@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visión General - Documentación FitLive</title>
+    <link rel="stylesheet" href="css/sanitize-all.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body>
+<!-- Header -->
+<header>
+    <div class="logo">
+        <div class="bi bi-activity"></div>
+        <span>FitLive</span>
+    </div>
+    <div class="header-right">
+        <a href="../portal-servicios/index.html" class="header-link">Otros Servicios</a>
+        <a href="../index.html" class="header-link">Portal Gimnasio</a>
+    </div>
+</header>
+
+<div class="container">
+    <!-- Sidebar Izquierdo -->
+    <aside class="sidebar-left">
+        <div class="index-date">Última actualización: 15 de octubre de 2025</div>
+        <a href="index.html">Visión General</a>
+        <a href="getting-started.html">Primeros Pasos</a>
+        <a href="#">Arquitectura del Sistema</a>
+
+        <a href="#">servicio-clientes: Servicio de Gestión de Clientes</a>
+        <div class="nested">
+            <a href="#">Endpoints de la API REST</a>
+            <a href="#">Objetos de Transferencia de Datos (DTOs)</a>
+            <a href="#">Capa de Servicio y Lógica de Negocio</a>
+            <a href="#">Modelo de Datos y Persistencia</a>
+            <a href="#">Integraciones Externas: PeruDevs API</a>
+            <a href="#">Configuración y Despliegue</a>
+            <a href="#">Pruebas (Testing)</a>
+        </div>
+
+        <a href="#">servicio-facturacion: Servicio de Facturación</a>
+        <div class="nested">
+            <a href="#">Generación de PDF y Códigos QR</a>
+            <a href="#">Configuración e Instalación</a>
+        </div>
+
+        <a href="#">Configuración del Entorno de Desarrollo</a>
+
+    </aside>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <h1 id="overview">Visión General</h1>
+        <div class="source-section">
+            <details>
+                <summary>Archivos fuente relevantes</summary>
+                <div class="source-buttons">
+                    <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">.gitignore</span></a>
+                    <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-clientes/pom.xml</span></a>
+                    <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-facturacion/pom.xml</span></a>
+                </div>
+            </details>
+        </div>
+
+        <h2 id="purpose-scope">Propósito y Alcance</h2>
+        <p>Este documento proporciona una introducción de alto nivel al repositorio FitLive, que contiene un sistema de facturación basado en microservicios diseñado para operaciones comerciales peruanas. El sistema consiste en dos servicios de backend principales que manejan la gestión de clientes y la generación de facturas con capacidades de PDF y códigos QR.</p>
+        <p>Esta descripción general cubre los componentes del sistema, el stack tecnológico, la organización del repositorio y las capacidades principales. Para información detallada sobre cómo compilar y ejecutar los servicios localmente, consulte <a href="#" class="content-link">Primeros Pasos</a>. Para detalles de arquitectura e interacciones de servicio, consulte <a href="#" class="content-link">Arquitectura del Sistema</a>.</p>
+        <div class="sources-reference">
+            <span class="sources-label">Fuentes:</span>
+            <div class="source-buttons">
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-clientes/pom.xml</span><span class="line-numbers">1-93</span></a>
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-facturacion/pom.xml</span><span class="line-numbers">1-105</span></a>
+            </div>
+        </div>
+
+        <h2 id="system-components">Componentes del Sistema</h2>
+        <p>El repositorio contiene dos microservicios independientes de Spring Boot que juntos forman un sistema de facturación:</p>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>Servicio</th><th>ID de Artefacto</th><th>Puerto</th><th>Responsabilidad Principal</th></tr></thead>
+                <tbody>
+                <tr><td>Gestión de Clientes</td><td><code class="artifact-id">servicio-clientes</code></td><td>8080</td><td>Gestión de datos de clientes, validación RUC/DNI</td></tr>
+                <tr><td>Gestión de Facturas</td><td><code class="artifact-id">servicio-facturacion</code></td><td>TBD</td><td>Generación de facturas, creación de PDF, códigos QR</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 id="component-diagram">Diagrama de Arquitectura de Componentes</h3>
+        <div class="image-viewer">
+            <div class="image-container">
+                <div class="pan-zoom-wrapper">
+                    <img src="images/architecture-diagram.svg" alt="Diagrama de Arquitectura de Componentes">
+                </div>
+            </div>
+            <div class="image-controls">
+                💡 Use la rueda del ratón para zoom | Arrastre para mover
+            </div>
+            <i class="bi bi-arrows-fullscreen expand-icon"></i>
+        </div>
+        <div class="sources-reference">
+            <span class="sources-label">Fuentes:</span>
+            <div class="source-buttons">
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-clientes/pom.xml</span><span class="line-numbers">12-15</span></a>
+            </div>
+        </div>
+
+        <h2 id="tech-stack">Stack Tecnológico</h2>
+        <p>Ambos microservicios comparten una base tecnológica común basada en Java y Spring Boot modernos:</p>
+        <h3 id="core-framework">Framework Principal</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>Tecnología</th><th>Versión</th><th>Propósito</th></tr></thead>
+                <tbody>
+                <tr><td>Java</td><td>22</td><td>Runtime environment</td></tr>
+                <tr><td>Spring Boot</td><td>3.5.6</td><td>Application framework</td></tr>
+                <tr><td>Spring MVC</td><td>3.5.6</td><td>REST API layer</td></tr>
+                <tr><td>Spring Data JPA</td><td>3.5.6</td><td>Data persistence</td></tr>
+                <tr><td>Hibernate</td><td>(vía Spring Boot)</td><td>ORM implementation</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <h3 id="data-layer">Capa de Datos</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>Tecnología</th><th>Versión</th><th>Scope</th><th>Propósito</th></tr></thead>
+                <tbody>
+                <tr><td>PostgreSQL</td><td>42.7.8</td><td>runtime</td><td>Base de datos de producción</td></tr>
+                <tr><td>H2 Database</td><td>2.4.240</td><td>runtime</td><td>Base de datos para desarrollo/pruebas</td></tr>
+                <tr><td>Flyway</td><td>11.14.0</td><td>all</td><td>Gestión de migraciones de base de datos</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <h3 id="service-dependencies">Dependencias Específicas del Servicio</h3>
+        <p><strong>servicio-clientes:</strong></p>
+        <div class="table-wrapper">
+            <table><thead><tr><th>Tecnología</th><th>Versión</th><th>Propósito</th></tr></thead><tbody><tr><td>SpringDoc OpenAPI</td><td>2.8.13</td><td>Documentación de API (Swagger UI)</td></tr></tbody></table>
+        </div>
+        <p><strong>servicio-facturacion:</strong></p>
+        <div class="table-wrapper">
+            <table><thead><tr><th>Tecnología</th><th>Versión</th><th>Propósito</th></tr></thead><tbody><tr><td>OpenPDF</td><td>3.0.0</td><td>Generación de PDF</td></tr><tr><td>ZXing Core</td><td>3.5.3</td><td>Generación de códigos QR</td></tr><tr><td>ZXing JavaSE</td><td>3.5.3</td><td>Soporte de imagen para códigos QR</td></tr></tbody></table>
+        </div>
+
+        <h2 id="repo-structure">Estructura del Repositorio</h2>
+        <div class="image-viewer">
+            <div class="image-container" id="imageContainerRepo">
+                <div class="pan-zoom-wrapper">
+                    <img src="images/repository-structure.svg" alt="Diagrama de Estructura del Repositorio">
+                </div>
+            </div>
+            <div class="image-controls">
+                💡 Use la rueda del ratón para zoom | Arrastre para mover
+            </div>
+            <i class="bi bi-arrows-fullscreen expand-icon"></i>
+        </div>
+        <div class="sources-reference">
+            <span class="sources-label">Fuentes:</span>
+            <div class="source-buttons">
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">.gitignore</span><span class="line-numbers">1-18</span></a>
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-clientes/pom.xml</span><span class="line-numbers">11-15</span></a>
+            </div>
+        </div>
+
+        <h2 id="core-capabilities">Capacidades Principales</h2>
+        <h3 id="client-management-service">Servicio de Gestión de Clientes (<code class="artifact-id">servicio-clientes</code>)</h3>
+        <p>El microservicio <code class="artifact-id">servicio-clientes</code> proporciona gestión de información de clientes con capacidades de validación externa:</p>
+        <ol>
+            <li><strong>Operaciones CRUD de Datos de Clientes</strong> – Crear, leer, actualizar y eliminar registros de clientes a través de la API REST.</li>
+            <li><strong>Validación de RUC</strong> – Consultar y validar números de identificación fiscal peruanos (RUC) utilizando APIs externas.</li>
+            <li><strong>Validación de DNI</strong> – Consultar y validar números de identificación nacional peruanos (DNI).</li>
+            <li><strong>Estrategia de Caché</strong> – Caching en la base de datos local de los datos de clientes obtenidos externamente para minimizar las llamadas a la API.</li>
+            <li><strong>Documentación de API</strong> – UI interactiva de Swagger para la exploración y prueba de la API.</li>
+        </ol>
+        <p>Para endpoints detallados de la API, consulte <a href="#" class="content-link">Endpoints de la API REST</a>. Para detalles de la integración externa, consulte <a href="#" class="content-link">Integraciones Externas: PeruDevs API</a>.</p>
+        <div class="sources-reference">
+            <span class="sources-label">Fuentes:</span>
+            <div class="source-buttons">
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-clientes/pom.xml</span><span class="line-numbers">14-54</span></a>
+            </div>
+        </div>
+
+        <h3 id="invoice-management-service">Servicio de Gestión de Facturas (<code class="artifact-id">servicio-facturacion</code>)</h3>
+        <p>El microservicio <code class="artifact-id">servicio-facturacion</code> maneja la creación de facturas y la generación de documentos:</p>
+        <ol>
+            <li><strong>Generación de Facturas</strong> – Crear y gestionar registros de facturas.</li>
+            <li><strong>Generación de PDF</strong> – Generar documentos de factura imprimibles utilizando la librería OpenPDF.</li>
+            <li><strong>Incrustación de Códigos QR</strong> – Generar e incrustar códigos QR en facturas para validación/seguimiento usando ZXing.</li>
+            <li><strong>Referencia de Cliente</strong> – Vincular facturas a registros de clientes desde <code class="artifact-id">servicio-clientes</code>.</li>
+        </ol>
+        <div class="sources-reference">
+            <span class="sources-label">Fuentes:</span>
+            <div class="source-buttons">
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-facturacion/pom.xml</span><span class="line-numbers">14-65</span></a>
+            </div>
+        </div>
+
+        <h2 id="build-dev-infra">Infraestructura de Compilación y Desarrollo</h2>
+        <h3 id="maven-project-structure">Estructura de Proyecto Maven</h3>
+        <div class="image-viewer">
+            <div class="image-container" id="imageContainerBuild">
+                <div class="pan-zoom-wrapper">
+                    <img src="images/build-system.svg" alt="Diagrama del Sistema de Compilación">
+                </div>
+            </div>
+            <div class="image-controls">
+                💡 Use la rueda del ratón para zoom | Arrastre para mover
+            </div>
+            <i class="bi bi-arrows-fullscreen expand-icon"></i>
+        </div>
+        <p>Ambos servicios utilizan Maven con el Spring Boot Maven Plugin para construir archivos JAR ejecutables. El POM padre (<code class="artifact-id">spring-boot-starter-parent</code>) proporciona gestión de dependencias y configuraciones por defecto.</p>
+        <div class="sources-reference">
+            <span class="sources-label">Fuentes:</span>
+            <div class="source-buttons">
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-clientes/pom.xml</span><span class="line-numbers">5-91</span></a>
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-facturacion/pom.xml</span><span class="line-numbers">5-102</span></a>
+            </div>
+        </div>
+
+        <h3 id="dev-env-support">Soporte para Entorno de Desarrollo</h3>
+        <p>El repositorio es compatible con múltiples entornos de desarrollo:</p>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>Aspecto</th><th>Configuración</th></tr></thead>
+                <tbody>
+                <tr><td>IDEs Ignorados</td><td>IntelliJ IDEA (<code>.idea/</code>), VS Code (<code>.vscode/</code>)</td></tr>
+                <tr><td>Salida de Compilación</td><td>Directorios <code>target/</code> ignorados</td></tr>
+                <tr><td>Archivos de Base de Datos</td><td>Directorio <code>DB/</code> ignorado</td></tr>
+                <tr><td>Específico del SO</td><td><code>.DS_Store</code> (macOS), <code>Thumbs.db</code> (Windows)</td></tr>
+                <tr><td>Registros (Logs)</td><td>Archivos <code>*.log</code> y directorio <code>logs/</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="sources-reference">
+            <span class="sources-label">Fuentes:</span>
+            <div class="source-buttons">
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">.gitignore</span><span class="line-numbers">1-18</span></a>
+            </div>
+        </div>
+
+        <h2 id="architecture-principles">Principios de Arquitectura</h2>
+        <h3 id="microservices-pattern">Patrón de Microservicios</h3>
+        <p>Cada servicio es desplegable de forma independiente con su propio:</p>
+        <ul>
+            <li>Configuración POM de Maven</li>
+            <li>Punto de entrada de aplicación Spring Boot</li>
+            <li>Esquema de base de datos (gestionado vía migraciones Flyway)</li>
+            <li>Esquema de versionado de API REST (<code class="artifact-id">/api/v1/...</code>)</li>
+        </ul>
+        <h3 id="layered-architecture">Arquitectura en Capas</h3>
+        <p>Ambos servicios siguen las mejores prácticas de Spring Boot con una clara separación:</p>
+        <div class="image-viewer">
+            <div class="image-container">
+                <div class="pan-zoom-wrapper">
+                    <img src="images/layered-architecture.svg" alt="Diagrama de Arquitectura en Capas">
+                </div>
+            </div>
+            <div class="image-controls">
+                💡 Use la rueda del ratón para zoom | Arrastre para movera
+            </div>
+            <i class="bi bi-arrows-fullscreen expand-icon"></i>
+        </div>
+        <div class="sources-reference">
+            <span class="sources-label">Fuentes:</span>
+            <div class="source-buttons">
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-clientes/pom.xml</span><span class="line-numbers">32-47</span></a>
+            </div>
+        </div>
+
+        <h3 id="db-migration">Gestión de Migración de Base de Datos</h3>
+        <p>Ambos servicios usan Flyway para una evolución del esquema de base de datos controlada por versiones:</p>
+        <ul>
+            <li>Scripts de migración ubicados en <code>src/main/resources/db/migration/</code></li>
+            <li>Migración automática al iniciar la aplicación</li>
+            <li>Soporte de PostgreSQL para producción (<code class="artifact-id">flyway-database-postgresql</code>)</li>
+            <li>Compatible con H2 para desarrollo local</li>
+        </ul>
+        <div class="sources-reference">
+            <span class="sources-label">Fuentes:</span>
+            <div class="source-buttons">
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-clientes/pom.xml</span><span class="line-numbers">57-67</span></a>
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-facturacion/pom.xml</span><span class="line-numbers">68-78</span></a>
+            </div>
+        </div>
+
+        <h3 id="multi-env-config">Configuración Multi-Entorno</h3>
+        <p>Los servicios soportan diferentes configuraciones de base de datos:</p>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>Entorno</th><th>Base de Datos</th><th>Driver JDBC</th><th>Scope</th></tr></thead>
+                <tbody>
+                <tr><td>Producción</td><td>PostgreSQL</td><td>postgresql:42.7.8</td><td>runtime</td></tr>
+                <tr><td>Desarrollo/Pruebas</td><td>H2</td><td>h2:2.4.240</td><td>runtime</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Ambos drivers de bases de datos están marcados con el scope <code>runtime</code>, permitiendo la selección específica del entorno a través de perfiles o configuración de Spring.</p>
+        <div class="sources-reference">
+            <span class="sources-label">Fuentes:</span>
+            <div class="source-buttons">
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-clientes/pom.xml</span><span class="line-numbers">69-81</span></a>
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-facturacion/pom.xml</span><span class="line-numbers">80-92</span></a>
+            </div>
+        </div>
+
+        <h2 id="integration-points">Puntos de Integración</h2>
+        <h3 id="external-api">Integración con API Externa</h3>
+        <p>El servicio <code class="artifact-id">servicio-clientes</code> se integra con la API externa PeruDevs para validación de RUC y DNI. Esta integración usa:</p>
+        <ul>
+            <li><code>HttpClient</code> nativo de Java (no necesita dependencia explícita en Java 11+)</li>
+            <li>Jackson para deserialización JSON (provisto por <code class="artifact-id">spring-boot-starter-web</code>)</li>
+            <li>Patrón Adapter para encapsular los detalles de la API externa</li>
+        </ul>
+        <p>Para detalles de implementación, consulte <a href="#" class="content-link">Integraciones Externas: PeruDevs API</a>.</p>
+        <div class="sources-reference">
+            <span class="sources-label">Fuentes:</span>
+            <div class="source-buttons">
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-clientes/pom.xml</span><span class="line-numbers">34-37</span></a>
+            </div>
+        </div>
+
+        <h3 id="inter-service-comm">Comunicación entre Servicios</h3>
+        <p>El servicio <code class="artifact-id">servicio-facturacion</code> puede hacer referencia a datos de clientes desde <code class="artifact-id">servicio-clientes</code>. La arquitectura soporta:</p>
+        <ul>
+            <li>Llamadas directas a la API REST entre servicios.</li>
+            <li>Acceso a base de datos compartida (ambos servicios usan <code class="artifact-id">facturacion_db</code>).</li>
+            <li>Potencial para comunicación basada en mensajes (no implementado actualmente).</li>
+        </ul>
+        <p>Para patrones de interacción de servicios, consulte <a href="#" class="content-link">Arquitectura del Sistema</a>.</p>
+
+        <h2 id="version-release">Información de Versión y Lanzamiento</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>Aspecto</th><th>Valor</th></tr></thead>
+                <tbody>
+                <tr><td>Versión Actual</td><td>0.0.1-SNAPSHOT</td></tr>
+                <tr><td>Estado de la Build</td><td>Development/Pre-release</td></tr>
+                <tr><td>Group ID</td><td>com.facturacion</td></tr>
+                <tr><td>Artifact ID (Clientes)</td><td><code class="artifact-id">servicio-clientes</code></td></tr>
+                <tr><td>Artifact ID (Facturas)</td><td><code class="artifact-id">servicio-facturacion</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Ambos servicios están actualmente en estado snapshot/desarrollo, indicando desarrollo activo antes del primer lanzamiento a producción.</p>
+        <div class="sources-reference">
+            <span class="sources-label">Fuentes:</span>
+            <div class="source-buttons">
+                <a href="#" class="source-btn"><span class="file-icon"><i class="bi bi-github"></i></span><span class="file-name">Back/servicio-clientes/pom.xml</span><span class="line-numbers">11-14</span></a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Sidebar Derecho -->
+    <aside class="sidebar-right">
+        <h3>En esta página</h3>
+        <a href="#overview">Visión General</a>
+        <div class="nested">
+            <a href="#purpose-scope">Propósito y Alcance</a>
+            <a href="#system-components">Componentes del Sistema</a>
+            <div class="nested">
+                <a href="#component-diagram">Diagrama de Arquitectura</a>
+            </div>
+            <a href="#tech-stack">Stack Tecnológico</a>
+            <div class="nested">
+                <a href="#core-framework">Framework Principal</a>
+                <a href="#data-layer">Capa de Datos</a>
+                <a href="#service-dependencies">Dependencias</a>
+            </div>
+            <a href="#repo-structure">Estructura del Repositorio</a>
+            <a href="#core-capabilities">Capacidades Principales</a>
+            <div class="nested">
+                <a href="#client-management-service">Servicio de Clientes</a>
+                <a href="#invoice-management-service">Servicio de Facturas</a>
+            </div>
+            <a href="#build-dev-infra">Infraestructura</a>
+            <div class="nested">
+                <a href="#maven-project-structure">Estructura de Maven</a>
+                <a href="#dev-env-support">Soporte de Entorno</a>
+            </div>
+            <a href="#architecture-principles">Principios de Arquitectura</a>
+            <div class="nested">
+                <a href="#microservices-pattern">Patrón de Microservicios</a>
+                <a href="#layered-architecture">Arquitectura en Capas</a>
+                <a href="#db-migration">Migración de BD</a>
+                <a href="#multi-env-config">Configuración Multi-Entorno</a>
+            </div>
+            <a href="#integration-points">Puntos de Integración</a>
+            <div class="nested">
+                <a href="#external-api">API Externa</a>
+                <a href="#inter-service-comm">Comunicación entre Servicios</a>
+            </div>
+            <a href="#version-release">Versión y Lanzamiento</a>
+        </div>
+    </aside>
+</div>
+
+<div id="image-popup" class="image-popup-overlay">
+    <span class="popup-close-btn">&times;</span>
+    <div class="pan-zoom-wrapper">
+        <img class="popup-content" id="popup-image">
+    </div>
+</div>
+
+<script src="js/script.js"></script>
+</body>
+</html>

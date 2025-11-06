@@ -49,7 +49,7 @@ Este repositorio contiene el código fuente de un sistema de facturación modula
 
 El sistema sigue un patrón de microservicios con dos componentes principales que se comunican con una base de datos PostgreSQL compartida y un sistema externo para la validación de documentos.
 
-![Diagrama de la Arquitectura del Sistema](Front/documentacion/src/assets/architecture-diagram.svg)
+![Diagrama de la Arquitectura del Sistema](Front/src/docs/assets/arquitectura-componentes.svg)
 
 ---
 
@@ -79,7 +79,7 @@ Ambos servicios comparten una base tecnológica común, garantizando consistenci
 
 ## Estructura del Repositorio
 
-![Diagrama de la Estructura del Repositorio](Front/documentacion/src/assets/repository-structure.svg)
+![Diagrama de la Estructura del Repositorio](Front/src/docs/assets/estructura-repositorio.svg)
 
 ---
 
@@ -158,4 +158,4 @@ Este es un proyecto de portafolio personal y actualmente no se aceptan contribuc
 
 ## Licencia
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
+Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.

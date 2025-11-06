@@ -1,0 +1,609 @@
+---
+title: "Configuración y Ajuste"
+description: "Esta página documenta la configuración de compilación, la configuración del entorno y el proceso de despliegue para el microservicio servicio-facturacion. Incluye la configuración del Maven Wrapper, opciones de configuración de la aplicación, configuración de la base de datos e instrucciones de compilación."
+---
+
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Configuración y Ajuste
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-facturacion/.gitattributes" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-facturacion/.mvn/wrapper/maven-wrapper.properties" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-facturacion/mvnw" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-facturacion/mvnw.cmd" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+<p>Esta página documenta la configuración de compilación, la configuración del entorno y el proceso de despliegue para el microservicio **servicio-facturacion**. Incluye la configuración del Maven Wrapper, las opciones de configuración de la aplicación, la configuración de la base de datos y las instrucciones de compilación.</p>
+<p>Para información sobre las capacidades de generación de PDF y códigos QR, consulte <a href="/docs/servicio-facturacion/generacion-pdf-qr" class="content-link">Generación de PDF y Códigos QR</a>. Para la documentación de la API REST, consulte la visión general principal del servicio en <a href="/docs/servicio-facturacion" class="content-link">servicio-facturacion: Servicio de Facturación</a>.</p>
+
+## Infraestructura del Maven Wrapper
+
+<p>El servicio utiliza el **Maven Wrapper** para asegurar compilaciones consistentes en diferentes entornos de desarrollo sin requerir una distribución de Maven preinstalada. El wrapper descarga y utiliza automáticamente una versión específica de Maven, eliminando los problemas de "en mi máquina funciona".</p>
+
+### Componentes del Wrapper
+
+<p>El Maven Wrapper consta de tres archivos clave:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Componente</th>
+                <th scope="col">Plataforma</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>mvnw</code></td>
+                <td>Unix/Linux/macOS</td>
+                <td>Script de shell para ejecutar comandos de Maven.</td>
+            </tr>
+            <tr>
+                <td><code>mvnw.cmd</code></td>
+                <td>Windows</td>
+                <td>Script de Batch/PowerShell para ejecutar comandos de Maven.</td>
+            </tr>
+            <tr>
+                <td><code>.mvn/wrapper/maven-wrapper.properties</code></td>
+                <td>Multiplataforma</td>
+                <td>Configuración que especifica la versión de Maven y la URL de descarga.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Configuración de la Distribución de Maven
+
+<p>El archivo de propiedades del wrapper especifica la versión exacta de Maven a utilizar:</p>
+
+<ImageViewer 
+    src="/src/assets/configuracion-distribucion-maven.svg" 
+    alt="Diagrama que muestra cómo el archivo maven-wrapper.properties define la versión del wrapper, la URL de descarga y el tipo de distribución para asegurar una versión consistente de Maven."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/.mvn/wrapper/maven-wrapper.properties" lines="1-4" />
+</SourceReference>
+
+<p>La configuración utiliza:</p>
+<ul>
+    <li><strong>Versión del Wrapper</strong>: 3.3.4</li>
+    <li><strong>Tipo de Distribución</strong>: <code>only-script</code> (descarga solo scripts, no binarios completos)</li>
+    <li><strong>Versión de Maven</strong>: 3.9.11</li>
+    <li><strong>URL de Descarga</strong>: <code>{"https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.9.11/apache-maven-3.9.11-bin.zip"}</code></li>
+</ul>
+
+### Configuración de Final de Línea Multiplataforma
+
+<p>Para asegurar un comportamiento consistente entre sistemas operativos, el archivo <code class="artifact-id">.gitattributes</code> impone convenciones de final de línea:</p>
+
+<ImageViewer 
+    src="/src/assets/configuracion-final-linea.svg" 
+    alt="Diagrama que ilustra cómo el archivo .gitattributes asegura que mvnw use finales de línea de Unix (LF) y *.cmd use finales de línea de Windows (CRLF) para prevenir errores de ejecución en diferentes sistemas operativos."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/.gitattributes" lines="1-3" />
+</SourceReference>
+
+<p>Esta configuración asegura que:</p>
+<ul>
+    <li><code>mvnw</code> utiliza finales de línea de Unix (LF) incluso cuando se clona en Windows.</li>
+    <li>Los archivos <code>*.cmd</code> utilizan finales de línea de Windows (CRLF) incluso cuando se clonan en sistemas Unix.</li>
+</ul>
+
+## Flujo de Ejecución del Wrapper
+
+<p>El Maven Wrapper implementa un sofisticado mecanismo de descarga y caché para asegurar que la versión correcta de Maven esté disponible:</p>
+
+<ImageViewer 
+    src="/src/assets/flujo-ejecucion-wrapper.svg" 
+    alt="Diagrama de secuencia que muestra el flujo de ejecución del Maven Wrapper, desde la ejecución de un comando por parte del desarrollador, pasando por la verificación de la caché local de Maven, hasta la descarga de la distribución si es necesario, y finalmente la ejecución del comando de Maven."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/mvnw" lines="108-295" />
+    <SourceBtn path="Back/servicio-facturacion/mvnw.cmd" lines="53-189" />
+</SourceReference>
+
+### Características Clave del Wrapper
+
+<p>Los scripts del wrapper implementan varias características importantes:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Característica</th>
+                <th scope="col">Script de Unix (mvnw)</th>
+                <th scope="col">Script de Windows (mvnw.cmd)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Detección de Java</td>
+                <td>Verifica <code>JAVA_HOME</code> o <code>PATH</code></td>
+                <td>Verifica <code>JAVA_HOME</code> vía PowerShell</td>
+            </tr>
+            <tr>
+                <td>Métodos de Descarga</td>
+                <td><code>wget</code>, <code>curl</code>, o fallback a Java</td>
+                <td>PowerShell <code>WebClient</code></td>
+            </tr>
+            <tr>
+                <td>Validación de Checksum</td>
+                <td><code>sha256sum</code> o <code>shasum</code></td>
+                <td>PowerShell <code>Get-FileHash</code></td>
+            </tr>
+            <tr>
+                <td>Ubicación de Caché</td>
+                <td><code>\~/.m2/wrapper/dists/</code></td>
+                <td><code>\~/.m2/wrapper/dists/</code></td>
+            </tr>
+            <tr>
+                <td>Algoritmo de Hash</td>
+                <td>SHA-256 de la URL de distribución</td>
+                <td>SHA-256 de la URL de distribución</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/mvnw" lines="44-79" />
+    <SourceBtn path="Back/servicio-facturacion/mvnw.cmd" lines="194-223" />
+    <SourceBtn path="Back/servicio-facturacion/mvnw.cmd" lines="130-147" />
+</SourceReference>
+
+## Comandos de Compilación
+
+### Ciclo de Vida de Compilación Estándar
+
+<p>Una vez que el wrapper está configurado, los desarrolladores utilizan los comandos estándar de Maven a través de los scripts del wrapper:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Comando</th>
+                <th scope="col">Unix/Linux/macOS</th>
+                <th scope="col">Windows</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Clean</td>
+                <td><code>./mvnw clean</code></td>
+                <td><code>mvnw.cmd clean</code></td>
+                <td>Eliminar el directorio de destino</td>
+            </tr>
+            <tr>
+                <td>Compile</td>
+                <td><code>./mvnw compile</code></td>
+                <td><code>mvnw.cmd compile</code></td>
+                <td>Compilar el código fuente</td>
+            </tr>
+            <tr>
+                <td>Test</td>
+                <td><code>./mvnw test</code></td>
+                <td><code>mvnw.cmd test</code></td>
+                <td>Ejecutar pruebas unitarias</td>
+            </tr>
+            <tr>
+                <td>Package</td>
+                <td><code>./mvnw package</code></td>
+                <td><code>mvnw.cmd package</code></td>
+                <td>Construir el archivo JAR</td>
+            </tr>
+            <tr>
+                <td>Install</td>
+                <td><code>./mvnw install</code></td>
+                <td><code>mvnw.cmd install</code></td>
+                <td>Instalar en el repositorio local de Maven</td>
+            </tr>
+            <tr>
+                <td>Full Build</td>
+                <td><code>./mvnw clean install</code></td>
+                <td><code>mvnw.cmd clean install</code></td>
+                <td>Limpiar, compilar, probar y empaquetar</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Estructura de Salida de la Compilación
+
+<ImageViewer 
+    src="/src/assets/estructura-salida-compilacion.svg" 
+    alt="Diagrama de árbol que muestra la estructura de carpetas de salida de una compilación de Maven, incluyendo el directorio 'target' con las clases compiladas y el JAR ejecutable."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/mvnw" lines="1-296" />
+    <SourceBtn path="Back/servicio-facturacion/mvnw.cmd" lines="1-190" />
+</SourceReference>
+
+## Configuración de la Aplicación
+
+### Archivos de Configuración de Spring Boot
+
+<p>La configuración del servicio se gestiona a través del mecanismo de configuración externalizada de Spring Boot:</p>
+
+<ImageViewer 
+    src="/src/assets/archivos-configuracion-springboot.svg" 
+    alt="Diagrama de flujo que muestra la jerarquía de precedencia de las fuentes de configuración en Spring Boot, desde los archivos de propiedades hasta las variables de entorno y los argumentos de línea de comandos."
+/>
+
+### Dominios de Configuración
+
+<p>Basado en el stack tecnológico, el servicio requiere configuración para:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Dominio</th>
+                <th scope="col">Claves de Configuración</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Servidor</td>
+                <td><code>server.port</code></td>
+                <td>Puerto HTTP (probablemente 8081 o diferente de servicio-clientes:8080)</td>
+            </tr>
+            <tr>
+                <td>Base de Datos</td>
+                <td><code>spring.datasource.*</code></td>
+                <td>Ajustes de conexión a PostgreSQL o H2</td>
+            </tr>
+            <tr>
+                <td>JPA/Hibernate</td>
+                <td><code>spring.jpa.*</code></td>
+                <td>Configuración de ORM y logging de SQL</td>
+            </tr>
+            <tr>
+                <td>Flyway</td>
+                <td><code>spring.flyway.*</code></td>
+                <td>Ajustes de migración de base de datos</td>
+            </tr>
+            <tr>
+                <td>Generación de PDF</td>
+                <td>Propiedades personalizadas</td>
+                <td>Configuración de OpenPDF si es necesario</td>
+            </tr>
+            <tr>
+                <td>Código QR</td>
+                <td>Propiedades personalizadas</td>
+                <td>Parámetros de ZXing (tamaño, formato, etc.)</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Configuración de la Base de Datos
+
+<p>El servicio soporta múltiples perfiles de base de datos:</p>
+
+<ImageViewer 
+    src="/src/assets/configuracion-bd-perfiles.svg" 
+    alt="Diagrama de flujo que ilustra cómo los perfiles de Spring seleccionan entre una base de datos H2 en memoria para desarrollo y una base de datos PostgreSQL para producción, y cómo Flyway gestiona las migraciones para ambas."
+/>
+
+### Variables de Entorno
+
+<p>Variables de entorno clave para el despliegue:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Variable</th>
+                <th scope="col">Propósito</th>
+                <th scope="col">Valor de Ejemplo</th>
+                <th scope="col">Requerido</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">SPRING_PROFILES_ACTIVE</code></td>
+                <td>Perfil de Spring activo</td>
+                <td><code>prod</code></td>
+                <td>Sí (producción)</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">DATABASE_URL</code></td>
+                <td>URL de conexión a PostgreSQL</td>
+                <td><code>jdbc:postgresql://db:5432/facturacion_db</code></td>
+                <td>Sí (producción)</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">DATABASE_USERNAME</code></td>
+                <td>Nombre de usuario de la base de datos</td>
+                <td><code>postgres</code></td>
+                <td>Sí (producción)</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">DATABASE_PASSWORD</code></td>
+                <td>Contraseña de la base de datos</td>
+                <td><code>secure_password</code></td>
+                <td>Sí (producción)</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">SERVER_PORT</code></td>
+                <td>Puerto del servidor HTTP</td>
+                <td><code>8081</code></td>
+                <td>No (valores por defecto en config)</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">JAVA_TOOL_OPTIONS</code></td>
+                <td>Opciones de la JVM</td>
+                <td><code>-Xmx512m -Xms256m</code></td>
+                <td>No (ajuste opcional)</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+## Configuración y Migraciones de la Base de Datos
+
+### Estrategia de Migración de Flyway
+
+<p>El servicio utiliza Flyway para el versionado del esquema de la base de datos:</p>
+
+<ImageViewer 
+    src="/src/assets/estrategia-migracion-flyway.svg" 
+    alt="Diagrama de flujo que describe la estrategia de migración de Flyway, mostrando cómo la aplicación verifica el historial de migraciones y ejecuta los scripts SQL pendientes para actualizar el esquema de la base de datos."
+/>
+
+### Estructura de Migración Esperada
+
+<p>Las migraciones de Flyway deben ubicarse en <code class="artifact-id">src/main/resources/db/migration/</code>:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Patrón de Archivo de Migración</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>{"V1__initial_schema.sql"}</code></td>
+                <td>Crear el esquema inicial de la base de datos</td>
+            </tr>
+            <tr>
+                <td><code>{"V2__create_facturas_table.sql"}</code></td>
+                <td>Crear la tabla de facturas con almacenamiento de PDF</td>
+            </tr>
+            <tr>
+                <td><code>{"V3__add_qr_codes.sql"}</code></td>
+                <td>Añadir la columna de código QR a las facturas</td>
+            </tr>
+            <tr>
+                <td><code>{"V{N}__{description}.sql"}</code></td>
+                <td>Cambios de esquema subsecuentes</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+## Compilación y Ejecución
+
+### Entorno de Desarrollo
+
+<p>Para ejecutar el servicio en modo de desarrollo:</p>
+
+<CodeBlock language="bash" code={`# Unix/Linux/macOS
+./mvnw spring-boot:run
+
+# Windows
+mvnw.cmd spring-boot:run`} />
+
+<p>Este comando:</p>
+<ol>
+    <li>Compila el código fuente.</li>
+    <li>Ejecuta las migraciones de Flyway contra la base de datos H2.</li>
+    <li>Inicia el servidor Tomcat embebido.</li>
+    <li>Habilita Spring Boot DevTools para recarga en caliente (hot-reloading).</li>
+</ol>
+
+### Compilación de Producción
+
+<p>Para crear un JAR listo para producción:</p>
+
+<CodeBlock language="bash" code={`# Unix/Linux/macOS
+./mvnw clean package -DskipTests
+
+# Windows
+mvnw.cmd clean package -DskipTests`} />
+
+<p>El JAR resultante se encuentra en <code class="artifact-id">{"target/servicio-facturacion-{version}.jar"}</code> y puede ser ejecutado:</p>
+
+<CodeBlock language="bash" code={`java -jar target/servicio-facturacion-{version}.jar \\
+    --spring.profiles.active=prod \\
+    --spring.datasource.url=jdbc:postgresql://localhost:5432/facturacion_db \\
+    --spring.datasource.username=postgres \\
+    --spring.datasource.password=your_password`} />
+
+## Arquitectura de Despliegue
+
+### Despliegue Contenerizado
+
+<p>El servicio está diseñado para un despliegue contenerizado junto a servicio-clientes:</p>
+
+<ImageViewer 
+    src="/src/assets/despliegue-contenerizado.svg" 
+    alt="Diagrama de arquitectura de despliegue que muestra los microservicios servicio-clientes y servicio-facturacion corriendo en contenedores, comunicándose con una base de datos PostgreSQL y servicios externos."
+/>
+
+<SourceReference variant="inline-box" textBefore="Visión general de la arquitectura del sistema."/>
+
+### Lista de Verificación de Despliegue
+
+<p>Antes de desplegar servicio-facturacion en producción:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Paso</th>
+                <th scope="col">Verificación</th>
+                <th scope="col">Archivo/Variable de Configuración</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>✓ Compilación de Maven exitosa</td>
+                <td><code>./mvnw clean package</code> se completa con éxito</td>
+                <td><code>pom.xml</code></td>
+            </tr>
+            <tr>
+                <td>✓ Base de datos accesible</td>
+                <td>Conexión a PostgreSQL probada</td>
+                <td><code>DATABASE_URL</code></td>
+            </tr>
+            <tr>
+                <td>✓ Migraciones aplicadas</td>
+                <td>La versión de Flyway coincide</td>
+                <td>Tabla <code>flyway_schema_history</code></td>
+            </tr>
+            <tr>
+                <td>✓ Perfil configurado</td>
+                <td><code>SPRING_PROFILES_ACTIVE=prod</code></td>
+                <td>Variable de entorno</td>
+            </tr>
+            <tr>
+                <td>✓ Dependencias disponibles</td>
+                <td>OpenPDF, ZXing en el classpath</td>
+                <td>Dependencias de <code>pom.xml</code></td>
+            </tr>
+            <tr>
+                <td>✓ Puerto no conflictivo</td>
+                <td>Puerto 8081 (o puerto configurado) disponible</td>
+                <td><code>SERVER_PORT</code></td>
+            </tr>
+            <tr>
+                <td>✓ Recursos de la JVM asignados</td>
+                <td>Tamaño de heap apropiado para la carga</td>
+                <td><code>JAVA_TOOL_OPTIONS</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+## Solución de Problemas del Wrapper
+
+### Problemas Comunes
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Problema</th>
+                <th scope="col">Causa</th>
+                <th scope="col">Solución</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>Permiso denegado: ./mvnw</code></td>
+                <td>Script de Unix no ejecutable</td>
+                <td>Ejecutar <code>chmod +x mvnw</code></td>
+            </tr>
+            <tr>
+                <td><code>JAVA_HOME no establecido</code></td>
+                <td>Java no encontrado</td>
+                <td>Establecer la variable de entorno <code>JAVA_HOME</code></td>
+            </tr>
+            <tr>
+                <td><code>No se puede descargar Maven</code></td>
+                <td>Problemas de red/proxy</td>
+                <td>Configurar <code>MVNW_REPOURL</code> para un mirror interno</td>
+            </tr>
+            <tr>
+                <td>Finales de línea incorrectos</td>
+                <td>Configuración de checkout de Git</td>
+                <td>Verificar que <code>.gitattributes</code> esté commiteado</td>
+            </tr>
+            <tr>
+                <td>Desajuste de SHA-256</td>
+                <td>Descarga corrupta</td>
+                <td>Eliminar <code>~/.m2/wrapper/dists/</code> y reintentar</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Variables de Entorno del Wrapper
+
+<p>Los scripts del Maven Wrapper soportan configuración adicional:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Variable</th>
+                <th scope="col">Propósito</th>
+                <th scope="col">Ejemplo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">MVNW_REPOURL</code></td>
+                <td>URL de repositorio de Maven personalizado</td>
+                <td><code>{"https://internal-nexus/maven2"}</code></td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">MVNW_USERNAME</code></td>
+                <td>Nombre de usuario para autenticación del repositorio</td>
+                <td><code>build-user</code></td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">MVNW_PASSWORD</code></td>
+                <td>Contraseña para autenticación del repositorio</td>
+                <td><code>secure_token</code></td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">MVNW_VERBOSE</code></td>
+                <td>Habilitar salida detallada (verbose)</td>
+                <td><code>true</code></td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">MAVEN_USER_HOME</code></td>
+                <td>Directorio home de Maven personalizado</td>
+                <td><code>/opt/maven-cache</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/mvnw" lines="24-30" />
+    <SourceBtn path="Back/servicio-facturacion/mvnw.cmd" lines="24-28" />
+</SourceReference>
+
+## Resumen
+
+<p>El servicio servicio-facturacion utiliza el Maven Wrapper para compilaciones consistentes y reproducibles en todos los entornos. El wrapper descarga automáticamente Maven 3.9.11, gestiona las dependencias y asegura la compatibilidad multiplataforma a través de una configuración adecuada de finales de línea. Los desarrolladores pueden compilar y ejecutar el servicio utilizando comandos estándar de Maven a través de los scripts del wrapper (<code class="artifact-id">mvnw</code>/<code class="artifact-id">mvnw.cmd</code>), con una configuración gestionada a través del sistema de configuración externalizada de Spring Boot que soporta múltiples perfiles para entornos de desarrollo y producción.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/mvnw" lines="1-296" />
+    <SourceBtn path="Back/servicio-facturacion/mvnw.cmd" lines="1-190" />
+    <SourceBtn path="Back/servicio-facturacion/.mvn/wrapper/maven-wrapper.properties" lines="1-4" />
+    <SourceBtn path="Back/servicio-facturacion/.gitattributes" lines="1-3" />
+</SourceReference>

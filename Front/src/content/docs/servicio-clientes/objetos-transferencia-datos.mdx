@@ -1,0 +1,396 @@
+---
+title: "Objetos de Transferencia de Datos (DTOs)"
+description: "Descripción de los DTOs utilizados en el microservicio servicio-clientes para la comunicación API, definiendo la estructura de los datos intercambiados."
+---
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Objetos de Transferencia de Datos (DTOs)
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ClienteResponse.java" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ConsultaDocumentoResponse.java" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/DniResponse.java" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento describe los Objetos de Transferencia de Datos (DTOs) utilizados en el microservicio <code class="artifact-id">servicio-clientes</code> para la comunicación API. Los DTOs definen la estructura de los datos intercambiados entre la capa de la API REST y los clientes externos, proporcionando un contrato claro que es independiente del modelo de datos interno.</p>
+<p>Para información sobre los endpoints de la API REST que utilizan estos DTOs, consulte <a href="/docs/servicio-clientes/endpoints-api-rest" class="content-link">Endpoints de la API REST</a>. Para detalles sobre cómo los DTOs se mapean desde/hacia entidades de dominio, consulte <a href="/docs/servicio-clientes/capa-servicio-logica-negocio" class="content-link">Capa de Servicio y Lógica de Negocio</a>.</p>
+
+<SourceReference variant="inline-box" label='' textBefore="Fuentes: Diagramas de visión general de la arquitectura."/>
+
+## Visión General de DTOs
+
+<p>El microservicio <code class="artifact-id">servicio-clientes</code> define tres DTOs principales en el paquete <code>com.facturacion.servicioclientes.dto</code>:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Clase DTO</th>
+                <th scope="col">Propósito</th>
+                <th scope="col">Usado Por</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">ClienteResponse</code></td>
+                <td>Representa los resultados de búsqueda de RUC (identificación fiscal de empresa)</td>
+                <td>Endpoints de búsqueda de RUC</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">DniResponse</code></td>
+                <td>Representa los resultados de búsqueda de DNI (identificación personal)</td>
+                <td>Endpoints de búsqueda de DNI</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">ConsultaDocumentoResponse</code></td>
+                <td>Wrapper polimórfico para búsqueda unificada de documentos</td>
+                <td>Endpoint de búsqueda combinada de documentos</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Estos DTOs sirven como el límite entre el modelo de dominio interno del servicio y los consumidores externos de la API, asegurando que los detalles de implementación permanezcan ocultos mientras se proporciona una interfaz pública estable.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ClienteResponse.java" lines="1-50" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/DniResponse.java" lines="1-42" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ConsultaDocumentoResponse.java" lines="1-22" />
+</SourceReference>
+
+## Arquitectura de DTOs
+
+<ImageViewer 
+    src="/src/assets/arquitectura-dto.svg" 
+    alt="Diagrama de arquitectura de DTOs que muestra el flujo desde la integración externa y el modelo de dominio, a través del Service Layer y el Mapper, hasta los DTOs de respuesta producidos por el Controller Layer." 
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ConsultaDocumentoResponse.java" lines="1-22" />
+</SourceReference>
+
+## ClienteResponse
+
+<p>El DTO <code class="artifact-id">ClienteResponse</code> representa la información de la entidad de negocio asociada a un RUC (Registro Único de Contribuyentes), que es el número de identificación fiscal de empresas de Perú.</p>
+
+### Estructura
+
+<ImageViewer 
+    src="/src/assets/estructura-clienteresponse-dto.svg" 
+    alt="Diagrama de clase UML para ClienteResponse, mostrando campos privados como ruc, razon_social, y sus getters y setters públicos." 
+/>
+
+### Campos
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Campo</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">ruc</code></td>
+                <td><code>String</code></td>
+                <td>Número de identificación fiscal de 11 dígitos para empresas.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">razon_social</code></td>
+                <td><code>String</code></td>
+                <td>Razón social registrada.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">direccion</code></td>
+                <td><code>String</code></td>
+                <td>Dirección fiscal registrada.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">estado</code></td>
+                <td><code>String</code></td>
+                <td>Estado del contribuyente (ej. ACTIVO, BAJA).</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">departamento</code></td>
+                <td><code>String</code></td>
+                <td>Departamento/región geográfica donde está registrada la empresa.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Representación JSON
+
+<p>Cuando se serializa a JSON, un <code class="artifact-id">ClienteResponse</code> se ve así:</p>
+<CodeBlock language="json" code={`{
+  "ruc": "20123456789",
+  "razon_social": "EMPRESA EJEMPLO S.A.C.",
+  "direccion": "AV. EJEMPLO 123, LIMA",
+  "estado": "ACTIVO",
+  "departamento": "LIMA"
+}`} />
+
+### Patrón de Uso
+
+<p>El <code class="artifact-id">ClienteResponse</code> es devuelto por:</p>
+<ul>
+    <li>Endpoints de búsqueda de RUC que consultan por número de RUC.</li>
+    <li>Búsqueda combinada de documentos cuando la entrada se identifica como un RUC.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ClienteResponse.java" lines="1-50" />
+</SourceReference>
+
+## DniResponse
+
+<p>El DTO <code class="artifact-id">DniResponse</code> representa la información de identidad personal asociada a un DNI (Documento Nacional de Identidad), que es el número de la cédula de identidad nacional de Perú.</p>
+
+### Estructura
+
+<ImageViewer 
+    src="/src/assets/estructura-dniresponse-dto.svg" 
+    alt="Diagrama de clase UML para DniResponse, mostrando campos privados como nombres, apellidoPaterno, etc., y sus getters y setters públicos." 
+/>
+
+### Campos
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Campo</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">nombres</code></td>
+                <td><code>String</code></td>
+                <td>Nombre(s) de la persona.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">apellidoPaterno</code></td>
+                <td><code>String</code></td>
+                <td>Apellido paterno.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">apellidoMaterno</code></td>
+                <td><code>String</code></td>
+                <td>Apellido materno.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">nombreCompleto</code></td>
+                <td><code>String</code></td>
+                <td>Nombre completo (típicamente en formato concatenado).</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Representación JSON
+
+<p>Cuando se serializa a JSON, un <code class="artifact-id">DniResponse</code> se ve así:</p>
+
+<CodeBlock language="json" code={`{
+  "nombres": "JUAN CARLOS",
+  "apellidoPaterno": "PEREZ",
+  "apellidoMaterno": "GARCIA",
+  "nombreCompleto": "PEREZ GARCIA JUAN CARLOS"
+}`} />
+
+### Patrón de Uso
+
+<p>El <code class="artifact-id">DniResponse</code> es devuelto por:</p>
+<ul>
+    <li>Endpoints de búsqueda de DNI que consultan por número de DNI.</li>
+    <li>Búsqueda combinada de documentos cuando la entrada se identifica como un DNI.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/DniResponse.java" lines="1-42" />
+</SourceReference>
+
+## ConsultaDocumentoResponse
+
+<p>El <code class="artifact-id">ConsultaDocumentoResponse</code> es un DTO wrapper polimórfico que permite una funcionalidad de búsqueda de documentos unificada. Puede contener datos de RUC o DNI, discriminados por el campo <code class="artifact-id">tipo</code>.</p>
+
+### Estructura
+
+<ImageViewer 
+    src="/src/assets/estructura-consultadocumentoresponse-dto.svg" 
+    alt="Diagrama de clase UML para ConsultaDocumentoResponse, mostrando su relación con los DTOs ClienteResponse y DniResponse, y el enum TipoDocumento." 
+/>
+
+### Campos
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Campo</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">tipo</code></td>
+                <td><code>TipoDocumento</code></td>
+                <td>Enum que indica el tipo de documento (RUC o DNI).</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">datosRuc</code></td>
+                <td><code>ClienteResponse</code></td>
+                <td>Datos del RUC, poblado solo cuando tipo=RUC.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">datosDni</code></td>
+                <td><code>DniResponse</code></td>
+                <td>Datos del DNI, poblado solo cuando tipo=DNI.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Enumeración TipoDocumento
+
+<p>El enum anidado <code class="artifact-id">TipoDocumento</code> define dos valores:</p>
+<ul>
+    <li><code class="artifact-id">RUC</code> - Indica que la respuesta contiene datos de identificación fiscal de empresa.</li>
+    <li><code class="artifact-id">DNI</code> - Indica que la respuesta contiene datos de identidad personal.</li>
+</ul>
+
+<SourceReference variant="inline" label = 'Definido en ' textBefore="">
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ConsultaDocumentoResponse.java" lines="8-10" buttonMode='inline-/n' />
+</SourceReference>
+
+### Comportamiento de Serialización JSON
+
+<SourceReference 
+    variant="table" 
+    textBefore='La clase está anotada con <code>@JsonInclude(JsonInclude.Include.NON_NULL)</code> en ' 
+    textAfter=', lo que asegura que los campos nulos se excluyan de la serialización JSON. Esto produce respuestas de API más limpias donde solo se incluye el objeto de datos relevante.'
+>
+    <SourceBtn
+        path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ConsultaDocumentoResponse.java"
+        lines="5"
+    />
+</SourceReference>
+
+### Ejemplos de Representación JSON
+
+<p><strong>Respuesta de Documento RUC:</strong></p>
+
+<CodeBlock language="json" code={
+`{
+    "tipo": "RUC",
+    "datosRuc": {
+        "ruc": "20123456789",
+        "razon_social": "EMPRESA EJEMPLO S.A.C.",
+        "direccion": "AV. EJEMPLO 123, LIMA",
+        "estado": "ACTIVO",
+        "departamento": "LIMA"
+    }
+}`} />
+
+<p><strong>Respuesta de Documento DNI:</strong></p>
+
+<CodeBlock language="json" code={
+`{
+    "tipo": "DNI",
+    "datosDni": {
+        "nombres": "JUAN CARLOS",
+        "apellidoPaterno": "PEREZ",
+        "apellidoMaterno": "GARCIA",
+        "nombreCompleto": "PEREZ GARCIA JUAN CARLOS"
+    }
+}`} />
+
+<p>Nótese que <code class="artifact-id">datosDni</code> se omite en la respuesta de RUC y <code class="artifact-id">datosRuc</code> se omite en la respuesta de DNI debido a la anotación <code>@JsonInclude</code>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ConsultaDocumentoResponse.java" lines="1-22" />
+</SourceReference>
+
+## Flujo de Uso de DTOs
+
+<ImageViewer 
+    src="/src/assets/flujo-uso-dto.svg" 
+    alt="Diagrama de secuencia que muestra el flujo de uso de un DTO, desde la solicitud del cliente externo, pasando por el controlador y el servicio, hasta la serialización de la respuesta JSON." 
+/>
+
+<p>Este diagrama ilustra cómo se producen los DTOs a través del pipeline de transformación de la capa de servicio, donde las entidades de dominio o las respuestas de API externas se mapean al tipo de DTO apropiado antes de ser devueltas al cliente.</p>
+
+<SourceReference variant="inline-box" textBefore="Diagramas de arquitectura,">
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ClienteResponse.java" lines="1-50"/>
+</SourceReference>
+
+## Características de Diseño
+
+### POJOs Simples con Getters/Setters
+
+<p>Todos los DTOs siguen un patrón simple de JavaBean con:</p>
+<ul>
+    <li>Campos privados</li>
+    <li>Métodos getter y setter públicos</li>
+    <li>Constructores sin argumentos (implícitos)</li>
+    <li>Sin lógica de negocio</li>
+</ul>
+<p>Este diseño los hace compatibles con la serialización/deserialización JSON de Jackson y permite una fácil inspección y modificación durante las pruebas.</p>
+
+### Nomenclatura de Campos en Snake Case
+
+<SourceReference 
+    variant="table" 
+    textBefore='El <code class="artifact-id">ClienteResponse</code> utiliza snake_case para los nombres de los campos (<code class="artifact-id">razon_social</code>, no <code class="artifact-id">razonSocial</code>)'
+    textAfter=', lo que coincide con la estructura JSON esperada por los consumidores externos. En contraste, <code class="artifact-id">DniResponse</code> utiliza camelCase para sus campos.'
+>
+    <SourceBtn 
+        path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ClienteResponse.java" 
+        lines="6" 
+    />
+</SourceReference>
+
+<p></p>
+
+<p>Esta inconsistencia sugiere que <code class="artifact-id">ClienteResponse</code> puede estar diseñado para coincidir con las convenciones de nomenclatura de una API externa o un sistema heredado, mientras que <code class="artifact-id">DniResponse</code> sigue las convenciones de nomenclatura estándar de Java.</p>
+
+### Consideraciones sobre Inmutabilidad
+
+<p>Los DTOs actuales son mutables (tienen setters). Si bien esto es aceptable para DTOs que se utilizan principalmente para la transferencia de datos, los DTOs inmutables con builders podrían proporcionar una mejor seguridad en entornos concurrentes (thread safety) y prevenir modificaciones accidentales. Sin embargo, el diseño mutable actual es compatible con frameworks como Jackson que utilizan setters para la deserialización.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ClienteResponse.java" lines="1-50" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/DniResponse.java" lines="1-42" />
+</SourceReference>
+
+## Resumen
+
+<p>La capa de DTOs en <code class="artifact-id">servicio-clientes</code> proporciona tres contratos de datos clave:</p>
+<ol>
+    <li><code class="artifact-id">ClienteResponse</code> - Datos de entidad de negocio de búsquedas de RUC.</li>
+    <li><code class="artifact-id">DniResponse</code> - Datos de identidad personal de búsquedas de DNI.</li>
+    <li><code class="artifact-id">ConsultaDocumentoResponse</code> - Wrapper polimórfico que permite consultas de documentos unificadas.</li>
+</ol>
+<p>Estos DTOs utilizan anotaciones de Jackson para el control de la serialización JSON y siguen las convenciones de JavaBean para la compatibilidad con el framework. Sirven como el contrato de API público y estable, a la vez que desacoplan a los consumidores externos de los cambios en el modelo de dominio interno.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ClienteResponse.java" lines="1-50" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/DniResponse.java" lines="1-42" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/dto/ConsultaDocumentoResponse.java" lines="1-22" />
+</SourceReference>

@@ -1,0 +1,728 @@
+---
+title: "Configuración del Entorno de Desarrollo"
+description: "Este documento proporciona una guía completa para configurar un entorno de desarrollo local para el sistema de microservicios FitLive. Cubre la configuración del IDE, la configuración de la herramienta de compilación, la configuración del control de versiones y la preparación de la base de datos de desarrollo."
+---
+
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Configuración del Entorno de Desarrollo
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path=".gitignore" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/.gitattributes" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/.gitignore" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento proporciona una guía completa para configurar un entorno de desarrollo local para el sistema de microservicios FitLive. Cubre la configuración del IDE, la configuración de la herramienta de compilación, la configuración del control de versiones y la preparación de la base de datos de desarrollo.</p>
+<p>Para obtener información sobre cómo compilar y ejecutar los servicios después de la configuración, consulte <a href="/docs/primeros-pasos" class="content-link">Primeros Pasos</a>. Para el despliegue en producción y la configuración específica del entorno, consulte <a href="/docs/servicio-clientes/configuracion-y-despliegue" class="content-link">Configuración y Despliegue de servicio-clientes</a> y <a href="/docs/servicio-facturacion/configuracion-y-ajuste" class="content-link">Configuración y Ajuste de servicio-facturacion</a>.</p>
+
+## Prerrequisitos
+
+<p>Las siguientes herramientas y versiones son necesarias para el desarrollo de FitLive:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Herramienta</th>
+                <th scope="col">Versión</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Java JDK</td>
+                <td>22</td>
+                <td>Runtime y compilación para Spring Boot 3.5.6</td>
+            </tr>
+            <tr>
+                <td>Git</td>
+                <td>2.x o posterior</td>
+                <td>Control de versiones y clonación de repositorio</td>
+            </tr>
+            <tr>
+                <td>Maven</td>
+                <td>Incluido vía wrapper</td>
+                <td>Automatización de compilación (no se necesita instalación separada)</td>
+            </tr>
+            <tr>
+                <td>PostgreSQL</td>
+                <td>12.x o posterior</td>
+                <td>Base de datos de producción (opcional para desarrollo local)</td>
+            </tr>
+            <tr>
+                <td>IDE</td>
+                <td>Cualquiera compatible</td>
+                <td>Edición de código y depuración</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### IDEs Soportados
+
+<p>El código base incluye soporte de configuración para múltiples entornos de desarrollo:</p>
+<ul>
+    <li><strong>IntelliJ IDEA</strong> - Configuraciones del directorio <code class="artifact-id">.idea</code> ignoradas vía <code class="artifact-id">.gitignore</code></li>
+    <li><strong>Visual Studio Code</strong> - Configuraciones del directorio <code class="artifact-id">.vscode</code> ignoradas</li>
+    <li><strong>Spring Tool Suite (STS)</strong> - Soporte para IDE de Spring basado en Eclipse</li>
+    <li><strong>NetBeans</strong> - Configuraciones de proyecto de NetBeans ignoradas</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/.gitignore" lines="7-33" />
+    <SourceBtn path=".gitignore" lines="1-18" />
+</SourceReference>
+
+## Configuración del Repositorio Git
+
+### Clonando el Repositorio
+<CodeBlock language="bash" code={`git clone https://github.com/OAQR/Fitlive.git
+cd Fitlive`} />
+
+### Configuración de Git para Desarrollo Multiplataforma
+
+<p>El repositorio utiliza <code class="artifact-id">.gitattributes</code> para asegurar finales de línea consistentes en Windows, macOS y Linux:</p>
+
+<ImageViewer 
+    src="/src/assets/configuracion-finales-linea.svg" 
+    alt="Diagrama que ilustra cómo el archivo .gitattributes impone que mvnw siempre use finales de línea LF y *.cmd siempre use finales de línea CRLF para la compatibilidad entre plataformas."
+/>
+
+<p><strong>Configuración de Final de Línea:</strong></p>
+<ul>
+    <li><strong>Script de Shell del Maven Wrapper</strong> (<code class="artifact-id">mvnw</code>) - Siempre usa finales de línea LF para sistemas basados en Unix.</li>
+    <li><strong>Archivos Batch del Maven Wrapper</strong> (<code class="artifact-id">*.cmd</code>) - Siempre usa finales de línea CRLF para Windows.</li>
+</ul>
+
+<SourceReference 
+    variant="inline" 
+    label=''
+    textBefore="Esta configuración está definida en "
+    textAfter=' y asegura que los scripts del Maven Wrapper permanezcan ejecutables independientemente del sistema operativo del desarrollador.'
+>
+    <SourceBtn path="Back/servicio-clientes/.gitattributes" lines="1-2" buttonMode="inline-/n"/>
+</SourceReference>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/.gitattributes" lines="1-2" />
+</SourceReference>
+
+### Archivos y Directorios Ignorados
+
+<p>Los siguientes artefactos de desarrollo son excluidos del control de versiones:</p>
+
+<ImageViewer 
+    src="/src/assets/archivos-directorios-ignorados.svg" 
+    alt="Diagrama de flujo que muestra cómo los archivos .gitignore a nivel de repositorio y a nivel de servicio excluyen varias categorías de archivos como configuraciones de IDE, artefactos de compilación y logs."
+/>
+
+<SourceReference 
+    variant="table" 
+    label='' 
+    textBefore="<strong>Exclusiones a nivel raíz</strong> ( "
+    textAfter=' ) :'
+>
+    <SourceBtn path=".gitignore" lines="1-18" buttonMode="inline-/n"/>
+</SourceReference>
+
+<ul>
+    <li>Directorios de IDE: <code>.idea/</code>, <code>.vscode/</code></li>
+    <li>Salida de compilación: <code>out/</code>, <code>**/target/</code></li>
+    <li>Directorio de base de datos: <code>DB/</code></li>
+    <li>Archivos específicos del SO: <code>.DS_Store</code>, <code>Thumbs.db</code></li>
+    <li>Archivos de log: <code>*.log</code>, <code>logs/</code></li>
+</ul>
+
+<SourceReference 
+    variant="table" 
+    label='' 
+    textBefore="<strong>Exclusiones a nivel de servicio</strong> ( "
+    textAfter=' ) :'
+>
+    <SourceBtn path="Back/servicio-clientes/.gitignore" lines="1-34" buttonMode="inline-/n"/>
+</SourceReference>
+
+<ul>
+    <li>Spring Tool Suite: <code>.apt_generated</code>, <code>.classpath</code>, <code>.factorypath</code>, <code>.project</code>, <code>.settings</code>, <code>.springBeans</code>, <code>.sts4-cache</code></li>
+    <li>IntelliJ IDEA: <code>.idea</code>, <code>\*.iws</code>, <code>\*.iml</code>, <code>*.ipr</code></li>
+    <li>NetBeans: <code>/nbproject/private/</code>, <code>/nbbuild/</code>, <code>/dist/</code>, <code>/nbdist/</code>, <code>/.nb-gradle/</code></li>
+    <li>JAR del Maven wrapper: <code>.mvn/wrapper/maven-wrapper.jar</code></li>
+    <li>Documentación generada: <code>HELP.md</code></li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path=".gitignore" lines="1-18" />
+    <SourceBtn path="Back/servicio-clientes/.gitignore" lines="1-34" />
+</SourceReference>
+
+## Configuración del Maven Wrapper
+
+<p>Los servicios de FitLive utilizan el <strong>Maven Wrapper</strong> (<code class="artifact-id">mvnw</code>), que empaqueta una versión específica de Maven con cada servicio. Esto elimina la necesidad de que los desarrolladores instalen Maven globalmente y asegura compilaciones consistentes en todos los entornos.</p>
+
+### Estructura de Archivos del Maven Wrapper
+
+<ImageViewer 
+    src="/src/assets/estructura-archivos-maven-wrapper.svg" 
+    alt="Diagrama de la estructura de archivos del Maven Wrapper, mostrando los scripts mvnw y mvnw.cmd, el archivo de propiedades de configuración y el JAR del wrapper que descarga la distribución de Maven."
+/>
+
+### Uso Específico de la Plataforma
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Plataforma</th>
+                <th scope="col">Comando</th>
+                <th scope="col">Finales de Línea</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>macOS/Linux</td>
+                <td><code class="artifact-id">./mvnw</code></td>
+                <td>LF (forzado por <code>.gitattributes</code>)</td>
+            </tr>
+            <tr>
+                <td>Windows (CMD)</td>
+                <td><code class="artifact-id">mvnw.cmd</code></td>
+                <td>CRLF (forzado por <code>.gitattributes</code>)</td>
+            </tr>
+            <tr>
+                <td>Windows (PowerShell)</td>
+                <td><code class="artifact-id">.\mvnw.cmd</code></td>
+                <td>CRLF (forzado por <code>.gitattributes</code>)</td>
+            </tr>
+            <tr>
+                <td>Windows (Git Bash)</td>
+                <td><code class="artifact-id">./mvnw</code></td>
+                <td>LF (forzado por <code>.gitattributes</code>)</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Comandos Comunes del Maven Wrapper
+
+<CodeBlock language="bash" code={`# Limpiar y compilar
+./mvnw clean compile
+
+# Ejecutar pruebas
+./mvnw test
+
+# Empaquetar la aplicación
+./mvnw clean package
+
+# Ejecutar la aplicación Spring Boot
+./mvnw spring-boot:run
+
+# Omitir pruebas durante el empaquetado
+./mvnw clean package -DskipTests`} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/.gitattributes" lines="1-2" />
+    <SourceBtn path="Back/servicio-clientes/.gitignore" lines="3" />
+</SourceReference>
+
+## Configuración del IDE
+
+### Proceso de Importación del Proyecto
+
+<p>Cada servicio (<code class="artifact-id">servicio-clientes</code> y <code class="artifact-id">servicio-facturacion</code>) es un proyecto Maven separado que debe ser importado de forma independiente.</p>
+
+<ImageViewer 
+    src="/src/assets/proceso-importacion-proyecto.svg" 
+    alt="Diagrama que muestra la estructura del repositorio con dos proyectos Maven independientes y las diferentes opciones de importación en un IDE."
+/>
+
+### Configuración de IntelliJ IDEA
+
+<ol>
+    <li>
+        <strong>Importar Proyecto Maven:</strong>
+        <ul>
+            <li>File → Open → Navegue a <code>Back/servicio-clientes</code> (o <code>servicio-facturacion</code>)</li>
+            <li>Seleccione <code>pom.xml</code></li>
+            <li>Haga clic en "Open as Project"</li>
+            <li>IntelliJ detectará automáticamente la configuración de Maven</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Configurar Java SDK:</strong>
+        <ul>
+            <li>File → Project Structure → Project</li>
+            <li>Establezca el Project SDK a Java 22</li>
+            <li>Establezca el Language Level a "22 - Unnamed variables and patterns"</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Archivos de Configuración del IDE:</strong>
+        <ul>
+            <SourceReference 
+                variant="table" 
+                label='' 
+                textBefore="<li> Las configuraciones específicas de IntelliJ en el directorio <code>.idea/</code> son ignoradas vía"
+                textAfter='</li>'
+            >
+                <SourceBtn path="Back/servicio-clientes/.gitignore" lines="16-20" buttonMode="inline-/n"/>
+            </SourceReference>
+            <li>Cada desarrollador mantiene su propia configuración local</li>
+        </ul>
+    </li>
+</ol>
+
+### Configuración de Visual Studio Code
+
+<ol>
+    <li>
+        <strong>Instalar Extensiones Requeridas:</strong>
+        <ul>
+            <li>Extension Pack for Java (Microsoft)</li>
+            <li>Spring Boot Extension Pack (VMware)</li>
+            <li>Maven for Java</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Abrir Directorio del Servicio:</strong>
+        <ul>
+            <li>File → Open Folder → Seleccione <code>Back/servicio-clientes</code> (o <code>servicio-facturacion</code>)</li>
+            <li>VS Code detectará <code>pom.xml</code> y se configurará automáticamente</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Configuración del Runtime de Java:</strong>
+        <ul>
+            <li>Asegúrese de que Java 22 esté configurado en los ajustes de VS Code</li>
+            <li>La extensión de Java utilizará la variable de entorno JAVA_HOME</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Configuración del Espacio de Trabajo:</strong>
+        <ul>
+            <li>
+                <SourceReference 
+                variant="table" 
+                label='' 
+                textBefore="El directorio <code>.vscode/</code> es ignorado vía"
+                textAfter=''
+                >
+                    <SourceBtn path="Back/servicio-clientes/.gitignore" lines="33" buttonMode="inline-/n"/>
+                </SourceReference>
+            </li>
+            <li>Cree un archivo local <code>.vscode/settings.json</code> para preferencias personales</li>
+        </ul>
+    </li>
+</ol>
+
+### Configuración de Spring Tool Suite (STS)
+
+<ol>
+    <li>
+        <strong>Importar Proyecto Maven:</strong>
+        <ul>
+            <li>File → Import → Maven → Existing Maven Projects</li>
+            <li>Navegue a <code>Back/servicio-clientes</code> (o <code>servicio-facturacion</code>)</li>
+            <li>Seleccione <code>pom.xml</code> y haga clic en Finish</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Archivos de Configuración de STS:</strong>
+        <ul>
+            <SourceReference 
+                variant="table" 
+                label='' 
+                textBefore="
+                    <li> 
+                        Los archivos específicos de Eclipse/STS son ignorados vía "
+                textAfter=' :
+                        <ul>
+                            <li>
+                                <code>.apt_generated</code>, 
+                                <code>.classpath</code>, 
+                                <code>.factorypath</code>
+                            </li>
+                            <li>
+                                <code>.project</code>, 
+                                <code>.settings</code>, 
+                                <code>.springBeans</code>, 
+                                <code>.sts4-cache</code>
+                            </li>
+                        </ul>
+                    </li>'
+            >
+                <SourceBtn path="Back/servicio-clientes/.gitignore" lines="7-14" buttonMode="inline-/n"/>
+            </SourceReference>
+        </ul>
+    </li>
+</ol>
+
+### Configuración de NetBeans
+
+<ol>
+    <li>
+        <strong>Abrir Proyecto Maven:</strong>
+        <ul>
+            <li>File → Open Project → Navegue a <code>Back/servicio-clientes</code> (o <code>servicio-facturacion</code>)</li>
+            <li>NetBeans reconoce automáticamente la estructura de Maven</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Archivos de Configuración de NetBeans:</strong>
+        <ul>
+            <SourceReference 
+                variant="table" 
+                label='' 
+                textBefore="
+                    <li> 
+                        Los directorios específicos de NetBeans son ignorados vía "
+                textAfter=' :
+                        <ul>
+                            <li>
+                                <code>/nbproject/private/</code>, 
+                                <code>/nbbuild/</code>, 
+                                <code>/dist/</code>, 
+                                <code>/nbdist/</code>, 
+                                <code>/.nb-gradle/</code>
+                            </li>
+                        </ul>
+                    </li>'
+            >
+                <SourceBtn path="Back/servicio-clientes/.gitignore" lines="22-30" buttonMode="inline-/n"/>
+            </SourceReference>
+        </ul>
+    </li>
+</ol>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/.gitignore" lines="7-33" />
+    <SourceBtn path=".gitignore" lines="1-4" />
+</SourceReference>
+
+## Configuración de la Base de Datos de Desarrollo
+
+<p>Los servicios de FitLive soportan tanto <strong>H2</strong> (en memoria) para desarrollo como <strong>PostgreSQL</strong> para producción.</p>
+
+### Base de Datos H2 en Memoria (Por Defecto para Desarrollo)
+
+<p>Los servicios están preconfigurados para usar la base de datos H2 para el desarrollo local, sin requerir la instalación de una base de datos externa.</p>
+
+<ImageViewer 
+    src="/src/assets/configuracion-bd-h2.svg" 
+    alt="Diagrama que muestra cómo la aplicación Spring Boot, configurada a través de propiedades, se conecta a una base de datos H2 en memoria y proporciona acceso a través de la consola H2."
+/>
+
+<p><strong>Beneficios de la Configuración H2:</strong></p>
+<ul>
+    <li>No se requiere instalación de base de datos externa</li>
+    <li>Arranque y cierre rápidos</li>
+    <li>Creación automática del esquema a través de migraciones de Flyway</li>
+    <li>Consola web integrada para la inspección de la base de datos</li>
+</ul>
+<p><strong>Acceso a la Consola H2:</strong></p>
+<ul>
+    <li>URL: <code>{"http://localhost:8080/h2-console"}</code></li>
+    <li>JDBC URL: <code>jdbc:h2:mem:testdb</code></li>
+    <li>Username: <code>sa</code></li>
+    <li>Password: (vacío)</li>
+</ul>
+
+### Configuración de PostgreSQL (Desarrollo tipo Producción)
+
+<p>Para los desarrolladores que necesiten probar contra PostgreSQL:</p>
+<ol>
+    <li>
+        <strong>Instalar PostgreSQL:</strong>
+        <CodeBlock language="bash" code={`# macOS (Homebrew)
+brew install postgresql@14
+
+# Ubuntu/Debian
+sudo apt-get install postgresql-14
+
+# Windows
+# Descargar desde https://www.postgresql.org/download/windows/`} />
+    </li>
+    <li>
+        <strong>Crear Base de Datos de Desarrollo:</strong>
+        <CodeBlock language="sql" code={`CREATE DATABASE facturacion_db;
+CREATE USER fitlive_user WITH ENCRYPTED PASSWORD 'dev_password';
+GRANT ALL PRIVILEGES ON DATABASE facturacion_db TO fitlive_user;`} />
+    </li>
+    <li>
+        <strong>Configurar Perfil de Aplicación:</strong>
+        <ul>
+            <li>Cree <code>application-postgres.properties</code> en <code>src/main/resources/</code></li>
+            <li>O use variables de entorno para sobrescribir los valores por defecto</li>
+        </ul>
+    </li>
+    <li>
+        <strong>Exclusión de Archivos de Base de Datos:</strong>
+        <ul>
+            <SourceReference 
+                variant="table" 
+                label='' 
+                textBefore="<li> El directorio <code>DB/</code> está excluido de Git vía "
+                textAfter='</li>'
+            >
+                <SourceBtn path=".gitignore" lines="10" buttonMode="inline-/n"/>
+            </SourceReference>
+            <li>Los archivos de datos locales de PostgreSQL deben almacenarse fuera del repositorio</li>
+        </ul>
+    </li>
+</ol>
+
+### Migraciones de Flyway
+
+<p>Tanto H2 como PostgreSQL utilizan Flyway para la gestión del esquema:</p>
+
+<ImageViewer 
+    src="/src/assets/migraciones-flyway.svg" 
+    alt="Diagrama de flujo que muestra cómo Flyway ejecuta scripts de migración en orden para actualizar el estado de la base de datos, rastreando las migraciones aplicadas en la tabla flyway_schema_history."
+/>
+
+<ul>
+    <li>Scripts de migración ubicados en <code>src/main/resources/db/migration/</code></li>
+    <li>Flyway ejecuta automáticamente las migraciones pendientes al iniciar</li>
+    <li>El historial de migraciones se rastrea en la tabla <code>flyway_schema_history</code></li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path=".gitignore" lines="10" />
+</SourceReference>
+
+## Salida de Compilación y Artefactos
+
+<p>El proceso de compilación de Maven genera clases compiladas, JARs empaquetados y otros artefactos que son excluidos del control de versiones.</p>
+
+### Estructura del Directorio de Compilación
+
+<ImageViewer 
+    src="/src/assets/estructura-directorio-compilacion.svg" 
+    alt="Diagrama que ilustra cómo los comandos de Maven (compile, test, package) procesan el código fuente y el pom.xml para generar la salida en el directorio 'target', incluyendo clases, resultados de pruebas y el JAR ejecutable."
+/>
+
+### Artefactos de Compilación Excluidos
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Directorio/Patrón</th>
+                <th scope="col">Propósito</th>
+                <th scope="col">Ignorado Por</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">target/</code></td>
+                <td>Directorio de salida de la compilación de Maven</td>
+                <td>
+                    <SourceReference variant="table" label="">
+                        <SourceBtn path="Back/servicio-clientes/.gitignore" lines="2" buttonMode="inline-/n"/>
+                    </SourceReference>
+                </td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">out/</code></td>
+                <td>Salida de compilación alternativa</td>
+                <td>
+                    <SourceReference variant="table" label="">
+                        <SourceBtn path=".gitignore" lines="6" buttonMode="inline-/n"/>
+                    </SourceReference>
+                </td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">build/</code></td>
+                <td>Herramientas de compilación Gradle/otras</td>
+                <td><SourceReference variant="table" label="">
+                        <SourceBtn path="Back/servicio-clientes/.gitignore" lines="28" buttonMode="inline-/n"/>
+                    </SourceReference>
+                </td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">**/target/</code></td>
+                <td>Módulos Maven anidados</td>
+                <td>
+                    <SourceReference variant="table" extraClass = ".sources-inline-margin" label="">
+                        <SourceBtn path=".gitignore" lines="7" buttonMode="inline-/n"/>
+                    </SourceReference>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p><strong>Excepciones:</strong></p>
+<ul>
+    <li><code>{"!**/src/main/**/target/"}</code> - Permite directorios target dentro del código fuente si es necesario</li>
+    <li><code>{"!**/src/test/**/target/"}</code> - Permite directorios target dentro de las fuentes de prueba</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/.gitignore" lines="2-30" />
+    <SourceBtn path=".gitignore" lines="6-7" />
+</SourceReference>
+
+## Gestión de Archivos de Log
+
+<p>Los logs de la aplicación son excluidos del control de versiones para evitar el aumento de tamaño del repositorio y evitar commitear información sensible.</p>
+
+### Patrones de Exclusión de Logs
+
+<ImageViewer 
+    src="/src/assets/patrones-exclusion-logs.svg" 
+    alt="Diagrama que muestra cómo los logs generados por la aplicación en ejecución y la ejecución de pruebas son excluidos del control de versiones por el archivo .gitignore."
+/>
+
+<SourceReference 
+    variant="table" 
+    label='' 
+    textBefore="<strong>Exclusiones de archivos de log</strong> definidas en "
+    textAfter=':'
+>
+    <SourceBtn path=".gitignore" lines="16-18" buttonMode="inline-/n"/>
+</SourceReference>
+
+<ul>
+    <li><code class="artifact-id">\*.log</code> - Todos los archivos con extensión <code>.log</code></li>
+    <li><code class="artifact-id">logs/</code> - El directorio completo de logs</li>
+</ul>
+<p><strong>Mejores Prácticas:</strong></p>
+<ul>
+    <li>Configure el framework de logging (Logback/Log4j2) para escribir en el directorio <code class="artifact-id">logs/</code></li>
+    <li>Use rotación de logs para gestionar el espacio en disco</li>
+    <li>Nunca commitee archivos de log que contengan datos sensibles</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path=".gitignore" lines="16-18" />
+</SourceReference>
+
+## Verificación del Entorno
+
+<p>Después de completar la configuración, verifique su entorno de desarrollo usando estas comprobaciones:</p>
+
+### Verificación de la Versión de Java
+
+<CodeBlock language="bash" code={`java -version
+# Salida esperada: openjdk version "22..." o similar`} />
+
+### Verificación del Maven Wrapper
+
+<CodeBlock language="bash" code={`cd Back/servicio-clientes
+./mvnw --version
+
+# Salida esperada:
+# Apache Maven 3.x.x
+# Maven home: ...
+# Java version: 22.x.x`} />
+
+### Prueba de Compilación del Proyecto
+
+<CodeBlock language="bash" code={`# Limpiar y compilar servicio-clientes
+cd Back/servicio-clientes
+./mvnw clean compile
+
+# La compilación exitosa debe terminar con:
+# [INFO] BUILD SUCCESS`} />
+
+### Verificación de la Integración del IDE
+
+<ImageViewer 
+    src="/src/assets/verificacion-integracion-ide.svg" 
+    alt="Diagrama de flujo que muestra una lista de verificación para un entorno de IDE listo, incluyendo dependencias de Maven resueltas, SDK de Java configurado y sin errores de compilación."
+/>
+
+<p><strong>Puntos de Verificación:</strong></p>
+<ol>
+    <li><strong>Dependencias de Maven:</strong> Todas las dependencias en <code class="artifact-id">pom.xml</code> se descargan y resuelven.</li>
+    <li><strong>Java SDK:</strong> El proyecto reconoce las características del lenguaje de Java 22.</li>
+    <li><strong>Configuración de Spring Boot:</strong> El IDE detecta la clase de aplicación de Spring Boot.</li>
+    <li><strong>Sin Errores de Compilación:</strong> Todos los archivos fuente compilan sin errores.</li>
+</ol>
+
+### Verificación de la Ejecución de Pruebas
+
+<CodeBlock language="bash" code={`# Ejecutar pruebas unitarias
+./mvnw test
+
+# Esperado: Todas las pruebas pasan (o se omiten si no existen aún)
+# [INFO] Tests run: X, Failures: 0, Errors: 0, Skipped: Y`} />
+
+<SourceReference variant='inline-box' textBefore='Múltiples archivos en '>
+    <SourceBtn path="Back/servicio-clientes/" />
+</SourceReference>
+
+## Solución de Problemas Comunes de Configuración
+
+### Problemas de Permisos del Maven Wrapper (macOS/Linux)
+
+<p><strong>Síntoma:</strong> <code class="artifact-id">Permission denied</code> al ejecutar <code class="artifact-id">./mvnw</code></p>
+<p><strong>Solución:</strong></p>
+<CodeBlock language="bash" code={`chmod +x mvnw
+./mvnw --version`} />
+
+### Problemas de Final de Línea del Maven Wrapper (Windows)
+
+<p><strong>Síntoma:</strong> El script del Maven wrapper falla con errores de sintaxis.</p>
+<p><strong>Solución:</strong></p>
+<ul>
+    <li>Asegúrese de que Git esté configurado para respetar <code class="artifact-id">.gitattributes</code>.</li>
+    <li>Vuelva a clonar el repositorio con el manejo de finales de línea adecuado.</li>
+    <SourceReference 
+        variant="table" 
+        label='' 
+        textBefore="<li>Verifique que "
+        textAfter=' esté presente.</li>'
+    >
+        <SourceBtn path="Back/servicio-clientes/.gitattributes" lines="1-2" buttonMode="inline-/n"/>
+    </SourceReference>
+</ul>
+
+### El IDE No Reconoce Java 22
+
+<p><strong>Síntoma:</strong> El IDE muestra errores para sintaxis moderna de Java.</p>
+<p><strong>Solución:</strong></p>
+<ul>
+    <li>Verifique que el JDK de Java 22 esté instalado: <code class="artifact-id">java -version</code></li>
+    <li>Configure el SDK del proyecto en el IDE a Java 22.</li>
+    <li>Actualice el IDE a la última versión que soporte Java 22.</li>
+</ul>
+
+### La Consola H2 No es Accesible
+
+<p><strong>Síntoma:</strong> No se puede acceder a <code class="artifact-id">{"http://localhost:8080/h2-console"}</code></p>
+<p><strong>Solución:</strong></p>
+<ul>
+    <li>Asegúrese de que la aplicación esté en ejecución: <code class="artifact-id">./mvnw spring-boot:run</code></li>
+    <li>Verifique que la consola H2 esté habilitada en <code class="artifact-id">application.properties</code>.</li>
+    <li>Verifique que el puerto 8080 no esté en uso por otra aplicación.</li>
+</ul>
+
+### Fallos de Conexión a PostgreSQL
+
+<p><strong>Síntoma:</strong> La aplicación no se puede conectar a PostgreSQL.</p>
+<p><strong>Solución:</strong></p>
+<ul>
+    <li>Verifique que el servicio de PostgreSQL esté en ejecución.</li>
+    <li>Revise las credenciales de la base de datos en la configuración.</li>
+    <li>Asegúrese de que la base de datos <code class="artifact-id">facturacion_db</code> exista.</li>
+    <li>Verifique que la red/firewall permita la conexión al puerto de PostgreSQL (por defecto 5432).</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/.gitattributes" lines="1-2" />
+    <SourceBtn path=".gitignore" lines="1-18" />
+    <SourceBtn path="Back/servicio-clientes/.gitignore" lines="1-34" />
+</SourceReference>

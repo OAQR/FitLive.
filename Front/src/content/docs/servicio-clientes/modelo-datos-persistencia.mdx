@@ -1,0 +1,309 @@
+---
+title: "Modelo de Datos y Persistencia"
+description: "Este documento describe el modelo de datos y la capa de persistencia para el microservicio servicio-clientes. Cubre la entidad JPA (ClienteEntity), el esquema de la base de datos (tabla clientes) y la interfaz del repositorio que gestionan los datos de los clientes."
+---
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Modelo de Datos y Persistencia
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/entity/ClienteEntity.java" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/repository/ClienteRepository.java" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento describe el modelo de datos y la capa de persistencia para el microservicio <code class="artifact-id">servicio-clientes</code>. Cubre la entidad JPA (<code>ClienteEntity</code>), el esquema de la base de datos (tabla <code>clientes</code>), y la interfaz del repositorio (<code>ClienteRepository</code>) que gestionan el almacenamiento y la recuperación de datos de clientes.</p>
+<p>Para información sobre cómo esta capa de persistencia es utilizada en la lógica de negocio y las estrategias de caché, consulte <a href="/docs/servicio-clientes/capa-servicio-logica-negocio" class="content-link">Capa de Servicio y Lógica de Negocio</a>. Para la configuración de la base de datos y la gestión de migraciones, consulte <a href="/docs/servicio-clientes/configuracion-y-despliegue" class="content-link">Configuración y Despliegue</a>.</p>
+
+## Modelo de Entidad: ClienteEntity
+
+<p>La clase <code class="artifact-id">ClienteEntity</code> representa un registro de cliente en la base de datos. Es una entidad JPA estándar que se mapea a la tabla <code>clientes</code>.</p>
+
+### Estructura de la Entidad
+
+<ImageViewer 
+    src="/src/assets/estructura-entidad-cliente.svg" 
+    alt="Diagrama de clase UML para ClienteEntity, mostrando sus campos privados (id, ruc, razonSocial, etc.) y sus métodos públicos getter y setter, con una nota indicando que es una entidad JPA mapeada a la tabla 'clientes'." 
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/entity/ClienteEntity.java" lines="1-83" />
+</SourceReference>
+
+### Especificaciones de los Campos
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Campo</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Nombre de Columna</th>
+                <th scope="col">Restricciones</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">id</code></td>
+                <td><code>Long</code></td>
+                <td><code>id</code></td>
+                <td>Clave Primaria, Autoincremental</td>
+                <td>Identificador único para el cliente.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">ruc</code></td>
+                <td><code>String</code></td>
+                <td><code>ruc</code></td>
+                <td>Único, No Nulo, Longitud Máx: 11</td>
+                <td>Número de identificación fiscal peruano (RUC).</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">razonSocial</code></td>
+                <td><code>String</code></td>
+                <td><code>razonSocial</code></td>
+                <td>Ninguna</td>
+                <td>Nombre comercial/legal del cliente.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">direccion</code></td>
+                <td><code>String</code></td>
+                <td><code>direccion</code></td>
+                <td>Ninguna</td>
+                <td>Dirección física del cliente.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">estado</code></td>
+                <td><code>String</code></td>
+                <td><code>estado</code></td>
+                <td>Ninguna</td>
+                <td>Estado de registro (ej. "ACTIVO", "BAJA").</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">departamento</code></td>
+                <td><code>String</code></td>
+                <td><code>departamento</code></td>
+                <td>Ninguna</td>
+                <td>Departamento/región geográfica.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/entity/ClienteEntity.java" lines="14-31" />
+</SourceReference>
+
+### Anotaciones JPA
+
+<p>La entidad utiliza las siguientes anotaciones JPA:</p>
+<ul>
+    <li><code>@Entity</code>: Marca la clase como una entidad JPA.</li>
+    <li><code>@Table(name = "clientes")</code>: Mapea la entidad a la tabla <code>clientes</code> de la base de datos.</li>
+    <li><code>@Id</code>: Designa el campo <code>id</code> como la clave primaria.</li>
+    <li><code>@GeneratedValue(strategy = GenerationType.IDENTITY)</code>: Configura el autoincremento para la clave primaria utilizando columnas de identidad de la base de datos.</li>
+    <li><code>@Column</code>: Especifica restricciones a nivel de columna para cada campo.</li>
+</ul>
+<p>El campo <code>ruc</code> tiene las restricciones más estrictas:</p>
+<ul>
+    <li><code>unique = true</code>: Asegura que no haya valores de RUC duplicados.</li>
+    <li><code>nullable = false</code>: Requiere un valor de RUC para cada cliente.</li>
+    <li><code>length = 11</code>: Refuerza el formato estándar de 11 dígitos del RUC.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/entity/ClienteEntity.java" lines="10-31" />
+</SourceReference>
+
+## Esquema de la Base de Datos
+
+### Tabla: clientes
+
+<ImageViewer 
+    src="/src/assets/esquema-db-clientes.svg" 
+    alt="Diagrama del esquema de la tabla 'clientes', mostrando las columnas (id, ruc, razonSocial, etc.), sus tipos de datos (BIGINT, VARCHAR), y las restricciones de clave primaria (PK) y clave única (UK)." 
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/entity/ClienteEntity.java" lines="11-31" />
+</SourceReference>
+
+### Restricciones de Clave
+
+<p>La tabla <code class="artifact-id">clientes</code> impone las siguientes restricciones:</p>
+<ol>
+    <li><strong>Clave Primaria</strong>: La columna <code class="artifact-id">id</code> sirve como clave primaria con comportamiento autoincremental.</li>
+    <li><strong>Restricción Única</strong>: La columna <code class="artifact-id">ruc</code> debe ser única en todos los registros.</li>
+    <li><strong>No Nulo</strong>: La columna <code class="artifact-id">ruc</code> no puede contener valores nulos.</li>
+</ol>
+<p>Estas restricciones aseguran la integridad de los datos, previniendo registros de clientes duplicados y garantizando que cada cliente tenga un número de identificación fiscal válido.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/entity/ClienteEntity.java" lines="14-19" />
+</SourceReference>
+
+## Capa de Repositorio: ClienteRepository
+
+<p>La interfaz <code class="artifact-id">ClienteRepository</code> proporciona métodos de acceso a datos para los registros de <code>ClienteEntity</code>. Extiende la interfaz <code>JpaRepository</code> de Spring Data JPA, heredando operaciones CRUD estándar y añadiendo métodos de consulta personalizados.</p>
+
+### Interfaz del Repositorio
+
+<ImageViewer 
+    src="/src/assets/interfaz-repositorio.svg" 
+    alt="Diagrama de clase UML que muestra la interfaz ClienteRepository extendiendo JpaRepository. Se detalla el método personalizado findByRuc y los métodos heredados como save, findById, etc. Una nota indica que es una interfaz de Spring Data JPA anotada con @Repository." 
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/repository/ClienteRepository.java" lines="1-13" />
+</SourceReference>
+
+### Métodos de Consulta
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Método</th>
+                <th scope="col">Tipo de Retorno</th>
+                <th scope="col">Propósito</th>
+                <th scope="col">Consulta Generada</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>findByRuc(String ruc)</code></td>
+                <td><code>Optional&lt;ClienteEntity&gt;</code></td>
+                <td>Recuperar cliente por RUC.</td>
+                <td><code>SELECT * FROM clientes WHERE ruc = ?</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>El método <code>findByRuc</code> utiliza el mecanismo de derivación de consultas de Spring Data JPA. Al seguir la convención de nomenclatura <code>findBy[NombreDelCampo]</code>, Spring genera automáticamente la consulta SQL apropiada sin requerir una implementación manual.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/repository/ClienteRepository.java" lines="12" />
+</SourceReference>
+
+### Métodos Heredados
+
+<p>A través de <code>JpaRepository&lt;ClienteEntity, Long&gt;</code>, el repositorio hereda las siguientes operaciones:</p>
+<ul>
+    <li><strong>Operaciones de Guardado</strong>: <code>save()</code>, <code>saveAll()</code></li>
+    <li><strong>Operaciones de Lectura</strong>: <code>findById()</code>, <code>findAll()</code>, <code>findAllById()</code></li>
+    <li><strong>Operaciones de Borrado</strong>: <code>delete()</code>, <code>deleteById()</code>, <code>deleteAll()</code></li>
+    <li><strong>Operaciones de Conteo</strong>: <code>count()</code>, <code>existsById()</code></li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/repository/ClienteRepository.java" lines="10" />
+</SourceReference>
+
+## Arquitectura de Persistencia
+
+<p>El siguiente diagrama ilustra cómo la capa de persistencia se integra con la capa de servicio y la base de datos:</p>
+
+<ImageViewer 
+    src="/src/assets/arquitectura-persistencia.svg" 
+    alt="Diagrama de la arquitectura de persistencia, mostrando cómo ClienteServiceImpl llama a los métodos de ClienteRepository. La implementación de Spring Data JPA genera SQL para interactuar con la base de datos PostgreSQL. Las anotaciones @Repository y @Entity habilitan el proxy de Spring y el mapeo ORM, respectivamente." 
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/repository/ClienteRepository.java" lines="9-13" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/entity/ClienteEntity.java" lines="10-11" />
+</SourceReference>
+
+### Roles de los Componentes
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Componente</th>
+                <th scope="col">Rol</th>
+                <th scope="col">Tecnología</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">ClienteEntity</code></td>
+                <td>Objeto del modelo de dominio que representa los datos del cliente.</td>
+                <td>Anotaciones JPA (<code>@Entity</code>, <code>@Table</code>, <code>@Column</code>)</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">ClienteRepository</code></td>
+                <td>Interfaz de acceso a datos que define los contratos de consulta.</td>
+                <td>Spring Data JPA (<code>@Repository</code>, extiende <code>JpaRepository</code>)</td>
+            </tr>
+            <tr>
+                <td>Spring Data JPA</td>
+                <td>Proveedor de implementación del repositorio.</td>
+                <td>Hibernate ORM</td>
+            </tr>
+            <tr>
+                <td>PostgreSQL</td>
+                <td>Almacenamiento de datos persistente.</td>
+                <td>Base de datos relacional (producción) / H2 (desarrollo)</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/entity/ClienteEntity.java" lines="1-83" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/repository/ClienteRepository.java" lines="1-13" />
+</SourceReference>
+
+### Gestión de Transacciones
+
+<p>La capa de repositorio opera dentro del contexto de gestión de transacciones de Spring. Los métodos de la capa de servicio que llaman a operaciones del repositorio suelen estar anotados con <code class="artifact-id">@Transactional</code>, asegurando:</p>
+<ol>
+    <li><strong>Atomicidad</strong>: Múltiples operaciones de base de datos tienen éxito o fallan juntas.</li>
+    <li><strong>Consistencia</strong>: Se mantienen las restricciones de integridad de los datos.</li>
+    <li><strong>Aislamiento (Isolation)</strong>: Las transacciones concurrentes no interfieren entre sí.</li>
+    <li><strong>Durabilidad</strong>: Los cambios confirmados persisten incluso después de fallos del sistema.</li>
+</ol>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/repository/ClienteRepository.java" lines="9" />
+</SourceReference>
+
+## Mapeo de Campos: Entidad a Base de Datos
+
+<p>El siguiente diagrama muestra el mapeo explícito entre los campos de la entidad Java y las columnas de la base de datos:</p>
+
+<ImageViewer 
+    src="/src/assets/mapeo-campos-entidad-db.svg" 
+    alt="Diagrama que muestra el mapeo explícito entre los campos de la entidad Java (id, ruc, etc.) y las columnas de la base de datos (id BIGINT PK, ruc VARCHAR UK, etc.), con las anotaciones JPA correspondientes que facilitan el mapeo." 
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/entity/ClienteEntity.java" lines="14-31" />
+</SourceReference>
+
+## Patrón de Uso
+
+<p>El patrón de uso típico para la capa de persistencia sigue este flujo:</p>
+
+<ImageViewer 
+    src="/src/assets/patron-uso-persistencia.svg" 
+    alt="Diagrama de secuencia que ilustra el patrón de uso de la capa de persistencia. Muestra cómo ClienteServiceImpl llama a findByRuc en ClienteRepository, que a su vez desencadena una consulta SELECT a PostgreSQL. En caso de no encontrar la entidad, se muestra un flujo alternativo para buscar en una API externa y persistir la nueva entidad." 
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/repository/ClienteRepository.java" lines="12" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/entity/ClienteEntity.java" lines="14-16" />
+</SourceReference>
+
+<p>Este patrón demuestra la estrategia de caché donde la capa de servicio primero verifica los registros existentes mediante <code>findByRuc()</code>, y solo persiste nuevos datos mediante <code>save()</code> cuando un cliente es obtenido de una fuente externa. Para más detalles sobre esta lógica de caché, consulte <a href="/docs/servicio-clientes/capa-servicio-logica-negocio" class="content-link">Capa de Servicio y Lógica de Negocio</a>.</p>

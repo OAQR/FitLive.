@@ -1,0 +1,20 @@
+---
+/**
+ * Renderiza un único elemento (`<li>`) de la Tabla de Contenidos.
+ * La indentación visual se gestiona mediante CSS aplicando una clase
+ * dinámica basada en la profundidad del encabezado (ej. `toc-depth-2`).
+ */
+import type { Heading } from "../types/navigation.ts"
+
+interface Props {
+    /** Objeto de encabezado extraído por Astro. */
+    heading: Heading;
+}
+
+const { heading } = Astro.props;
+const { depth, slug, text } = heading;
+---
+
+<li class={`toc-depth-${depth}`}>
+    <a href={`#${slug}`}>{text}</a>
+</li>

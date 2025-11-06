@@ -1,0 +1,356 @@
+---
+title: "Primeros Pasos"
+description: "Instrucciones para compilar, ejecutar y desarrollar los microservicios de FitLive localmente usando el Maven Wrapper."
+---
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Primeros Pasos
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-clientes/.gitattributes" buttonMode="custom" />
+            <SourceBtn path="Back/servicio-clientes/.mvn/wrapper/maven-wrapper.properties" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/mvnw" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/mvnw.cmd" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+<p>Esta página proporciona instrucciones para compilar, ejecutar y desarrollar los microservicios de FitLive localmente usando el Maven Wrapper. El sistema FitLive consiste en dos servicios Spring Boot: <code class="artifact-id">servicio-clientes</code> (gestión de clientes) y <code class="artifact-id">servicio-facturacion</code> (generación de facturas).</p>
+<p>Para información sobre la arquitectura general del sistema y cómo interactúan los servicios, consulte <a href="/docs/arquitectura-del-sistema" class="content-link">Arquitectura del Sistema</a>. Para detalles de configuración y despliegue específicos de cada servicio, vea <a href="/docs/servicio-clientes/configuracion-y-despliegue" class="content-link">Configuración y Despliegue de servicio-clientes</a> y <a href="/docs/servicio-facturacion/configuracion-y-ajuste" class="content-link">Configuración e Instalación de servicio-facturacion</a>.</p>
+
+## Prerrequisitos
+
+<p>Antes de compilar y ejecutar los servicios, asegúrese de que su entorno de desarrollo tenga lo siguiente instalado:</p>
+
+<TableWrapper>
+    <table>
+        <thead><tr><th scope="col">Requisito</th><th scope="col">Versión</th><th scope="col">Propósito</th></tr></thead>
+        <tbody>
+            <tr>
+                <td>Java Development Kit (JDK)</td>
+                <td>22</td>
+                <td>Requerido para compilar y ejecutar aplicaciones Spring Boot 3.5.6.</td>
+            </tr>
+            <tr>
+                <td>Git</td>
+                <td>Cualquier versión reciente</td>
+                <td>Para clonar el repositorio y el control de versiones.</td>
+            </tr>
+            <tr>
+                <td>PostgreSQL (opcional)</td>
+                <td>12+</td>
+                <td>Base de datos de producción; por defecto, se utiliza la base de datos en memoria H2 para el desarrollo local.</td>
+            </tr>
+            <tr>
+                <td>IDE (opcional)</td>
+                <td>IntelliJ IDEA, VS Code, STS, o NetBeans</td>
+                <td>Para la edición de código y depuración.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference variant="inline" label = '' textBefore="<strong>Nota:</strong> La instalación de Maven <strong>no es requerida</strong>. El repositorio incluye scripts del Maven Wrapper que descargan y utilizan automáticamente la versión correcta de Maven (3.9.11) como se especifica en ">
+    <SourceBtn path="Back/servicio-clientes/.mvn/wrapper/maven-wrapper.properties" lines="1-4" buttonMode='inline-/n' />
+</SourceReference>
+
+<SourceReference variant="inline-box" textAfter="diagramas de arquitectura del sistema">
+    <SourceBtn path="Back/servicio-clientes/.mvn/wrapper/maven-wrapper.properties"/>
+</SourceReference>
+
+## Resumen del Maven Wrapper
+
+<p>El Maven Wrapper (<code class="artifact-id">mvnw</code> y <code class="artifact-id">mvnw.cmd</code>) es un script de shell y un archivo batch que asegura que todos los desarrolladores usen la misma versión de Maven sin requerir una instalación local. Ambos servicios usan la versión 3.3.4 del Wrapper, que descarga Apache Maven 3.9.11.</p>
+
+<ImageViewer 
+    src="flujo-maven-wrapper.svg" 
+    alt="Diagrama de flujo del Maven Wrapper que muestra cómo un desarrollador ejecuta el comando mvnw, el cual comprueba si Maven está instalado localmente y, si no, lo descarga usando las propiedades del wrapper antes de ejecutar el comando de Maven." 
+/>
+
+### Componentes del Maven Wrapper:
+
+<TableWrapper>
+    <table>
+        <thead>
+        <tr>
+            <th>Archivo</th>
+            <th>Plataforma</th>
+            <th>Propósito</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><code class="artifact-id">mvnw</code></td>
+            <td>Unix/Linux/macOS</td>
+            <td>Script de shell para sistemas compatibles con POSIX.</td>
+        </tr>
+        <tr>
+            <td><code class="artifact-id">mvnw.cmd</code></td>
+            <td>Windows</td>
+            <td>Script de Batch/PowerShell para Windows.</td>
+        </tr>
+        <tr>
+            <td><code class="artifact-id">.mvn/wrapper/maven-wrapper.properties</code></td>
+            <td>Todas</td>
+            <td>Configuración que especifica la versión de Maven y la URL de descarga.</td>
+        </tr>
+        <tr>
+            <td><code class="artifact-id">.gitattributes</code></td>
+            <td>Todas</td>
+            <td>Asegura las terminaciones de línea correctas (LF para <code class="artifact-id">mvnw</code>, CRLF para <code class="artifact-id">*.cmd</code>).</td>
+        </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/mvnw" lines="1-296" />
+    <SourceBtn path="Back/servicio-clientes/mvnw.cmd" lines="1-190" />
+    <SourceBtn path="Back/servicio-clientes/.mvn/wrapper/maven-wrapper.properties" lines="1-4" />
+    <SourceBtn path="Back/servicio-clientes/.gitattributes" lines="1-3" />
+</SourceReference>
+
+## Construyendo los Servicios
+
+### Clonar el Repositorio
+<CodeBlock code={`git clone https://github.com/OAQR/FitLive.git
+cd Fitlive`} />
+
+### Construir servicio-clientes
+<p>Navegue al directorio de <code class="artifact-id">servicio-clientes</code> y ejecute el Maven Wrapper:</p>
+
+<p><strong>En Unix/Linux/macOS:</strong></p>
+<CodeBlock code={`cd Back/servicio-clientes
+./mvnw clean install`} />
+
+<p><strong>En Windows:</strong></p>
+<CodeBlock code={`cd Back\\servicio-clientes
+mvnw.cmd clean install`} />
+
+### Construir servicio-facturacion
+<p>De manera similar, navegue al directorio de <code class="artifact-id">servicio-facturacion</code>:</p>
+
+<p><strong>En Unix/Linux/macOS:</strong></p>
+<CodeBlock code={`cd Back/servicio-facturacion
+./mvnw clean install`} />
+
+<p><strong>En Windows:</strong></p>
+<CodeBlock code={`cd Back\\servicio-facturacion
+mvnw.cmd clean install`} />
+
+### Flujo del Proceso de Compilación
+
+<ImageViewer 
+    src="/src/assets/flujo-proceso-compilacion.svg" 
+    alt="Diagrama de secuencia que ilustra el proceso de compilación de Maven." 
+/>
+
+### Objetivos de Compilación Comunes
+
+<TableWrapper>
+    <table>
+        <thead><tr><th>Objetivo Maven</th><th>Descripción</th></tr></thead>
+        <tbody>
+            <tr><td><code>clean</code></td><td>Elimina el directorio <code>target/</code> y todos los artefactos compilados.</td></tr>
+            <tr><td><code>compile</code></td><td>Compila el código fuente en <code>src/main/java</code>.</td></tr>
+            <tr><td><code>test</code></td><td>Ejecuta las pruebas unitarias en <code>src/test/java</code>.</td></tr>
+            <tr><td><code>package</code></td><td>Empaqueta el código compilado en un archivo JAR ejecutable.</td></tr>
+            <tr><td><code>install</code></td><td>Instala el paquete en el repositorio local de Maven (<code>~/.m2/repository</code>).</td></tr>
+            <tr><td><code>verify</code></td><td>Ejecuta pruebas de integración y verifica el paquete.</td></tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference  variant="inline-box" textAfter='Configuración del ciclo de vida de compilación de Maven y Spring Boot 3.5.6'>
+    <SourceBtn path="Back/servicio-clientes/mvnw" lines="148-151"/>
+</SourceReference>
+
+## Ejecutando los Servicios
+
+### Ejecutar servicio-clientes
+<p>Después de compilar, puede ejecutar el servicio usando Maven:</p>
+<CodeBlock code={`cd Back/servicio-clientes
+./mvnw spring-boot:run`} />
+<p>El servicio se inicia en el puerto <strong>8080</strong> por defecto y expone los endpoints de la API REST en <code>{"http://localhost:8080/api/v1/clientes"}</code>.</p>
+
+### Ejecutar servicio-facturacion
+<CodeBlock code={`cd Back/servicio-facturacion
+./mvnw spring-boot:run`} />
+<p>El servicio se inicia en su puerto configurado y proporciona capacidades de generación de facturas.</p>
+
+### Alternativa: Ejecutar el JAR Empaquetado
+<p>Después de ejecutar <code>mvnw package</code>, puede ejecutar el JAR independiente:</p>
+<CodeBlock code={`java -jar target/servicio-clientes-<version>.jar`} />
+
+### Flujo de Arranque del Servicio
+
+<ImageViewer 
+    src="/src/assets/flujo-arranque-servicio.svg" 
+    alt="Diagrama de flujo que muestra el proceso de arranque de una aplicación Spring Boot."
+/>
+
+<SourceReference  variant="inline-box" label='Fuente: ' textBefore='Proceso de arranque de Spring Boot,'>
+    <SourceBtn path="Back/servicio-clientes configuración"/>
+</SourceReference>
+
+## Tareas Comunes de Desarrollo
+
+### Ejecutar Solo Pruebas
+<p>Ejecute todas las pruebas sin empaquetar:</p>
+<CodeBlock code={`./mvnw test`} />
+
+### Omitir Pruebas Durante la Compilación
+<p>Compile y empaquete sin ejecutar pruebas (para compilaciones más rápidas):</p>
+<CodeBlock code={`./mvnw clean install -DskipTests`} />
+
+### Compilación Limpia
+<p>Elimine todos los artefactos de compilación anteriores y recompile desde cero:</p>
+<CodeBlock code={`./mvnw clean package`} />
+
+### Ver Dependencias
+<p>Liste todas las dependencias del proyecto y sus versiones:</p>
+<CodeBlock code={`./mvnw dependency:tree`} />
+
+### Ejecutar en Modo de Depuración
+<p>Inicie el servicio con la depuración remota habilitada en el puerto 5005:</p>
+<CodeBlock code={`./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"`} />
+
+### Mapeo de Comandos del Maven Wrapper
+
+<ImageViewer 
+    src="/src/assets/mapeo-comandos-maven-wrapper.svg" 
+    alt="Diagrama que mapea los comandos del Maven Wrapper a las fases del ciclo de vida de Maven y sus salidas."
+/>
+
+<SourceReference variant='inline-box' label='Fuente: ' textAfter='Documentación del ciclo de vida de Maven'>
+    <SourceBtn path="Back/servicio-clientes/mvnw" lines="148-151"/>
+</SourceReference>
+
+## Configuración del Entorno
+
+### Perfil de Desarrollo
+<p>Ambos servicios usan una base de datos en memoria H2 por defecto para el desarrollo local. No se requiere configuración de base de datos externa.</p>
+
+### Perfil de Producción
+<p>Para ejecutar con PostgreSQL (configuración de producción), establezca el perfil de Spring:</p>
+<CodeBlock code={`./mvnw spring-boot:run -Dspring-boot.run.profiles=prod`} />
+<p>O al ejecutar el JAR:</p>
+<CodeBlock code={`java -jar target/servicio-clientes-<version>.jar --spring.profiles.active=prod`} />
+<p>Para más opciones de configuración, consulte <a href="docs/servicio-cliente/configuracion-y-despliegue" class="content-link">Configuración y Despliegue de servicio-clientes</a> y <a href="/docs/servicio-facturacion/configuracion-y-ajuste" class="content-link">Configuración e Instalación de servicio-facturacion</a>.</p>
+
+<SourceReference variant="inline-box" textBefore="Perfiles de Spring Boot, patrones de configuración de aplicaciones."/>
+
+## Solución de Problemas
+
+### Problemas de Descarga del Maven Wrapper
+<p>Si el Maven Wrapper falla al descargar Maven automáticamente:</p>
+<p><strong>Verifique la conectividad de red:</strong></p>
+<CodeBlock code={`curl -I https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.9.11/apache-maven-3.9.11-bin.zip`} />
+
+<p><strong>Configuración manual de MAVEN_HOME:</strong> Establezca la variable de entorno <code>MAVEN_HOME</code> para omitir la descarga automática:</p>
+<CodeBlock code={`export MAVEN_HOME=/path/to/your/maven
+./mvnw clean install`} />
+
+<p><strong>Use un repositorio corporativo:</strong> Establezca <code>MVNW_REPOURL</code> para usar un repositorio de Maven corporativo:</p>
+<CodeBlock code={`export MVNW_REPOURL=https://your-corporate-repo/maven2
+./mvnw clean install`} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/mvnw" lines="24-30" />
+    <SourceBtn path="Back/servicio-clientes/mvnw.cmd" lines="139-141" />
+</SourceReference>
+
+### Desajuste de Versión de Java
+<p>Los servicios requieren Java 22. Verifique su versión de Java:</p>
+<CodeBlock code={`java -version`} />
+<p>Si usa una versión diferente, establezca <code>JAVA_HOME</code>:</p>
+<CodeBlock code={`export JAVA_HOME=/path/to/jdk-22
+./mvnw clean install`} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/mvnw" lines="44-79" />
+</SourceReference>
+
+### Permiso Denegado en Unix/Linux/macOS
+<p>Si obtiene "Permiso denegado" al ejecutar <code>mvnw</code>:</p>
+<CodeBlock code={`chmod +x mvnw
+./mvnw clean install`} />
+
+<SourceReference variant='inline-box' textAfter='(#!/bin/sh shebang)'>
+    <SourceBtn path="Back/servicio-clientes/mvnw" lines="1"/>
+</SourceReference>
+
+### Problemas de Final de Línea
+<p>El archivo <code>.gitattributes</code> asegura las terminaciones de línea correctas. Si encuentra problemas después de clonar:</p>
+<CodeBlock code={`git config core.autocrlf false
+rm .git/index
+git reset`} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/.gitattributes" lines="1-3"/>
+</SourceReference>
+
+### Puerto Ya en Uso
+<p>Si el puerto 8080 ya está en uso al iniciar <code class="artifact-id">servicio-clientes</code>:</p>
+<p><strong>Opción 1: Cambiar el puerto en la línea de comandos:</strong></p>
+<CodeBlock code={`./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8081`} />
+<p><strong>Opción 2: Terminar el proceso que usa el puerto 8080:</strong></p>
+<CodeBlock code={`# En Unix/Linux/macOS
+lsof -ti:8080 | xargs kill -9
+
+# En Windows
+netstat -ano | findstr :8080
+taskkill /PID <PID> /F`} />
+
+<SourceReference variant="inline-box" textBefore="Configuración del servidor embebido de Spring Boot."/>
+
+## Referencia Rápida
+
+### Comandos Esenciales
+
+<TableWrapper>
+    <table>
+        <thead><tr><th>Tarea</th><th>Comando (Unix/macOS)</th><th>Comando (Windows)</th></tr></thead>
+        <tbody>
+            <tr><td>Compilar servicio</td><td><code>./mvnw clean install</code></td><td><code>mvnw.cmd clean install</code></td></tr>
+            <tr><td>Ejecutar servicio</td><td><code>./mvnw spring-boot:run</code></td><td><code>mvnw.cmd spring-boot:run</code></td></tr>
+            <tr><td>Ejecutar pruebas</td><td><code>./mvnw test</code></td><td><code>mvnw.cmd test</code></td></tr>
+            <tr><td>Empaquetar JAR</td><td><code>./mvnw package</code></td><td><code>mvnw.cmd package</code></td></tr>
+            <tr><td>Compilación limpia</td><td><code>./mvnw clean install</code></td><td><code>mvnw.cmd clean install</code></td></tr>
+            <tr><td>Omitir pruebas</td><td><code>./mvnw clean install -DskipTests</code></td><td><code>mvnw.cmd clean install -DskipTests</code></td></tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Ubicaciones de Archivos
+
+<ImageViewer 
+    src="estructura-repositorio-arbol.svg" 
+    alt="Diagrama de árbol de la estructura del repositorio."
+/>
+
+<SourceReference variant='inline-box' textBefore='Estructura del repositorio,'>
+    <SourceBtn path="Back/servicio-clientes/mvnw"/>
+    <SourceBtn path="Back/servicio-clientes/mvnw.cmd"/>
+    <SourceBtn path="Back/servicio-clientes/.mvn/wrapper/maven-wrapper.properties"/>
+</SourceReference>
+
+## Próximos Pasos
+
+<p>Después de construir y ejecutar los servicios localmente con éxito:</p>
+<ol>
+    <li><strong>Explorar las APIs REST:</strong> Consulte <a href="/docs/servicio-clientes/endpoints-api-rest" class="content-link">Endpoints de la API REST</a> para la documentación del endpoint <code class="artifact-id">servicio-clientes</code>.</li>
+    <li><strong>Comprender la arquitectura:</strong> Lea <a href="/docs/arquitectura-del-sistema" class="content-link">Arquitectura del Sistema</a> para una visión general de cómo interactúan los servicios.</li>
+    <li><strong>Configure integraciones externas:</strong> Vea <a href="/docs/servicio-clientes/integraciones-externas-perudevs" class="content-link">Integraciones Externas: PeruDevs API</a> para configurar la validación de RUC/DNI.</li>
+    <li><strong>Configurar el IDE:</strong> Consulte <a href="/docs/configuracion-del-entorno-de-desarrollo" class="content-link">Configuración del Entorno de Desarrollo</a> para obtener información específica del IDE.</li>
+    <li><strong>Ejecutar pruebas:</strong> Vea la sección de <a href="/docs/servicio-clientes/pruebas" class="content-link">Pruebas</a> para obtener información sobre la infraestructura de pruebas.</li>
+</ol>
+
+<SourceReference variant="inline-box" textBefore="Estructura del índice de contenidos."/>

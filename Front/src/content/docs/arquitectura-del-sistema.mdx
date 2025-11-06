@@ -1,0 +1,423 @@
+---
+title: "Arquitectura del Sistema"
+description: "Documento que describe la arquitectura general de la plataforma de facturación FitLive, incluyendo la estructura de microservicios, el stack tecnológico y los patrones de comunicación entre servicios."
+---
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Arquitectura del Sistema
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-clientes/pom.xml" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/ServicioClientesApplication.java" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-facturacion/pom.xml" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento describe la arquitectura general del sistema de la plataforma de facturación FitLive, incluyendo la estructura de los microservicios, el stack tecnológico y los patrones de comunicación entre servicios. Proporciona una visión técnica de alto nivel sobre cómo los dos microservicios principales (<code class="artifact-id">servicio-clientes</code> y <code class="artifact-id">servicio-facturacion</code>) colaboran para ofrecer capacidades de gestión de clientes y generación de facturas.</p>
+<p>Para información detallada sobre los servicios individuales, consulte <a href="/docs/servicio-clientes" class="content-link">servicio-clientes</a> y <a href="/docs/servicio-facturacion" class="content-link">servicio-facturacion</a>. Para instrucciones de compilación y despliegue, vea <a href="/docs/primeros-pasos" class="content-link">Primeros Pasos</a>.</p>
+
+## Visión General de Microservicios
+
+<p>El sistema FitLive está construido como una arquitectura de microservicios con dos servicios independientes que comparten una base de datos PostgreSQL común. Cada servicio es una aplicación Spring Boot autónoma que puede ser compilada, desplegada y escalada de forma independiente.</p>
+
+### Arquitectura de Sistema de Alto Nivel
+
+<ImageViewer 
+    src="/src/assets/arquitectura-sistema-alto-nivel.svg" 
+    alt="Diagrama de alto nivel que muestra la interacción entre clientes externos (web/móvil), los dos microservicios de backend, servicios externos como PeruDevs, y el almacenamiento de datos en PostgreSQL y H2."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="1-93" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="1-104" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/ServicioClientesApplication.java" lines="1-13" />
+</SourceReference>
+
+### Responsabilidades de los Servicios
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Servicio</th>
+                <th>Responsabilidad Principal</th>
+                <th>Tecnologías Clave</th>
+                <th>Puerto</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">servicio-clientes</code></td>
+                <td>Gestión de datos de clientes, validación de RUC/DNI, integración con API externa.</td>
+                <td>SpringDoc OpenAPI, HTTP Client, JPA</td>
+                <td>8080</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">servicio-facturacion</code></td>
+                <td>Generación de facturas, creación de PDF, generación de códigos QR.</td>
+                <td>OpenPDF, ZXing, JPA</td>
+                <td>TBD</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="11-15" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="11-15" />
+</SourceReference>
+
+## Stack Tecnológico
+
+<p>Ambos microservicios comparten una base tecnológica común construida sobre Spring Boot y Java, con librerías específicas para sus responsabilidades únicas.</p>
+
+### Stack Tecnológico Común
+
+<ImageViewer 
+    src="/src/assets/stack-tecnologico-comun.svg" 
+    alt="Diagrama que muestra las tecnologías comunes compartidas por ambos servicios, incluyendo Java, Spring Boot, Spring Data JPA, Hibernate, Flyway, PostgreSQL, H2 y Maven."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="5-10" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="29-31" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="34-81" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="5-10" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="29-31" />
+</SourceReference>
+
+### Dependencias Específicas del Servicio
+
+#### Stack Tecnológico de servicio-clientes
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Dependencia</th>
+                <th>Versión</th>
+                <th>Propósito</th>
+                <th>Coordenadas Maven</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>SpringDoc OpenAPI</td>
+                <td>2.8.13</td>
+                <td>Documentación de API REST (Swagger UI)</td>
+                <td><code>springdoc-openapi-starter-webmvc-ui</code></td>
+            </tr>
+            <tr>
+                <td>Java HTTP Client</td>
+                <td>Incorporado (Java 22)</td>
+                <td>Integración con API externa (PeruDevs)</td>
+                <td>Incorporado en el JDK</td>
+            </tr>
+            <tr>
+                <td>Jackson</td>
+                <td>Por defecto de Spring Boot</td>
+                <td>Serialización/deserialización de JSON</td>
+                <td>Incluido con <code>spring-boot-starter-web</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="50-54" />
+</SourceReference>
+
+#### Stack Tecnológico de servicio-facturacion
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Dependencia</th>
+                <th>Versión</th>
+                <th>Propósito</th>
+                <th>Coordenadas Maven</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>OpenPDF</td>
+                <td>3.0.0</td>
+                <td>Generación de documentos PDF</td>
+                <td><code>com.github.librepdf:openpdf</code></td>
+            </tr>
+            <tr>
+                <td>ZXing Core</td>
+                <td>3.5.3</td>
+                <td>Generación de códigos QR (librería principal)</td>
+                <td><code>com.google.zxing:core</code></td>
+            </tr>
+            <tr>
+                <td>ZXing JavaSE</td>
+                <td>3.5.3</td>
+                <td>Generación de códigos QR (soporte para Java SE)</td>
+                <td><code>com.google.zxing:javase</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="49-65" />
+</SourceReference>
+
+## Patrones de Arquitectura de Servicios
+
+### Arquitectura en Capas
+
+<p>Ambos microservicios siguen una arquitectura limpia en capas con una clara separación de responsabilidades:</p>
+
+<ImageViewer 
+    src="/src/assets/arquitectura-en-capas-detallada.svg" 
+    alt="Diagrama que detalla la arquitectura en capas para ambos servicios, mostrando las capas de API, Servicio, Integración, Documentos y Datos, y sus componentes respectivos como Controladores, Servicios, Adaptadores y Repositorios."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="34-48" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="33-47" />
+</SourceReference>
+
+### Optimización de Caché y Rendimiento
+
+<p>El servicio <code class="artifact-id">servicio-clientes</code> implementa una estrategia de caché utilizando la base de datos como una capa de caché:</p>
+<ol>
+    <li><strong>Estrategia Local-Primero</strong>: Consulta primero la base de datos PostgreSQL para los datos del cliente.</li>
+    <li><strong>Fallback Externo</strong>: Consulta la API de PeruDevs solo si no se encuentra en la caché (cache miss).</li>
+    <li><strong>Población Automática</strong>: Persiste las respuestas de la API externa en la base de datos para futuras solicitudes.</li>
+    <li><strong>Beneficio de Rendimiento</strong>: Reduce las llamadas a la API externa y mejora los tiempos de respuesta.</li>
+</ol>
+<p>Este patrón se detalla más en <a href="/docs/servicio-clientes/capa-servicio-logica-negocio" class="content-link">Capa de Servicio y Lógica de Negocio</a>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="45-48" />
+</SourceReference>
+
+## Arquitectura de la Base de Datos
+
+### Modelo de Base de Datos Compartida
+
+<p>Ambos microservicios se conectan a una base de datos PostgreSQL compartida llamada <code class="artifact-id">facturacion_db</code>. Si bien esto crea cierto acoplamiento entre los servicios, simplifica las transacciones y la consistencia de los datos para las operaciones de facturación.</p>
+
+<ImageViewer 
+    src="/src/assets/arquitectura-bd-compartida.svg" 
+    alt="Diagrama de la arquitectura de base de datos, mostrando cómo ambos microservicios acceden a una base de datos PostgreSQL compartida, interactuando con las tablas de clientes, facturas y el historial de migraciones de Flyway."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="45-81" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="44-92" />
+</SourceReference>
+
+### Versionado de Esquema con Flyway
+
+<p>Ambos servicios utilizan Flyway para la gestión del esquema de la base de datos:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Componente</th>
+                <th>Versión</th>
+                <th>Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>flyway-core</code></td>
+                <td>11.14.0</td>
+                <td>Motor de migración principal</td>
+            </tr>
+            <tr>
+                <td><code>flyway-database-postgresql</code></td>
+                <td>11.14.0</td>
+                <td>Soporte específico para PostgreSQL</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Flyway rastrea las migraciones aplicadas en la tabla <code class="artifact-id">flyway_schema_history</code>, asegurando una evolución consistente del esquema en todos los entornos.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="56-67" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="68-78" />
+</SourceReference>
+
+### Bases de Datos de Desarrollo vs. Producción
+
+<p>El sistema soporta dos configuraciones de base de datos:</p>
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Entorno</th>
+                <th>Base de Datos</th>
+                <th>Versión del Controlador</th>
+                <th>Alcance</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Producción</td>
+                <td>PostgreSQL</td>
+                <td>42.7.8</td>
+                <td><code>runtime</code></td>
+            </tr>
+            <tr>
+                <td>Desarrollo/Pruebas</td>
+                <td>H2 (en memoria)</td>
+                <td>2.4.240</td>
+                <td><code>runtime</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>La base de datos H2 proporciona un almacenamiento rápido en memoria para el desarrollo y las pruebas, sin necesidad de instalar PostgreSQL.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="69-81" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="80-92" />
+</SourceReference>
+
+## Integraciones Externas
+
+### Integración con la API de PeruDevs
+
+<p>El <code class="artifact-id">servicio-clientes</code> El servicio-clientes se integra con el servicio externo API de PeruDevs para validar y obtener documentos de identificación tributaria peruanos (RUC y DNI).</p>
+
+<ImageViewer 
+    src="/src/assets/integracion-api-perudevs.svg" 
+    alt="Diagrama que muestra el flujo de integración con la API de PeruDevs. El ClienteServiceImpl utiliza un PeruDevsAdapter para realizar llamadas GET con una clave de API a los endpoints de RUC y DNI de PeruDevs."
+/>
+
+<p><strong>Detalles de la Integración:</strong></p>
+<ul>
+    <li><strong>Protocolo</strong>: HTTP/REST usando el <code>HttpClient</code> incorporado de Java (Java 22).</li>
+    <li><strong>Autenticación</strong>: Basada en clave de API. (API Key).</li>
+    <li><strong>Formato de Datos</strong>: Petición/respuesta JSON usando Jackson para la deserialización.</li>
+    <li><strong>Manejo de Errores</strong>: El patrón Adapter (Adapter Pattern) aísla los fallos de la API externa de la capa de servicio.</li>
+</ul>
+<p>Para especificaciones detalladas de la integración, consulte <a href="/docs/servicio-clientes/integraciones-externas-perudevs" class="content-link">Integraciones Externas: PeruDevs API</a>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="29-31" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="34-37" />
+</SourceReference>
+
+## Infraestructura de Compilación y Despliegue
+
+### Sistema de Compilación Maven
+
+<p>Ambos servicios usan Maven con el plugin Spring Boot Maven para la compilación y el empaquetado:</p>
+
+<ImageViewer 
+    src="/src/assets/sistema-compilacion-maven.svg" 
+    alt="Diagrama del sistema de compilación Maven, mostrando cómo el POM padre de Spring Boot y el plugin de Spring Boot Maven son utilizados por los POM de ambos servicios para generar los artefactos de compilación finales."
+/>
+
+<p><strong>Artefactos de Compilación:</strong></p>
+<ul>
+    <li><strong>ID de Grupo</strong>: <code>com.facturacion</code></li>
+    <li><strong>Versión</strong>: <code>0.0.1-SNAPSHOT</code></li>
+    <li><strong>Empaquetado</strong>: JAR ejecutable con Tomcat embebido.</li>
+    <li><strong>Versión de Java</strong>: Java 22</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="5-31" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="84-91" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="5-31" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="95-102" />
+</SourceReference>
+
+### Puntos de Entrada de la Aplicación
+
+<p>Cada microservicio tiene una clase de aplicación estándar de Spring Boot:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Servicio</th>
+                <th>Clase Principal</th>
+                <th>Paquete</th>
+                <th>Anotación</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>servicio-clientes</td>
+                <td><code class="artifact-id">ServicioClientesApplication</code></td>
+                <td><code>com.facturacion.servicioclientes</code></td>
+                <td><code>@SpringBootApplication</code></td>
+            </tr>
+            <tr>
+                <td>servicio-facturacion</td>
+                <td><code class="artifact-id">ServicioFacturacionApplication</code></td>
+                <td><code>com.facturacion.serviciofacturacion</code></td>
+                <td><code>@SpringBootApplication</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>La anotación <code>@SpringBootApplication</code> habilita la auto-configuración de Spring Boot, el escaneo de componentes y el soporte de propiedades de configuración.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/ServicioClientesApplication.java" lines="1-13" />
+</SourceReference>
+
+### Características de Despliegue
+
+<p><strong>Servidor Embebido:</strong></p>
+<ul>
+    <li>Spring Boot usa Tomcat embebido (vía <code>spring-boot-starter-web</code>).</li>
+    <li>No se requiere un servidor de aplicaciones externo.</li>
+    <li>Modelo de despliegue autocontenido en un archivo JAR.</li>
+</ul>
+
+<p><strong>Gestión de Configuración:</strong></p>
+<ul>
+    <li>Propiedades de la aplicación externalizadas mediante archivos <code>application.properties</code> o <code>application.yml</code>.</li>
+    <li>Soporte para perfiles específicos de entorno (dev, prod).</li>
+    <li>Cadenas de conexión de base de datos configurables por entorno.</li>
+</ul>
+<p>Para procedimientos de despliegue detallados, consulte <a href="/docs/primeros-pasos" class="content-link">Primeros Pasos</a> y <a href="/docs/servicio-clientes/configuracion-y-despliegue" class="content-link">Configuración y Despliegue</a>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="34-37" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="33-36" />
+</SourceReference>
+
+## Comunicación entre Servicios
+
+<p>Aunque ambos servicios operan de forma independiente, es posible que <code class="artifact-id">servicio-facturacion</code> necesite hacer referencia a datos de clientes desde <code class="artifact-id">servicio-clientes</code>:</p>
+
+<p><strong>Opciones de Comunicación:</strong></p>
+<ol>
+    <li><strong>Acceso Directo a la Base de Datos</strong>: Consultar la tabla <code>clientes</code> directamente (modelo actual de base de datos compartida).</li>
+    <li><strong>Llamadas a la API REST</strong>: Peticiones HTTP desde <code>servicio-facturacion</code> a los endpoints de <code>servicio-clientes</code>.</li>
+    <li><strong>Orientado a Eventos</strong>: Consideración futura para mensajería asíncrona.</li>
+</ol>
+<p>La arquitectura actual favorece la simplicidad con el acceso a la base de datos compartida, aunque esto crea un acoplamiento que podría refactorizarse a una comunicación basada en REST para un mejor aislamiento de los servicios.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="1-93" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="1-104" />
+</SourceReference>

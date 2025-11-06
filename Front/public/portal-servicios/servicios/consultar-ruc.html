@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Consultar RUC</title>
+    <link rel="stylesheet" href="../css/dasd.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body>
+<header class="navbar">
+    <div class="container">
+        <a href="#" class="logo">
+            <i class="bi bi-activity"></i> FitLive
+        </a>
+        <nav class="nav-links">
+            <a href="../index.html">Otros Servicios</a>
+            <a href="../../index.html">Portal Gimnasio</a>
+            <a href="/docs/index">Documentacion</a>
+        </nav>
+    </div>
+</header>
+<div class="container">
+    <div class="page-header">
+        <a href="../index.html">&larr; Volver al Portal</a>
+        <h1>Consultar RUC</h1>
+    </div>
+    <main>
+        <form id="formConsultaRuc">
+            <div class="form-group">
+                <label for="inputRuc">Número de RUC:</label>
+                <input
+                        type="text"
+                        id="inputRuc"
+                        placeholder="Ingrese 11 dígitos numéricos"
+                        required
+                        maxlength="11"
+                        minlength="11"
+                        pattern="[0-9]{11}"
+                        inputmode="numeric"
+                        title="El RUC debe contener exactamente 11 dígitos numéricos.">
+            </div>
+            <button type="submit" id="btnBuscarRuc">Buscar RUC</button>
+        </form>
+        <div id="resultadoRuc" class="results-box" style="display: none;"></div>
+    </main>
+</div>
+<script src="../js/consulta-ruc.js"></script>
+</body>
+</html>

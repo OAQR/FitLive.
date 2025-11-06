@@ -1,0 +1,424 @@
+---
+title: "Pruebas"
+description: "Este documento cubre la infraestructura y el enfoque de pruebas para servicio-clientes. Describe las dependencias de prueba disponibles, la implementación actual y las estrategias de prueba para las diferentes capas de la arquitectura del servicio de gestión de clientes."
+---
+
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Pruebas
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-clientes/pom.xml" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/test/java/com/facturacion/servicioclientes/ServicioClientesApplicationTests.java" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento cubre la infraestructura y el enfoque de pruebas para <code class="artifact-id">servicio-clientes</code>. Describe las dependencias de prueba disponibles, la implementación actual y las estrategias de prueba para las diferentes capas de la arquitectura del servicio de gestión de clientes.</p>
+<p>Para información sobre la configuración y el despliegue, consulte <a href="/docs/servicio-clientes/configuracion-y-despliegue" class="content-link">Configuración y Despliegue</a>. Para detalles sobre la arquitectura del servicio que se está probando, consulte <a href="/docs/servicio-clientes/capa-servicio-logica-negocio" class="content-link">Capa de Servicio y Lógica de Negocio</a>.</p>
+
+## Infraestructura de Pruebas
+
+<p>El microservicio <code class="artifact-id">servicio-clientes</code> utiliza el framework de pruebas de Spring Boot construido sobre JUnit 5 (Jupiter). La infraestructura de pruebas se configura en el archivo POM de Maven con las siguientes dependencias clave:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Dependencia</th>
+                <th scope="col">Versión</th>
+                <th scope="col">Ámbito</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>spring-boot-starter-test</code></td>
+                <td>3.5.6 (heredada)</td>
+                <td>test</td>
+                <td>Proporciona JUnit 5, Spring Test, AssertJ, Mockito y otras utilidades de prueba.</td>
+            </tr>
+            <tr>
+                <td><code>h2</code></td>
+                <td>2.4.240</td>
+                <td>runtime</td>
+                <td>Base de datos en memoria para la ejecución de pruebas.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>La dependencia <code>spring-boot-starter-test</code> incluye varias librerías de prueba:</p>
+<ul>
+    <li><strong>JUnit 5 (Jupiter)</strong>: Framework de ejecución de pruebas.</li>
+    <li><strong>Spring Test &amp; Spring Boot Test</strong>: Soporte para el contexto de la aplicación Spring y utilidades de prueba.</li>
+    <li><strong>AssertJ</strong>: Librería de aserciones fluidas (fluent assertion).</li>
+    <li><strong>Hamcrest</strong>: Librería de matchers.</li>
+    <li><strong>Mockito</strong>: Framework de mocking.</li>
+    <li><strong>JSONassert</strong>: Librería de aserciones para JSON.</li>
+    <li><strong>JsonPath</strong>: Librería de consultas para JSON.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="40-43" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="70-74" />
+</SourceReference>
+
+## Entorno de Ejecución de Pruebas
+
+### Base de Datos H2 en Memoria
+
+<p>El servicio utiliza la base de datos H2 para la ejecución de pruebas, evitando la necesidad de una instancia de PostgreSQL durante las pruebas. Spring Boot autoconfigura H2 cuando detecta la dependencia en el classpath y no hay una base de datos de producción configurada para el perfil de prueba.</p>
+
+<ImageViewer 
+    src="/src/assets/configuracion-bd-pruebas-produccion.svg" 
+    alt="Diagrama que compara la configuración de base de datos para pruebas (con H2 en memoria) y para producción (con PostgreSQL)."
+/>
+
+<p><strong>Diagrama:</strong> Configuración de Base de Datos para Test vs. Producción</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="70-74" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="77-81" />
+</SourceReference>
+
+## Implementación Actual de Pruebas
+
+### ServicioClientesApplicationTests
+
+<p>El servicio contiene actualmente una única clase de prueba de integración que verifica que el contexto de la aplicación Spring se carga correctamente.</p>
+
+<ImageViewer 
+    src="/src/assets/estructura-servicioclientesapplicationtests.svg" 
+    alt="Diagrama que muestra la estructura de la clase de prueba ServicioClientesApplicationTests, destacando la anotación @SpringBootTest y el método de prueba contextLoads()."
+/>
+
+<p><strong>Diagrama:</strong> Estructura de ServicioClientesApplicationTests</p>
+
+<p>La clase de prueba es mínima pero esencial:</p>
+<ul>
+    <li>
+        <SourceReference variant="table" label='' textBefore="<strong>Ubicación</strong>: ">
+            <SourceBtn path="Back/servicio-clientes/src/test/java/com/facturacion/servicioclientes/ServicioClientesApplicationTests.java" lines="1-13" buttonMode="inline-/n" />
+        </SourceReference>
+    </li>
+    <li><strong>Anotación</strong>: <code>@SpringBootTest</code> – Carga el contexto completo de la aplicación.</li>
+    <li><strong>Método de Prueba</strong>: <code>contextLoads()</code> – Verifica que todos los beans puedan ser instanciados sin errores.</li>
+</ul>
+<p>Esta prueba valida que:</p>
+<ul>
+    <li>La aplicación Spring Boot se inicia correctamente.</li>
+    <li>Todos los beans <code>@Component</code>, <code>@Service</code>, <code>@Repository</code> y <code>@Controller</code> son creados.</li>
+    <li>La inyección de dependencias de los beans está configurada correctamente.</li>
+    <li>La conectividad con la base de datos (H2) funciona.</li>
+    <li>Las migraciones de Flyway se ejecutan con éxito.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/test/java/com/facturacion/servicioclientes/ServicioClientesApplicationTests.java" lines="1-13" />
+</SourceReference>
+
+## Estrategia de Pruebas por Capa de Arquitectura
+
+<p>La arquitectura de <code class="artifact-id">servicio-clientes</code> consta de múltiples capas, cada una de las cuales requiere diferentes enfoques de prueba:</p>
+
+<ImageViewer 
+    src="/src/assets/piramide-pruebas-mapeo-capas.svg" 
+    alt="Diagrama de la pirámide de pruebas mapeado a las capas de la arquitectura del servicio, mostrando pruebas unitarias, de servicio y de integración."
+/>
+
+<p><strong>Diagrama:</strong> Pirámide de Pruebas y Mapeo de Capas</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/test/java/com/facturacion/servicioclientes/ServicioClientesApplicationTests.java" lines="1-13" />
+</SourceReference>
+
+## Tipos y Enfoques de Pruebas
+
+### Pruebas de Integración (<code class="artifact-id">@SpringBootTest</code>)
+
+<p>Las pruebas de integración cargan el contexto completo de la aplicación Spring y prueban el funcionamiento conjunto de los componentes.</p>
+<p><strong>Implementación Actual:</strong></p>
+<ul>
+    <li>
+        <SourceReference variant="table" textBefore="<code>ServicioClientesApplicationTests.contextLoads()</code>">
+            <SourceBtn path="Back/servicio-clientes/src/test/java/com/facturacion/servicioclientes/ServicioClientesApplicationTests.java" lines="9-11" buttonMode="inline-/n" />
+        </SourceReference>
+    </li>
+</ul>
+
+<p><strong>Recomendado para:</strong></p>
+
+<ul>
+    <li>Pruebas de endpoints del controlador con <code>@AutoConfigureMockMvc</code>.</li>
+    <li>Pruebas de integración de la base de datos con <code>ClienteRepository</code>.</li>
+    <li>Probar el flujo completo de petición-respuesta.</li>
+    <li>Verificar las migraciones de Flyway.</li>
+</ul>
+
+<p><strong>Ejemplo de Estructura de Prueba:</strong></p>
+
+<CodeBlock language="java" code={`@SpringBootTest
+@AutoConfigureMockMvc
+class ClienteControllerIntegrationTest {
+    // Pruebas de peticiones HTTP completas a los endpoints /api/v1/clientes
+}`} />
+
+### Pruebas de la Capa de Servicio (<code class="artifact-id">@MockBean</code>)
+
+<p>Las pruebas de la capa de servicio se centran en la lógica de negocio mientras se simulan (mocking) las dependencias.</p>
+<p><strong>Recomendado para:</strong></p>
+<ul>
+    <li>Probar la lógica de caché de <code>ClienteServiceImpl</code>.</li>
+    <li>Verificar el fallback a <code>PeruDevsAdapter</code> en caso de fallo de caché (cache miss).</li>
+    <li>Probar la transformación y el mapeo de datos.</li>
+    <li>Validar el manejo de errores.</li>
+</ul>
+<p><strong>Ejemplo de Estructura de Prueba:</strong></p>
+<CodeBlock language="java" code={`@SpringBootTest
+class ClienteServiceImplTest {
+    @Autowired
+    private ClienteServiceImpl service;
+    
+    @MockBean
+    private ClienteRepository repository;
+    
+    @MockBean
+    private PeruDevsAdapter adapter;
+    
+    // Métodos de prueba del servicio con dependencias simuladas
+}`} />
+
+### Pruebas Unitarias (Sin Contexto de Spring)
+
+<p>Pruebas de Java puras sin la sobrecarga del framework Spring.</p>
+<p><strong>Recomendado para:</strong></p>
+<ul>
+    <li>Probar las transformaciones de DTO de <code>ClienteMapper</code>.</li>
+    <li>Probar métodos de utilidad.</li>
+    <li>Probar la lógica de validación de datos.</li>
+</ul>
+<p><strong>Ejemplo de Estructura de Prueba:</strong></p>
+<CodeBlock language="java" code={`class ClienteMapperTest {
+    private ClienteMapper mapper = new ClienteMapper();
+    
+    // Pruebas de mapeos de entidad a DTO y de DTO a entidad
+}`} />
+
+### Pruebas de Integración Externa (<code>@MockBean</code>o WireMock)
+
+<p>Pruebas para la integración de API externas con <code class="artifact-id">PeruDevsAdapter</code>.</p>
+<p><strong>Recomendado para:</strong></p>
+<ul>
+    <li>Simular (mocking) las respuestas de <code>PeruDevsAdapter</code>.</li>
+    <li>Probar el manejo de errores para fallos de la API externa.</li>
+    <li>Verificar la construcción de las peticiones a la API.</li>
+</ul>
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="40-43" />
+</SourceReference>
+
+## Ejecución de Pruebas
+
+### Comandos de Maven
+
+<p>Ejecute las pruebas utilizando los comandos del Maven Wrapper:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Comando</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>./mvnw test</code></td>
+                <td>Ejecutar todas las pruebas.</td>
+            </tr>
+            <tr>
+                <td><code>./mvnw test -Dtest=ServicioClientesApplicationTests</code></td>
+                <td>Ejecutar una clase de prueba específica.</td>
+            </tr>
+            <tr>
+                <td><code>./mvnw verify</code></td>
+                <td>Ejecutar pruebas unitarias y de integración.</td>
+            </tr>
+            <tr>
+                <td><code>./mvnw clean test</code></td>
+                <td>Limpiar la compilación y ejecutar las pruebas.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Flujo de Ejecución de Pruebas
+
+<ImageViewer 
+    src="/src/assets/secuencia-ejecucion-pruebas.svg" 
+    alt="Diagrama de secuencia que muestra el flujo de ejecución de pruebas, desde la invocación del comando de Maven hasta la carga del contexto de Spring y la ejecución de los métodos de prueba."
+/>
+
+<p><strong>Diagrama: </strong>Secuencia de Ejecución de Tests</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="84-91" />
+    <SourceBtn path="Back/servicio-clientes/src/test/java/com/facturacion/servicioclientes/ServicioClientesApplicationTests.java" lines="6-11" />
+</SourceReference>
+
+## Configuración de Pruebas
+
+### Perfil de Prueba por Defecto
+
+<p>Spring Boot utiliza automáticamente una configuración específica para las pruebas durante su ejecución. La base de datos H2 se autoconfigura basándose en la detección de dependencias en el classpath.</p>
+<p><strong>Prioridad de Configuración:</strong></p>
+<ol>
+    <li><code>src/test/resources/application-test.properties</code> (si existe)</li>
+    <li><code>src/test/resources/application.properties</code> (si existe)</li>
+    <li><code>src/main/resources/application.properties</code> (fallback)</li>
+    <li>Valores por defecto de la autoconfiguración</li>
+</ol>
+
+### Inicialización de la Base de Datos
+
+<p>Cuando las pruebas se ejecutan con <code class="artifact-id">@SpringBootTest</code>:</p>
+<ol>
+    <li>La base de datos H2 en memoria se inicia automáticamente.</li>
+    <li>Las migraciones de Flyway se ejecutan (desde <code>src/main/resources/db/migration/</code>).</li>
+    <li>Los datos de prueba pueden cargarse mediante la anotación <code>@Sql</code>.</li>
+    <li>La base de datos se destruye después de la ejecución de las pruebas.</li>
+</ol>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="70-74" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="57-67" />
+</SourceReference>
+
+## Matriz de Cobertura de Pruebas
+
+<p>La siguiente tabla mapea los componentes de la arquitectura a los tipos de prueba recomendados:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Componente</th>
+                <th scope="col">Clase/Interfaz</th>
+                <th scope="col">Tipo de Prueba</th>
+                <th scope="col">Dependencias de Prueba</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Controlador REST</td>
+                <td><code>ClienteController</code></td>
+                <td>Integración</td>
+                <td><code>@SpringBootTest</code>, <code>@AutoConfigureMockMvc</code></td>
+            </tr>
+            <tr>
+                <td>Capa de Servicio</td>
+                <td><code>ClienteServiceImpl</code></td>
+                <td>Prueba de Servicio</td>
+                <td><code>@MockBean</code> para repositorios/adaptadores</td>
+            </tr>
+            <tr>
+                <td>Repositorio</td>
+                <td><code>ClienteRepository</code></td>
+                <td>Integración</td>
+                <td><code>@DataJpaTest</code> o <code>@SpringBootTest</code></td>
+            </tr>
+            <tr>
+                <td>Adaptador Externo</td>
+                <td><code>PeruDevsAdapter</code></td>
+                <td>Prueba de Servicio</td>
+                <td><code>@MockBean</code> o WireMock</td>
+            </tr>
+            <tr>
+                <td>Mapper</td>
+                <td><code>ClienteMapper</code></td>
+                <td>Prueba Unitaria</td>
+                <td>No se necesita contexto de Spring.</td>
+            </tr>
+            <tr>
+                <td>Entidad</td>
+                <td><code>ClienteEntity</code></td>
+                <td>Prueba Unitaria</td>
+                <td>Pruebas de validación de JPA.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/test/java/com/facturacion/servicioclientes/ServicioClientesApplicationTests.java" lines="1-13" />
+</SourceReference>
+
+## Mejores Prácticas
+
+### Organización de Pruebas
+
+<ul>
+    <li>Ubicar las clases de prueba en la misma estructura de paquetes que el código de producción bajo <code>src/test/java/</code>.</li>
+    <li>Nombrar las clases de prueba con el sufijo <code>Test</code> (ej., <code>ClienteServiceImplTest</code>).</li>
+    <li>Usar nombres de métodos de prueba descriptivos que expresen la intención.</li>
+    <li>Agrupar pruebas relacionadas usando clases de prueba anidadas con <code>@Nested</code>.</li>
+</ul>
+
+### Aislamiento de Pruebas
+
+<ul>
+    <li>Cada prueba debe ser independiente y no depender del orden de ejecución.</li>
+    <li>Usar <code>@BeforeEach</code> para configurar los datos de prueba.</li>
+    <li>Limpiar los recursos en <code>@AfterEach</code> si es necesario.</li>
+    <li>Evitar el estado mutable compartido entre pruebas.</li>
+</ul>
+
+### Simulación de Dependencias Externas (Mocking)
+
+<ul>
+    <li>Simular (mock) <code>PeruDevsAdapter</code> para evitar llamadas a API externas durante las pruebas.</li>
+    <li>Usar <code>@MockBean</code> para componentes gestionados por Spring.</li>
+    <li>Usar <code>when().thenReturn()</code> de Mockito para respuestas predecibles.</li>
+    <li>Verificar las interacciones con <code>verify()</code> al probar el comportamiento.</li>
+</ul>
+
+### Pruebas de Base de Datos
+
+<ul>
+    <li>Usar el modo de compatibilidad de H2 para PostgreSQL: <code>MODE=PostgreSQL</code>.</li>
+    <li>Probar que las migraciones de Flyway se ejecutan correctamente.</li>
+    <li>Usar <code>@Transactional</code> en las pruebas para revertir automáticamente los cambios en la base de datos.</li>
+    <li>Considerar la anotación <code>@Sql</code> para la configuración de datos de prueba complejos.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="40-43" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="70-74" />
+</SourceReference>
+
+## Resumen
+
+<p>La infraestructura de pruebas de <code class="artifact-id">servicio-clientes</code> se basa en Spring Boot Test con JUnit 5, proporcionando:</p>
+<ul>
+    <li><strong>Framework</strong>: Spring Boot 3.5.6 test starter con JUnit 5.</li>
+    <li><strong>Base de Datos</strong>: Base de datos H2 en memoria para el aislamiento de pruebas.</li>
+    <li><strong>Cobertura Actual</strong>: Prueba básica de carga del contexto de la aplicación.</li>
+    <li><strong>Ejecución</strong>: Comandos del Maven Wrapper (<code>./mvnw test</code>).</li>
+    <li><strong>Arquitectura</strong>: Soporte para pruebas de integración, de servicio y unitarias en todas las capas.</li>
+</ul>
+<p>La prueba existente <code>ServicioClientesApplicationTests</code> proporciona una validación fundamental de que el contexto de la aplicación y las dependencias están configurados correctamente.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="40-43" />
+    <SourceBtn path="Back/servicio-clientes/src/test/java/com/facturacion/servicioclientes/ServicioClientesApplicationTests.java" lines="1-13" />
+</SourceReference>

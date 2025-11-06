@@ -1,0 +1,18 @@
+---
+/**
+ * Muestra un bloque de código pre-formateado.
+ * Acepta el código como una única cadena de texto (con saltos de línea)
+ * o como un array de strings.
+ */
+interface Props {
+  code: string | string[];
+  class?: string;
+}
+
+const { code, class: extraClass = '' } = Astro.props;
+const formattedCode = Array.isArray(code) ? code.join('\n') : code;
+---
+
+<div class={`code-block ${extraClass}`}>
+  <pre><code>{formattedCode}</code></pre>
+</div>

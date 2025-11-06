@@ -1,0 +1,242 @@
+---
+title: "servicio-clientes: Gestión de Clientes"
+description: "El microservicio servicio-clientes es responsable de gestionar la información de los clientes dentro del sistema de facturación FitLive. Proporciona endpoints de API REST para recuperar y almacenar datos de clientes."
+---
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# servicio-clientes: Servicio de Gestión de Clientes
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-clientes/pom.xml" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/ServicioClientesApplication.java" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>El microservicio <code class="artifact-id">servicio-clientes</code> es responsable de gestionar la información de los clientes dentro del sistema de facturación de FitLive. Este servicio proporciona endpoints de API REST para recuperar y almacenar datos de clientes, con integración a servicios de validación externos para documentos de identificación fiscal peruanos (RUC y DNI).</p>
+<p>Esta página proporciona una visión arquitectónica del servicio, sus componentes principales y cómo se integra dentro del sistema más grande. Para información detallada sobre aspectos específicos, consulte:</p>
+
+<ul>
+    <li>Especificaciones de endpoints de la API REST: <a href="/docs/servicio-clientes/endpoints-api-rest" class="content-link">Endpoints de la API REST</a></li>
+    <li>Estructuras de datos y contratos: <a href="/docs/servicio-clientes/objetos-transferencia-datos" class="content-link">Objetos de Transferencia de Datos (DTOs)</a></li>
+    <li>Implementación de la lógica de negocio: <a href="/docs/servicio-clientes/capa-servicio-logica-negocio" class="content-link">Capa de Servicio y Lógica de Negocio</a></li>
+    <li>Esquema de base de datos y entidades: <a href="/docs/servicio-clientes/modelo-datos-persistencia" class="content-link">Modelo de Datos y Persistencia</a></li>
+    <li>Integración con API externa: <a href="/docs/servicio-clientes/integraciones-externas-perudevs" class="content-link">Integraciones Externas: PeruDevs API</a></li>
+    <li>Despliegue y configuración: <a href="/docs/servicio-clientes/configuracion-y-despliegue" class="content-link">Configuración y Despliegue</a></li>
+    <li>Para el servicio de generación de facturas: <a href="/docs/servicio-facturacion" class="content-link">servicio-facturacion: Servicio de Facturación</a></li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="14-15" />
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="1" />
+</SourceReference>
+
+## Responsabilidades del Servicio
+
+<p>El microservicio <code class="artifact-id">servicio-clientes</code> realiza las siguientes funciones principales:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr><th>Responsabilidad</th><th>Descripción</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>Gestión de Datos de Clientes</strong></td><td>Almacena y recupera información de clientes, incluyendo RUC (ID fiscal), razón social, dirección y estado.</td></tr>
+            <tr><td><strong>Validación de Documentos</strong></td><td>Consulta servicios externos para validar y recuperar información de RUC y DNI (ID nacional).</td></tr>
+            <tr><td><strong>Caché de Datos</strong></td><td>Mantiene una caché local de los datos de clientes previamente consultados para minimizar las llamadas a APIs externas.</td></tr>
+            <tr><td><strong>Puerta de Enlace API (API Gateway)</strong></td><td>Expone endpoints RESTful para operaciones de clientes, accesibles por aplicaciones web y móviles.</td></tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="15" />
+</SourceReference>
+
+## Stack Tecnológico
+
+<p>El servicio está construido sobre las siguientes tecnologías:</p>
+
+<ImageViewer 
+    src="/src/assets/servicio-clientes-stack-tecnologico.svg"
+    alt="Diagrama del stack tecnológico de servicio-clientes, mostrando las capas de Runtime, Web, Datos e Integración con sus respectivas tecnologías como Java, Spring Boot, Spring MVC, Spring Data JPA, Hibernate, PostgreSQL, Flyway, y el HTTP Client de Java."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="7-8" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="30" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="34-81" />
+</SourceReference>
+
+## Punto de Entrada de la Aplicación
+
+<p>El servicio se inicializa a través de la clase de aplicación estándar de Spring Boot <code class="artifact-id">ServicioClientesApplication</code>, que arranca todos los componentes, configuraciones y dependencias definidos en el servicio.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/ServicioClientesApplication.java" lines="1-13" />
+</SourceReference>
+
+## Arquitectura Principal
+
+<p>El servicio sigue un patrón de arquitectura en capas con una clara separación de responsabilidades:</p>
+
+<ImageViewer 
+    src="/src/assets/servicio-clientes-arquitectura-principal.svg"
+    alt="Diagrama de la arquitectura principal de servicio-clientes, mostrando la interacción entre la Capa de API (Controller, WebConfig), la Capa de Servicio (ServiceImpl, Mapper), la Capa de Integración (Adapter), la Capa de Acceso a Datos (Repository, Entity) y los sistemas externos."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="34-81" />
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="1-13" />
+</SourceReference>
+
+### Descripciones de las Capas
+
+<p><strong>Capa de API</strong> - Expone endpoints REST a través de <code class="artifact-id">ClienteController</code> para operaciones de clientes (búsqueda por RUC, DNI, etc.). La clase <code class="artifact-id">WebConfig</code> configura las políticas de CORS para permitir solicitudes de origen cruzado (cross-origin) desde la aplicación web.</p>
+<p><strong>Capa de Servicio</strong> - Contiene la lógica de negocio en <code class="artifact-id">ClienteServiceImpl</code>, implementando la estrategia de caché inteligente. <code class="artifact-id">ClienteMapper</code> se encarga de las transformaciones entre entidades de dominio y objetos de transferencia de datos. (Service Layer)</p>
+<p><strong>Capa de Integración</strong> - El <code class="artifact-id">PeruDevsAdapter</code> encapsula toda la comunicación con la API externa del servicio PeruDevs, manejando la autenticación, el formato de las solicitudes y el análisis de las respuestas.</p>
+<p><strong>Capa de Acceso a Datos</strong> - Utiliza Spring Data JPA con <code class="artifact-id">ClienteRepository</code> para operaciones de base de datos sobre objetos <code class="artifact-id">ClienteEntity</code>, que se mapean a la tabla <code class="artifact-id">clientes</code> en PostgreSQL.</p>
+
+<SourceReference variant="inline-box" textBefore="Basado en diagramas de arquitectura del sistema y patrones estándar de arquitectura en capas de Spring Boot."/>
+
+## Estrategia de Caché y Flujo de Datos
+
+<p>Una de las características clave del servicio es su mecanismo de caché inteligente, que optimiza el rendimiento mientras asegura la disponibilidad de los datos:</p>
+
+<ImageViewer 
+    src="/src/assets/servicio-clientes-flujo-cache.svg"
+    alt="Diagrama de secuencia que muestra el flujo de datos para la estrategia de caché. Detalla los pasos para un acierto de caché (cache hit) donde los datos se recuperan de la base de datos local, y para un fallo de caché (cache miss) donde se consulta la API externa y el resultado se guarda en la base de datos."
+/>
+
+<p>Esta estrategia de caché proporciona varios beneficios:</p>
+<ul>
+    <li><strong>Rendimiento</strong>: Reduce la latencia al servir solicitudes repetidas desde la base de datos local.</li>
+    <li><strong>Eficiencia de Costos</strong>: Minimiza las llamadas a APIs externas (que pueden tener límites de tasa o ser facturadas).</li>
+    <li><strong>Disponibilidad</strong>: Mantiene el acceso a los datos de clientes previamente recuperados incluso si el servicio externo no está disponible.</li>
+    <li><strong>Persistencia de Datos</strong>: Construye una base de datos de clientes local con el tiempo.</li>
+</ul>
+
+<SourceReference variant="inline-box" textBefore="Basado en los diagramas de arquitectura del sistema que muestran el patrón de caché (caching pattern)."/>
+
+## Configuración y Ejecución (Runtime)
+
+<p>El servicio se configura a través de <code class="artifact-id">application.properties</code> con las siguientes configuraciones clave:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr><th>Configuración</th><th>Valor</th><th>Propósito</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>spring.application.name</code></td><td><code>servicio-clientes</code></td><td>Identificador del servicio</td></tr>
+            <tr><td><code>server.port</code></td><td><code>8080</code></td><td>Puerto HTTP para la API REST</td></tr>
+            <tr><td><code>api.perudevs.key</code></td><td>(vacío/configurable)</td><td>Clave de autenticación para la API de PeruDevs</td></tr>
+            <tr><td><code>spring.datasource.url</code></td><td><code>jdbc:postgresql://localhost:5432/facturacion_db</code></td><td>Conexión a PostgreSQL</td></tr>
+            <tr><td><code>spring.jpa.hibernate.ddl-auto</code></td><td><code>validate</code></td><td>Solo validación de esquema (Flyway gestiona las migraciones)</td></tr>
+            <tr><td><code>spring.jpa.open-in-view</code></td><td><code>false</code></td><td>Deshabilitado para prevenir problemas de carga perezosa (lazy loading) en la capa web</td></tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>El servicio requiere una clave de API de PeruDevs válida en la propiedad <code class="artifact-id">api.perudevs.key</code> para la funcionalidad de integración externa. El esquema de la base de datos es gestionado a través de migraciones de Flyway en lugar de la auto-generación de Hibernate.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="1-13" />
+</SourceReference>
+
+## Integración con la Base de Datos
+
+<p>El servicio utiliza PostgreSQL como su almacén de datos principal, con H2 disponible para escenarios de desarrollo y pruebas. El esquema de la base de datos es controlado por versiones a través de migraciones de Flyway:</p>
+<ul>
+    <li><strong>Base de Datos de Producción</strong>: <code>facturacion_db</code> en PostgreSQL</li>
+    <li><strong>Base de Datos de Desarrollo</strong>: H2 en memoria o basada en archivo</li>
+    <li><strong>Gestión de Esquema</strong>: Flyway 11.14.0 con extensiones específicas para PostgreSQL</li>
+    <li><strong>Ubicación de Migraciones</strong>: Scripts de migración SQL (típicamente en <code>src/main/resources/db/migration</code>)</li>
+</ul>
+<p>La configuración <code>spring.jpa.hibernate.ddl-auto=validate</code> asegura que los modelos de entidad de JPA coincidan con el esquema de la base de datos sin permitir que Hibernate modifique el esquema, forzando una gestión de esquema basada en migraciones.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="57-81" />
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="6-11" />
+</SourceReference>
+
+## Documentación de la API
+
+<p>El servicio incluye integración con SpringDoc OpenAPI (versión 2.8.13), que genera automáticamente:</p>
+<ul>
+    <li><strong>Especificación OpenAPI 3.0</strong>: Documentación de API legible por máquina.</li>
+    <li><strong>Swagger UI</strong>: Documentación de API interactiva accesible en <code>/swagger-ui.html</code> cuando el servicio está en ejecución.</li>
+    <li><strong>Explorador de API</strong>: Permite probar endpoints directamente desde el navegador.</li>
+</ul>
+<p>Esta documentación se genera automáticamente a partir de las anotaciones del controlador y las definiciones de DTO, asegurando que se mantenga sincronizada con la implementación real de la API.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="50-54" />
+</SourceReference>
+
+## Puntos de Integración
+
+<p>El servicio se integra con los siguientes sistemas:</p>
+
+<ImageViewer
+    src="/src/assets/servicio-clientes-puntos-integracion.svg"
+    alt="Diagrama de los puntos de integración, mostrando cómo los clientes (Web, Móvil, servicio-facturacion) interactúan con la API REST, la cual a su vez se comunica con el almacenamiento de datos (PostgreSQL) y servicios externos (PeruDevs)."
+/>
+
+<SourceReference variant="inline-box" textBefore="Basado en los diagramas de arquitectura del sistema."/>
+
+## Compilación y Despliegue
+
+<p>El servicio se compila usando Maven con el Plugin de Spring Boot Maven:</p>
+
+<CodeBlock code={`mvn clean install
+mvn spring-boot:run`} />
+
+<p><strong>Resultados clave de la compilación:</strong></p>
+<ul>
+    <li><strong>Artefacto</strong>: <code>servicio-clientes-0.0.1-SNAPSHOT.jar</code></li>
+    <li><strong>ID de Grupo</strong>: <code>com.facturacion</code></li>
+    <li><strong>Empaquetado</strong>: JAR ejecutable con servidor Tomcat embebido</li>
+    <li><strong>Versión de Java</strong>: Requiere Java 22</li>
+</ul>
+<p>El servicio puede ser desplegado como un archivo JAR independiente o contenedorizado usando Docker. Expone el puerto 8080 por defecto y requiere conectividad a PostgreSQL y al endpoint de la API de PeruDevs.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="1-93" />
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="2" />
+</SourceReference>
+
+## Límites del Servicio (Service Boundaries)
+
+<p>El microservicio <code class="artifact-id">servicio-clientes</code> tiene un alcance enfocado y limitado a la gestión de datos de clientes.</p>
+
+<p><strong>Sí hace:</strong></p>
+<ul>
+    <li>Gestiona operaciones CRUD para entidades de clientes.</li>
+    <li>Valida y recupera información de RUC/DNI desde fuentes externas.</li>
+    <li>Almacena en caché datos de clientes localmente para mejorar el rendimiento.</li>
+    <li>Expone una API REST para consultas de clientes.</li>
+</ul>
+
+<p><strong>No hace:</strong></p>
+<ul>
+    <li>Generar facturas (manejado por <a href="/docs/servicio-facturacion" class="content-link">servicio-facturacion</a>).</li>
+    <li>Gestionar autenticación/autorización de usuarios.</li>
+    <li>Procesar pagos o transacciones financieras.</li>
+    <li>Manejar catálogos de productos o inventario.</li>
+</ul>
+<p>Esta clara separación de responsabilidades permite que el servicio sea desarrollado, desplegado y escalado de forma independiente de otros componentes del sistema.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="15" />
+</SourceReference>

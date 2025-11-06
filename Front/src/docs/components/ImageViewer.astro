@@ -1,0 +1,38 @@
+---
+/**
+ * Renderiza un visor de imágenes interactivo con controles de zoom y paneo.
+ */
+interface Props {
+  /** Nombre de la imagen, relativa a la carpeta /docs/assets. */
+  src: string;
+  /** Texto alternativo descriptivo para la imagen. */
+  alt: string;
+}
+
+const images = import.meta.glob('/src/docs/assets/*', { as: 'url', eager: true });
+
+function resolveImageUrl(name: string): string | undefined {
+  const key = Object.keys(images).find(k => k.endsWith(`/${name}`));
+  return key ? images[key] as string : undefined;
+}
+
+const fileName = Astro.props.src;
+const resolvedSrc = resolveImageUrl(fileName);
+---
+<div class="image-viewer">
+    <div class="image-container">
+        <div class="pan-zoom-wrapper">
+            <img src={resolvedSrc} alt={Astro.props.alt} loading="lazy" decoding="async" />
+        </div>
+    </div>
+    <div class="image-controls">
+        💡 Use la rueda del ratón para zoom | Arrastre para mover
+    </div>
+    <i class="bi bi-arrows-fullscreen expand-icon"></i>
+</div>
+
+<script type="module">
+  import { initImageViewer } from '../scripts/imageViewerClient.js';
+  const root = document.querySelector('[data-image-viewer]');
+  if (root) initImageViewer(root);
+</script>

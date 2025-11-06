@@ -1,0 +1,287 @@
+---
+title: "Capa de Servicio y Lógica de Negocio"
+description: "Documenta la implementación de la capa de servicio en servicio-clientes, que contiene la lógica de negocio principal para la recuperación y gestión de datos de clientes."
+---
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Capa de Servicio y Lógica de Negocio
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/mapper/ClienteMapper.java" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/service/ClienteService.java" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/service/ClienteServiceImpl.java" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Esta página documenta la implementación de la capa de servicio en <code class="artifact-id">servicio-clientes</code>, que contiene la lógica de negocio principal para la recuperación y gestión de datos de clientes. La capa de servicio orquesta las interacciones entre la capa de la <a href="/docs/servicio-clientes/endpoints-api-rest" class="content-link">API REST</a>, la capa de <a href="/docs/servicio-clientes/modelo-datos-persistencia" class="content-link">persistencia</a>, y las <a href="/docs/servicio-clientes/integraciones-externas-perudevs" class="content-link">integraciones externas</a>, implementando una sofisticada estrategia de caché para optimizar el rendimiento.</p>
+<p>Para obtener información sobre los DTOs utilizados en esta capa, consulte <a href="/docs/servicio-clientes/objetos-transferencia-datos" class="content-link">Objetos de Transferencia de Datos</a>. Para detalles sobre la comunicación con APIs externas, consulte <a href="/docs/servicio-clientes/integraciones-externas-perudevs" class="content-link">Integraciones Externas</a>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/service/ClienteService.java" lines="1-27" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/service/ClienteServiceImpl.java" lines="1-107" />
+</SourceReference>
+
+## Contrato de la Interfaz de Servicio
+
+<p>La capa de servicio está definida por la interfaz <code class="artifact-id">ClienteService</code>, que establece los contratos para todas las operaciones de recuperación de datos de clientes.</p>
+
+### Definición de la Interfaz
+
+<ImageViewer 
+    src="/src/assets/interfaz-servicio.svg" 
+    alt="Diagrama de clase UML que muestra la interfaz ClienteService y su implementación ClienteServiceImpl, detallando los métodos públicos para buscar por RUC, DNI y documento." 
+/>
+
+### Métodos del Servicio
+
+<TableWrapper>
+    <table>
+        <thead><tr><th>Método</th><th>Parámetro</th><th>Tipo de Retorno</th><th>Propósito</th></tr></thead>
+        <tbody>
+            <tr><td><code class="artifact-id">buscarPorRuc</code></td><td><code>String ruc</code></td><td><code>Optional&lt;ClienteResponse&gt;</code></td><td>Recupera un cliente por RUC con caché.</td></tr>
+            <tr><td><code class="artifact-id">buscarPorDniSimple</code></td><td><code>String dni</code></td><td><code>Optional&lt;DniResponse&gt;</code></td><td>Recupera datos de una persona por DNI.</td></tr>
+            <tr><td><code class="artifact-id">buscarRucAsociadoADni</code></td><td><code>String dni</code></td><td><code>Optional&lt;ClienteResponse&gt;</code></td><td>Encuentra el RUC-10 asociado a un DNI.</td></tr>
+            <tr><td><code class="artifact-id">buscarPorDocumento</code></td><td><code>String documento</code></td><td><code>Optional&lt;ConsultaDocumentoResponse&gt;</code></td><td>Búsqueda unificada que soporta tanto RUC como DNI.</td></tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/service/ClienteService.java" lines="8-27" />
+</SourceReference>
+
+## Arquitectura de la Implementación del Servicio
+
+<p>La clase <code class="artifact-id">ClienteServiceImpl</code> implementa la interfaz de servicio y actúa como el orquestador central para la lógica de negocio.</p>
+
+### Dependencias de Componentes
+
+<ImageViewer 
+    src="/src/assets/dependencias-componentes.svg" 
+    alt="Diagrama de dependencias que muestra cómo ClienteServiceImpl utiliza ClienteRepository, PeruDevsAdapter y ClienteMapper para interactuar con la base de datos y sistemas externos, y para transformar datos entre entidades y DTOs."
+/>
+
+### Inyección de Dependencias
+
+<p>El servicio utiliza inyección de dependencias basada en constructor para gestionar sus tres colaboradores:</p>
+
+<TableWrapper>
+    <table>
+        <thead><tr><th>Dependencia</th><th>Tipo</th><th>Rol</th></tr></thead>
+        <tbody>
+            <tr><td><code class="artifact-id">clienteRepository</code></td><td><code>ClienteRepository</code></td><td>Proporciona acceso a la base de datos para las entidades de cliente.</td></tr>
+            <tr><td><code class="artifact-id">peruDevsAdapter</code></td><td><code>PeruDevsAdapter</code></td><td>Maneja la comunicación con la API externa de PeruDevs.</td></tr>
+            <tr><td><code class="artifact-id">clienteMapper</code></td><td><code>ClienteMapper</code></td><td>Transforma datos entre entidades y DTOs.</td></tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/service/ClienteServiceImpl.java" lines="18-29" />
+</SourceReference>
+
+## Estrategia de Caché
+
+<p>El servicio implementa una estrategia de caché *local-first* para minimizar las llamadas a APIs externas y mejorar los tiempos de respuesta.</p>
+
+### Flujo de Caché para Búsqueda de RUC
+
+<ImageViewer 
+    src="/src/assets/flujo-cache-busqueda-ruc.svg" 
+    alt="Diagrama de secuencia que ilustra el flujo de caché. Muestra la consulta inicial a la base de datos local y, en caso de un 'cache miss', el fallback a la API externa de PeruDevs, seguido del almacenamiento del nuevo dato en la base de datos local."
+/>
+
+### Comportamiento del Caché
+
+<p>La estrategia de caché sigue este patrón:</p>
+<ol>
+    <li><strong>Consultar Base de Datos Local</strong>: Primero consulta <code>ClienteRepository.findByRuc(ruc)</code>.</li>
+    <li><strong>En Acierto de Caché (Cache Hit)</strong>: Transforma la entidad a DTO usando <code>ClienteMapper.toResponse()</code> y retorna inmediatamente.</li>
+    <li>
+        <strong>En Fallo de Caché (Cache Miss)</strong>:
+        <ul>
+            <li>Llama a <code>PeruDevsAdapter.consultarRuc(ruc)</code> para obtener datos de la API externa.</li>
+            <li>Si se reciben datos, los transforma usando <code>ClienteMapper.toEntity()</code> y los persiste mediante <code>ClienteRepository.save()</code>.</li>
+            <li>Retorna los datos recién cacheados como un DTO.</li>
+        </ul>
+    </li>
+    <li><strong>En Fallo Externo</strong>: Retorna <code>Optional.empty()</code>.</li>
+</ol>
+<p>Este patrón asegura que una vez que se consulta un cliente, las solicitudes posteriores se sirven desde la base de datos local sin llamadas a la API externa.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/service/ClienteServiceImpl.java" lines="32-50" />
+</SourceReference>
+
+## Flujos de Lógica de Negocio
+
+### Implementación de Búsqueda de RUC
+
+<p>El método <code class="artifact-id">buscarPorRuc()</code> implementa la lógica central de caché:</p>
+
+<ImageViewer 
+    src="/src/assets/implementacion-busqueda-ruc.svg" 
+    alt="Diagrama de flujo que detalla la lógica del método buscarPorRuc. Muestra la bifurcación condicional: si el dato está en la base de datos local, se transforma y retorna; si no, se consulta la API externa, se guarda en la base de datos y luego se retorna."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/service/ClienteServiceImpl.java" lines="32-50" />
+</SourceReference>
+
+### Operaciones de Búsqueda de DNI
+
+<p>El servicio proporciona dos operaciones distintas relacionadas con el DNI:</p>
+
+#### Búsqueda Simple de DNI
+
+<p>El método <code class="artifact-id">buscarPorDniSimple()</code> recupera datos de una persona sin utilizar caché:</p>
+
+<ImageViewer 
+    src="/src/assets/busqueda-simple-dni.svg" 
+    alt="Diagrama de flujo lineal para la búsqueda simple de DNI, mostrando que siempre se consulta el PeruDevsAdapter, se mapea la respuesta y se retorna, sin interactuar con la base de datos local."
+/>
+
+<p>Este método siempre consulta la API externa y no persiste los resultados, ya que los datos del DNI representan a individuos en lugar de clientes de negocio.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/service/ClienteServiceImpl.java" lines="53-56" />
+</SourceReference>
+
+#### Búsqueda de Asociación DNI a RUC
+
+<p>El método <code class="artifact-id">buscarRucAsociadoADni()</code> verifica si un DNI tiene un RUC-10 asociado (identificación fiscal para persona natural con negocio):</p>
+
+<ImageViewer 
+    src="/src/assets/busqueda-asociacion-dni-ruc.svg" 
+    alt="Diagrama de flujo lineal para la búsqueda de asociación DNI a RUC. Muestra la consulta al PeruDevsAdapter, el mapeo manual a un ClienteResponse y el retorno del resultado."
+/>
+
+<p>Este método construye un <code class="artifact-id">ClienteResponse</code> directamente sin usar el mapper, extrayendo solo los campos de RUC, razón social y dirección.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/service/ClienteServiceImpl.java" lines="59-68" />
+</SourceReference>
+
+### Búsqueda Unificada de Documentos
+
+<p>El método <code class="artifact-id">buscarPorDocumento()</code> proporciona una detección inteligente del tipo de documento y enrutamiento:</p>
+
+<ImageViewer 
+    src="/src/assets/busqueda-unificada-documentos.svg" 
+    alt="Diagrama de flujo complejo para la búsqueda unificada de documentos. Muestra la validación inicial de la longitud del documento (8 u 11 dígitos), y luego las diferentes rutas de procesamiento para RUC y DNI, incluyendo la lógica de fallback para DNI con RUC asociado."
+/>
+
+### Lógica de Búsqueda de Documentos
+
+<TableWrapper>
+    <table>
+        <thead><tr><th>Longitud de Entrada</th><th>Interpretación</th><th>Flujo de Procesamiento</th></tr></thead>
+        <tbody>
+            <tr><td>11 dígitos</td><td>RUC</td><td>Llamar a <code>buscarPorRuc()</code> y envolver el resultado con <code>tipo=RUC</code>.</td></tr>
+            <tr><td>8 dígitos</td><td>DNI</td><td>1. Verificar si hay un RUC asociado mediante <code>buscarRucAsociadoADni()</code>.<br/>2. Si se encuentra un RUC, retornar como <code>tipo=RUC</code>.<br/>3. De lo contrario, llamar a <code>buscarPorDniSimple()</code> y retornar como <code>tipo=DNI</code>.</td></tr>
+            <tr><td>Otra</td><td>Inválido</td><td>Retornar <code>Optional.empty()</code>.</td></tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Este enrutamiento inteligente permite que la API maneje ambos tipos de documentos a través de un único endpoint, devolviendo las estructuras de datos apropiadas.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/service/ClienteServiceImpl.java" lines="71-106" />
+</SourceReference>
+
+## Capa de Mapeo de Datos
+
+<p>El componente <code class="artifact-id">ClienteMapper</code> maneja todas las transformaciones entre las diferentes representaciones de datos.</p>
+
+### Responsabilidades del Mapper
+
+<ImageViewer 
+    src="/src/assets/responsabilidades-mapper.svg" 
+    alt="Diagrama de flujo de datos que muestra las responsabilidades del ClienteMapper: convertir datos de la API externa a entidades de persistencia, y convertir tanto entidades de persistencia como datos de la API externa a DTOs de respuesta de la API."
+/>
+
+### Métodos del Mapper
+
+<TableWrapper>
+    <table>
+        <thead><tr><th>Método</th><th>Tipo de Origen</th><th>Tipo de Destino</th><th>Propósito</th></tr></thead>
+        <tbody>
+            <tr><td><code class="artifact-id">toResponse()</code></td><td><code>ClienteEntity</code></td><td><code>ClienteResponse</code></td><td>Convierte la entidad persistida a un DTO de API.</td></tr>
+            <tr><td><code class="artifact-id">toEntity()</code></td><td><code>PeruDevsResponse.ClienteData</code></td><td><code>ClienteEntity</code></td><td>Convierte datos de la API externa a una entidad de persistencia.</td></tr>
+            <tr><td><code class="artifact-id">toDniResponse()</code></td><td><code>PeruDevsDniResponse.DniData</code></td><td><code>DniResponse</code></td><td>Convierte datos de DNI externos a un DTO de API.</td></tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Detalles de la Transformación
+
+<p>Cada método del mapper realiza una copia de campos segura ante nulos (null-safe):</p>
+<p><strong>Mapeo de Entidad a Respuesta</strong> (<code class="artifact-id">toResponse</code>):</p>
+<ul>
+    <li>Copia: <code>ruc</code>, <code>razonSocial</code> → <code>razon_social</code>, <code>direccion</code>, <code>estado</code>, <code>departamento</code>.</li>
+    <li>Manejo de nulos: Re torna <code>null</code> si la entidad de entrada es <code>null</code>.</li>
+</ul>
+<p><strong>Mapeo de Datos Externos a Entidad</strong> (<code class="artifact-id">toEntity</code>):</p>
+<ul>
+    <li>Copia: <code>ruc</code>, <code>razonSocial</code>, <code>direccion</code>, <code>estado</code>, <code>departamento</code>.</li>
+    <li>Manejo de nulos: Retorna <code>null</code> si los datos de entrada son <code>null</code>.</li>
+    <li>Nota: Establece los campos pero no el <code>id</code> (auto-generado por JPA).</li>
+</ul>
+<p><strong>Mapeo de DNI Externo a Respuesta</strong> (<code class="artifact-id">toDniResponse</code>):</p>
+<ul>
+    <li>Copia: <code>nombres</code>, <code>apellidoPaterno</code>, <code>apellidoMaterno</code>, <code>nombreCompleto</code>.</li>
+    <li>Manejo de nulos: Retorna <code>null</code> si los datos de entrada son <code>null</code>.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/mapper/ClienteMapper.java" lines="1-66" />
+</SourceReference>
+
+## Configuración de Inyección de Dependencias
+
+<p>La capa de servicio utiliza la inyección de dependencias de Spring para gestionar el ciclo de vida y las dependencias de los componentes.</p>
+
+### Anotaciones de Componentes
+
+<ImageViewer 
+    src="/src/assets/anotaciones-componentes.svg" 
+    alt="Diagrama que ilustra cómo el contenedor de Spring gestiona los componentes anotados (@Service, @Component, @Repository) y los inyecta en ClienteServiceImpl a través de un constructor anotado con @Autowired."
+/>
+
+### Patrón de Inyección
+
+<p>El <code class="artifact-id">ClienteServiceImpl</code> utiliza inyección por constructor, que es el patrón recomendado por:</p>
+<ul>
+    <li><strong>Inmutabilidad</strong>: Las dependencias son finales y se establecen una sola vez.</li>
+    <li><strong>Testabilidad</strong>: Facilita el mockeo de dependencias en pruebas unitarias.</li>
+    <li><strong>Fail-fast</strong>: Las dependencias faltantes causan un fallo inmediato al inicio.</li>
+</ul>
+<p>El constructor está anotado con <code class="artifact-id">@Autowired</code> (opcional en Spring 4.3+) y recibe las tres dependencias.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/service/ClienteServiceImpl.java" lines="22-29" />
+</SourceReference>
+
+## Resumen
+
+<p>La capa de servicio en <code class="artifact-id">servicio-clientes</code> implementa:</p>
+<ol>
+    <li><strong>Arquitectura Limpia</strong>: Separación entre las capas de API, servicio y datos.</li>
+    <li><strong>Estrategia de Caché</strong>: Enfoque *local-first* con fallback a API externa.</li>
+    <li><strong>Enrutamiento Inteligente</strong>: Búsqueda unificada de documentos con detección de tipo.</li>
+    <li><strong>Seguridad de Tipos (Type Safety)</strong>: API basada en <code>Optional</code> para manejar datos faltantes de forma segura.</li>
+    <li><strong>Inyección de Dependencias</strong>: Componentes gestionados por Spring con inyección por constructor.</li>
+    <li><strong>Transformación de Datos</strong>: Patrón Mapper que aísla las conversiones DTO/Entidad.</li>
+</ol>
+<p>La implementación equilibra el rendimiento (caché), la fiabilidad (fallback a API externa) y la mantenibilidad (separación clara de responsabilidades).</p>

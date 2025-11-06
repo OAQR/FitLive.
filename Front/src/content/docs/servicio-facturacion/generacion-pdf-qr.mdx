@@ -1,0 +1,359 @@
+---
+title: "Generación de PDF y Códigos QR"
+description: "Este documento describe las capacidades de generación de PDF y códigos QR del microservicio servicio-facturacion. Cubre las librerías utilizadas (OpenPDF y ZXing), su configuración y su rol en la generación de facturas."
+---
+
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Generación de PDF y Códigos QR
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-facturacion/pom.xml" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento describe las capacidades de generación de PDF y códigos QR del microservicio <code class="artifact-id">servicio-facturacion</code>. Cubre las librerías utilizadas (OpenPDF y ZXing), su configuración y su rol en la generación de documentos de factura con códigos QR embebidos para propósitos de validación y seguimiento.</p>
+<p>Para información sobre la arquitectura general del servicio de facturación, consulte <a href="/docs/servicio-facturacion" class="content-link">servicio-facturacion: Servicio de Facturación</a>. Para detalles de despliegue y configuración, consulte <a href="/docs/servicio-facturacion/configuracion-y-ajuste" class="content-link">Configuración y Ajuste</a>.</p>
+
+## Visión General
+
+<p>El microservicio <code class="artifact-id">servicio-facturacion</code> genera facturas en PDF con códigos QR embebidos. Esta funcionalidad se basa en dos librerías principales:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Librería</th>
+                <th scope="col">Versión</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>OpenPDF</td>
+                <td>3.0.0</td>
+                <td>Generación y formateo de documentos PDF</td>
+            </tr>
+            <tr>
+                <td>ZXing Core</td>
+                <td>3.5.3</td>
+                <td>Codificación y generación de códigos QR</td>
+            </tr>
+            <tr>
+                <td>ZXing JavaSE</td>
+                <td>3.5.3</td>
+                <td>Soporte de E/S de imágenes para el renderizado de códigos QR</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Estas dependencias están declaradas en la configuración de Maven del servicio y proporcionan las capacidades fundamentales para la generación de documentos.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="50-65" />
+</SourceReference>
+
+## Stack Tecnológico
+
+### OpenPDF
+
+<p>OpenPDF (anteriormente iText) es una librería de Java para crear y manipular documentos PDF. La versión 3.0.0 se utiliza en este servicio como un fork moderno y mantenido activamente que proporciona:</p>
+<ul>
+    <li>Creación programática de documentos PDF</li>
+    <li>Capacidades de formateo y maquetación de texto</li>
+    <li>Generación y formateo de tablas</li>
+    <li>Embebido de imágenes (usado para códigos QR)</li>
+    <li>Gestión y estilizado de fuentes</li>
+</ul>
+<p>La librería se incluye como una dependencia de tiempo de ejecución (runtime) y permite al servicio generar facturas en PDF con formato profesional.</p>
+
+### ZXing (Zebra Crossing)
+
+<p>ZXing es una librería de procesamiento de imágenes de códigos de barras multiformato. El servicio utiliza dos componentes de ZXing:</p>
+<ol>
+    <li><strong>ZXing Core (3.5.3)</strong>: Proporciona la lógica central de codificación/decodificación de códigos de barras, incluyendo los algoritmos de generación de códigos QR.</li>
+    <li><strong>ZXing JavaSE (3.5.3)</strong>: Proporciona capacidades de renderizado de imágenes específicas de la plataforma, permitiendo que los códigos QR se generen como objetos de imagen que pueden ser embebidos en PDFs.</li>
+</ol>
+<p>La combinación de estas librerías permite al servicio generar códigos QR como datos de imagen que pueden ser embebidos directamente en las facturas en PDF.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="50-65" />
+</SourceReference>
+
+## Arquitectura de Generación de PDF
+
+<ImageViewer 
+    src="/src/assets/arquitectura-generacion-pdf.svg" 
+    alt="Diagrama que muestra el flujo de generación de una factura, desde la solicitud hasta el almacenamiento del documento, e identifica los componentes clave de OpenPDF y ZXing involucrados."
+/>
+
+<p>El proceso de generación de PDF sigue un patrón builder donde los datos de la factura se ensamblan en un documento estructurado. La clase <code>Document</code> de OpenPDF sirve como el contenedor principal, con <code>PdfWriter</code> manejando el flujo de salida. Elementos de maquetación como <code>Paragraph</code> y <code>PdfPTable</code> estructuran el contenido, mientras que las imágenes de los códigos QR se embeben usando la clase <code>Image</code>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="50-53" />
+</SourceReference>
+
+## Flujo de Trabajo de Generación de Códigos QR
+
+<ImageViewer 
+    src="/src/assets/flujo-generacion-qr.svg" 
+    alt="Diagrama de secuencia que detalla el proceso de generación de un código QR, desde la preparación del contenido hasta la creación de una BitMatrix y su conversión a una imagen para ser embebida en un PDF."
+/>
+
+<p>El proceso de generación de códigos QR codifica los metadatos de la factura en un formato legible por máquina. El <code>QRCodeWriter</code> codifica los datos en una representación <code>BitMatrix</code>, que luego se convierte en una <code>BufferedImage</code> mediante <code>MatrixToImageWriter</code>. Esta imagen se embebe posteriormente en el documento PDF.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="56-65" />
+</SourceReference>
+
+## Integración con el Servicio de Facturación
+
+<ImageViewer 
+    src="/src/assets/integracion-servicio-facturas.svg" 
+    alt="Diagrama que muestra cómo el Servicio de Facturación integra los servicios de generación de PDF y QR, utilizando librerías externas para producir un array de bytes de PDF que puede ser almacenado o devuelto en una respuesta HTTP."
+/>
+
+<p>El servicio de facturación integra la generación de PDF y de códigos QR a través de componentes de servicio dedicados. Estos componentes abstraen la complejidad de las librerías subyacentes y proporcionan interfaces limpias para la generación de facturas. Los PDFs generados pueden ser almacenados en la base de datos, guardados en el sistema de archivos o devueltos directamente en respuestas HTTP.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="44-65" />
+</SourceReference>
+
+## Configuración de Dependencias
+
+<p>La configuración de Maven declara las dependencias necesarias para la generación de PDF y códigos QR:</p>
+
+### Dependencia de OpenPDF
+
+<CodeBlock language="xml" code={`<dependency>
+    <groupId>com.github.librepdf</groupId>
+    <artifactId>openpdf</artifactId>
+    <version>3.0.0</version>
+</dependency>`} />
+
+<p>Esta dependencia proporciona la librería OpenPDF completa para la generación de PDF. La versión 3.0.0 es una versión estable compatible con Java 22 y Spring Boot 3.5.6.</p>
+
+### Dependencias de ZXing
+
+<CodeBlock language="xml" code={`<dependency>
+    <groupId>com.google.zxing</groupId>
+    <artifactId>core</artifactId>
+    <version>3.5.3</version>
+</dependency>
+<dependency>
+    <groupId>com.google.zxing</groupId>
+    <artifactId>javase</artifactId>
+    <version>3.5.3</version>
+</dependency>`} />
+
+<p>Se requieren dos artefactos de ZXing:</p>
+<ul>
+    <li><strong>core</strong>: Contiene los algoritmos de codificación/decodificación de códigos de barras.</li>
+    <li><strong>javase</strong>: Proporciona implementaciones de E/S de imágenes específicas para Java SE.</li>
+</ul>
+<p>Ambas dependencias usan la versión 3.5.3, asegurando la compatibilidad entre el núcleo y los componentes específicos de la plataforma.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="50-65" />
+</SourceReference>
+
+## Clases y Componentes Clave de las Librerías
+
+### Clases Clave de OpenPDF
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Clase</th>
+                <th scope="col">Paquete</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">Document</code></td>
+                <td><code>com.lowagie.text</code></td>
+                <td>Contenedor principal para el contenido del PDF.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">PdfWriter</code></td>
+                <td><code>com.lowagie.text.pdf</code></td>
+                <td>Escribe el PDF en un flujo de salida.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">Paragraph</code></td>
+                <td><code>com.lowagie.text</code></td>
+                <td>Formateo de párrafos de texto.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">PdfPTable</code></td>
+                <td><code>com.lowagie.text.pdf</code></td>
+                <td>Maquetación y formateo de tablas.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">Image</code></td>
+                <td><code>com.lowagie.text</code></td>
+                <td>Embebido de imágenes (códigos QR).</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">Font</code></td>
+                <td><code>com.lowagie.text</code></td>
+                <td>Gestión de fuentes.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">Rectangle</code></td>
+                <td><code>com.lowagie.text</code></td>
+                <td>Tamaño y dimensiones de la página.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Clases Clave de ZXing
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Clase</th>
+                <th scope="col">Paquete</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">QRCodeWriter</code></td>
+                <td><code>com.google.zxing.qrcode</code></td>
+                <td>Codificación de códigos QR.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">BarcodeFormat</code></td>
+                <td><code>com.google.zxing</code></td>
+                <td>Enum de especificación de formato.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">BitMatrix</code></td>
+                <td><code>com.google.zxing.common</code></td>
+                <td>Representación de matriz binaria.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">MatrixToImageWriter</code></td>
+                <td><code>com.google.zxing.client.j2se</code></td>
+                <td>Conversión de matriz a imagen.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">EncodeHintType</code></td>
+                <td><code>com.google.zxing</code></td>
+                <td>Opciones de configuración de codificación.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Estas clases forman la superficie principal de la API utilizada para la generación de PDF y códigos QR dentro del servicio.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="50-65" />
+</SourceReference>
+
+## Patrón de Generación Típico
+
+<ImageViewer 
+    src="/src/assets/patron-generacion-tipico.svg" 
+    alt="Diagrama de flujo que ilustra el patrón típico de generación de facturas en PDF, comenzando con la validación de datos, la generación del QR, el ensamblaje secuencial del documento PDF, y finalizando con el almacenamiento o la entrega de la respuesta."
+/>
+
+<p>El patrón de generación típico involucra varias etapas:</p>
+<ol>
+    <li>Validación de entrada y preparación de datos.</li>
+    <li>Generación del código QR con los metadatos de la factura codificados.</li>
+    <li>Inicialización del documento PDF con la configuración de la página.</li>
+    <li>Adición secuencial de secciones de contenido (encabezado, información del cliente, ítems de línea, totales).</li>
+    <li>Embebido del código QR.</li>
+    <li>Finalización del documento y extracción del array de bytes.</li>
+    <li>Almacenamiento y/o entrega de la respuesta.</li>
+</ol>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="1-104" />
+</SourceReference>
+
+## Flujo de Datos para la Generación de Facturas
+
+<ImageViewer 
+    src="/src/assets/flujo-datos-generacion-factura.svg" 
+    alt="Diagrama de flujo de datos que muestra cómo los datos de entrada de la factura se procesan para generar tanto el contenido del string del QR como la imagen del QR, que luego se combinan en el contenido del PDF. El resultado final se almacena en la base de datos (BLOB y VARCHAR) y puede ser devuelto en una respuesta HTTP."
+/>
+
+<p>El flujo de datos muestra cómo los datos de entrada de la factura se transforman tanto en un documento PDF completo como en artefactos almacenados en la base de datos. El string de contenido del código QR se almacena por separado en la base de datos para posibles propósitos de verificación o regeneración, mientras que el PDF completo con la imagen del QR embebida se almacena como datos binarios.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="44-92" />
+</SourceReference>
+
+## Configuración de Compilación y Runtime
+
+<p>El servicio se construye como una aplicación Spring Boot con las siguientes características de tiempo de ejecución:</p>
+<ul>
+    <li><strong>Versión de Java</strong>: 22</li>
+    <li><strong>Versión de Spring Boot</strong>: 3.5.6</li>
+    <li><strong>Herramienta de Compilación</strong>: Maven (vía Spring Boot Maven Plugin)</li>
+    <li><strong>Ámbito en Runtime</strong>: Todas las librerías de PDF y QR están disponibles en tiempo de ejecución.</li>
+</ul>
+<p>El Spring Boot Maven Plugin empaqueta el servicio como un JAR ejecutable con todas las dependencias embebidas, asegurando que OpenPDF y ZXing estén disponibles cuando se despliega el servicio.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="29-31" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="95-102" />
+</SourceReference>
+
+## Integración con la Base de Datos
+
+<p>El servicio utiliza Spring Data JPA para la persistencia, con Flyway gestionando las migraciones de la base de datos. Los PDFs generados se almacenan típicamente en la base de datos junto con los metadatos de la factura:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Columna</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">pdf_content</code></td>
+                <td>BLOB</td>
+                <td>Datos binarios del documento PDF.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">qr_code</code></td>
+                <td>VARCHAR</td>
+                <td>String de contenido del código QR.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Este enfoque de almacenamiento dual permite:</p>
+<ul>
+    <li>Recuperación directa del PDF para descarga/visualización.</li>
+    <li>Regeneración o validación del código QR sin tener que re-parsear el PDF.</li>
+    <li>Consultas e indexación a nivel de base de datos sobre el contenido del QR.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="44-92" />
+</SourceReference>

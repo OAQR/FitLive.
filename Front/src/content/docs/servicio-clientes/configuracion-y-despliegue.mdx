@@ -1,0 +1,605 @@
+---
+title: "Configuración y Despliegue"
+description: "Esta página documenta los procedimientos de configuración y despliegue para el microservicio servicio-clientes. Cubre las propiedades de la aplicación, la configuración de la base de datos, la integración de API externas, la configuración de la compilación y las consideraciones de despliegue."
+---
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Configuración y Despliegue
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-clientes/.gitignore" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/pom.xml" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Esta página documenta los procedimientos de configuración y despliegue para el microservicio <code class="artifact-id">servicio-clientes</code>. Cubre las propiedades de la aplicación, la configuración de la base de datos, la integración de API externas, la configuración de la compilación y las consideraciones de despliegue.</p>
+<p>Para información sobre el desarrollo y las pruebas del servicio, consulte <a href="/docs/servicio-clientes/pruebas" class="content-link">Pruebas</a>. Para la configuración general del entorno de desarrollo en todos los servicios, consulte <a href="/docs/configuracion-del-entorno-de-desarrollo" class="content-link">Configuración del Entorno de Desarrollo</a>. Para la configuración del servicio de facturación, consulte <a href="/docs/servicio-facturacion/configuracion-y-ajuste" class="content-link">Configuración y Ajuste</a>.</p>
+
+## Visión General de la Configuración
+
+<p>El microservicio <code class="artifact-id">servicio-clientes</code> utiliza el enfoque de configuración estándar de Spring Boot con archivos de propiedades y variables de entorno. La configuración se centraliza en <code class="artifact-id">application.properties</code> y puede ser sobrescrita a través de perfiles específicos de entorno o variables de entorno.</p>
+
+### Arquitectura de Configuración
+
+<ImageViewer 
+    src="/src/assets/arquitectura-configuracion.svg" 
+    alt="Diagrama que muestra la jerarquía de las fuentes de configuración en Spring Boot, desde application.properties (prioridad más baja) hasta los argumentos de línea de comandos (prioridad más alta), y cómo estas alimentan los componentes de la aplicación." 
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="1-14" />
+</SourceReference>
+
+## Propiedades de la Aplicación
+
+<p>La configuración del servicio se define en <code class="artifact-id">application.properties</code> con los siguientes ajustes clave:</p>
+
+### Ajustes Principales de la Aplicación
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Propiedad</th>
+                <th scope="col">Valor por Defecto</th>
+                <th scope="col">Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>spring.application.name</code></td>
+                <td><code>servicio-clientes</code></td>
+                <td>Identificador de la aplicación utilizado en logs y monitoreo.</td>
+            </tr>
+            <tr>
+                <td><code>server.port</code></td>
+                <td><code>8080</code></td>
+                <td>Puerto HTTP para el servidor de la API REST.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="1-2" />
+</SourceReference>
+
+### Configuración de API Externa
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Propiedad</th>
+                <th scope="col">Valor por Defecto</th>
+                <th scope="col">Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>api.perudevs.key</code></td>
+                <td><em>(vacío)</em></td>
+                <td>Clave de API para la autenticación del servicio externo PeruDevs.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>La clave de API de PeruDevs debe configurarse para que el servicio pueda realizar búsquedas externas de RUC/DNI. Esta propiedad se inyecta en el componente <code class="artifact-id">PeruDevsAdapter</code> para la autenticación con el servicio externo.</p>
+<p>⚠️ <strong>Nota de Seguridad:</strong> Nunca commitee claves de API al control de versiones. Utilice variables de entorno o gestión de configuración externa para despliegues en producción.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="4" />
+</SourceReference>
+
+### Configuración de JPA y Hibernate
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Propiedad</th>
+                <th scope="col">Valor</th>
+                <th scope="col">Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>spring.jpa.hibernate.ddl-auto</code></td>
+                <td><code>validate</code></td>
+                <td>Modo de validación de esquema - previene cambios automáticos en el esquema.</td>
+            </tr>
+            <tr>
+                <td><code>spring.jpa.open-in-view</code></td>
+                <td><code>false</code></td>
+                <td>Deshabilita el patrón OSIV para una mejor gestión de transacciones.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>La configuración <code>validate</code> para <code>ddl-auto</code> asegura que Hibernate valide el esquema de la base de datos contra las entidades JPA sin realizar modificaciones. Los cambios en el esquema se gestionan exclusivamente a través de migraciones de Flyway (consulte <a href="/docs/servicio-clientes/modelo-datos-persistencia" class="content-link">Modelo de Datos y Persistencia</a>).</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="10-11" />
+</SourceReference>
+
+## Configuración de la Base de Datos
+
+<p>El servicio soporta dos configuraciones de base de datos: PostgreSQL para producción y H2 para desarrollo/pruebas.</p>
+
+### Flujo de Configuración de la Base de Datos
+
+<ImageViewer 
+    src="/src/assets/flujo-configuracion-bd.svg" 
+    alt="Diagrama de flujo que ilustra el proceso de configuración de la base de datos al iniciar la aplicación Spring Boot, mostrando la selección del driver (PostgreSQL o H2), la ejecución de migraciones de Flyway y la validación del esquema de Hibernate."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="6-11" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="57-81" />
+</SourceReference>
+
+### Configuración de PostgreSQL (Producción)
+
+<p>La configuración por defecto apunta a una base de datos PostgreSQL:</p>
+
+<CodeBlock language="properties" code={`spring.datasource.url=jdbc:postgresql://localhost:5432/facturacion_db
+spring.datasource.username=postgres
+spring.datasource.password=admin`} />
+
+<p><strong>Requisitos de Configuración:</strong></p>
+<ol>
+    <li><strong>Servidor de Base de Datos:</strong> Servidor PostgreSQL corriendo en <code>localhost:5432</code>.</li>
+    <li><strong>Nombre de la Base de Datos:</strong> <code>facturacion_db</code> debe existir antes del inicio de la aplicación.</li>
+    <li><strong>Credenciales de Usuario:</strong> Usuario <code>postgres</code> con contraseña <code>admin</code> (cambiar para producción).</li>
+    <li><strong>Gestión de Esquema:</strong> Flyway aplicará automáticamente las migraciones al esquema <code>public</code>.</li>
+</ol>
+
+<p><strong>Lista de Verificación para Despliegue en Producción:</strong></p>
+<ul>
+    <li>Crear un usuario de base de datos dedicado con privilegios mínimos.</li>
+    <li>Usar contraseñas seguras (no <code>admin</code>).</li>
+    <li>Configurar el pool de conexiones de la base de datos si es necesario.</li>
+    <li>Apuntar <code>spring.datasource.url</code> al servidor de base de datos de producción.</li>
+    <li>Almacenar credenciales en variables de entorno o en un sistema de gestión de secretos.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="6-8" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="76-81" />
+</SourceReference>
+
+### Configuración de H2 (Desarrollo)
+
+<p>Para el desarrollo y las pruebas locales, se puede usar la base de datos en memoria H2 sobrescribiendo las propiedades del datasource:</p>
+
+<CodeBlock language="bash" code={`java -jar servicio-clientes.jar \\
+    --spring.datasource.url=jdbc:h2:mem:testdb \\
+    --spring.datasource.driver-class-name=org.h2.Driver`} />
+
+<p>La dependencia de H2 está incluida con el ámbito `runtime` en la configuración de Maven.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="69-74" />
+</SourceReference>
+
+### Migraciones de Base de Datos con Flyway
+
+<p>El servicio utiliza Flyway para la gestión de versiones del esquema de la base de datos:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Dependencia</th>
+                <th scope="col">Versión</th>
+                <th scope="col">Ámbito</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">flyway-core</code></td>
+                <td>11.14.0</td>
+                <td>compile</td>
+                <td>Motor principal de migraciones de Flyway.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">flyway-database-postgresql</code></td>
+                <td>11.14.0</td>
+                <td>runtime</td>
+                <td>Soporte específico de Flyway para PostgreSQL.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Flyway ejecuta automáticamente los scripts de migración SQL ubicados en <code>src/main/resources/db/migration/</code> durante el inicio de la aplicación. Los scripts de migración deben seguir la convención de nomenclatura <code>{"V{version}__{description}.sql"}</code>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="57-67" />
+</SourceReference>
+
+## Configuración de la Compilación
+
+<p>El servicio utiliza Maven para la gestión de dependencias y la orquestación de la compilación, configurado a través de <code>pom.xml</code>.</p>
+
+### Coordenadas del Proyecto Maven
+
+<ImageViewer 
+    src="/src/assets/coordenadas-proyecto-maven.svg" 
+    alt="Diagrama que muestra la herencia del proyecto Maven 'servicio-clientes' desde el 'spring-boot-starter-parent'."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="5-15" />
+</SourceReference>
+
+### Dependencias Clave
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Dependencia</th>
+                <th scope="col">Versión</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>spring-boot-starter-web</code></td>
+                <td>3.5.6</td>
+                <td>API REST y servidor Tomcat embebido.</td>
+            </tr>
+            <tr>
+                <td><code>spring-boot-starter-data-jpa</code></td>
+                <td>3.5.6</td>
+                <td>Repositorios JPA y ORM Hibernate.</td>
+            </tr>
+            <tr>
+                <td><code>spring-boot-starter-test</code></td>
+                <td>3.5.6</td>
+                <td>Framework de pruebas (JUnit, Mockito).</td>
+            </tr>
+            <tr>
+                <td><code>springdoc-openapi-starter-webmvc-ui</code></td>
+                <td>2.8.13</td>
+                <td>Documentación OpenAPI/Swagger.</td>
+            </tr>
+            <tr>
+                <td><code>postgresql</code></td>
+                <td>42.7.8</td>
+                <td>Driver JDBC de PostgreSQL.</td>
+            </tr>
+            <tr>
+                <td><code>h2</code></td>
+                <td>2.4.240</td>
+                <td>Base de datos en memoria H2.</td>
+            </tr>
+            <tr>
+                <td><code>flyway-core</code></td>
+                <td>11.14.0</td>
+                <td>Gestión de migraciones de base de datos.</td>
+            </tr>
+            <tr>
+                <td><code>flyway-database-postgresql</code></td>
+                <td>11.14.0</td>
+                <td>Soporte de Flyway para PostgreSQL.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="32-82" />
+</SourceReference>
+
+### Configuración de la Versión de Java
+
+<p>El servicio requiere <strong>Java 22</strong> como se especifica en las propiedades de Maven:</p>
+
+<CodeBlock language="xml" code={`<properties>
+    <java.version>22</java.version>
+</properties>`} />
+
+<p>Asegúrese de que sus entornos de compilación y ejecución tengan Java 22 instalado y configurado.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="29-31" />
+</SourceReference>
+
+### Configuración del Plugin de Compilación
+
+<ImageViewer 
+    src="/src/assets/configuracion-plugin-compilacion.svg" 
+    alt="Diagrama de flujo del proceso de empaquetado del Spring Boot Maven Plugin, mostrando cómo se crea un JAR ejecutable que contiene las clases de la aplicación, dependencias embebidas y el Spring Boot Loader."
+/>
+
+<p>El <code class="artifact-id">spring-boot-maven-plugin</code> empaqueta la aplicación como un JAR completamente ejecutable con todas las dependencias embebidas. Esto permite un despliegue simple con la ejecución de <code>java -jar</code>.</p>
+
+<p><strong>Comando de Compilación:</strong></p>
+<CodeBlock language="bash" code={`./mvnw clean package`} />
+
+<p><strong>Ubicación del Archivo de Salida:</strong></p>
+<CodeBlock language="text" code={`target/servicio-clientes-0.0.1-SNAPSHOT.jar`} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="84-91" />
+</SourceReference>
+
+## Configuración Específica del Entorno
+
+<p>Spring Boot soporta múltiples enfoques para la configuración específica del entorno:</p>
+
+### Enfoque 1: Archivos de Propiedades Específicos del Perfil
+
+<p>Cree archivos de propiedades adicionales con la convención de nomenclatura <code class="artifact-id">{"application-{profile}.properties"}</code>:</p>
+<CodeBlock language="text" code={`src/main/resources/
+├── application.properties          # Configuración por defecto
+├── application-dev.properties      # Sobrescrituras para desarrollo
+├── application-prod.properties     # Sobrescrituras para producción
+└── application-test.properties     # Sobrescrituras para pruebas`} />
+
+<p>Active los perfiles usando <code class="artifact-id">spring.profiles.active</code>:</p>
+<CodeBlock language="bash" code={`java -jar servicio-clientes.jar --spring.profiles.active=prod`} />
+
+### Enfoque 2: Variables de Entorno
+
+<p>Sobrescriba cualquier propiedad usando variables de entorno con mayúsculas y guiones bajos:</p>
+<CodeBlock language="bash" code={`export SPRING_DATASOURCE_URL=jdbc:postgresql://prod-db:5432/facturacion_db
+export SPRING_DATASOURCE_USERNAME=app_user
+export SPRING_DATASOURCE_PASSWORD=secure_password
+export API_PERUDEVS_KEY=your_production_api_key
+export SERVER_PORT=8080
+
+java -jar servicio-clientes.jar`} />
+
+### Enfoque 3: Argumentos de Línea de Comandos
+
+<p>Pase las propiedades directamente como argumentos de línea de comandos:</p>
+<CodeBlock language="bash" code={`java -jar servicio-clientes.jar \\
+    --spring.datasource.url=jdbc:postgresql://prod-db:5432/facturacion_db \\
+    --spring.datasource.username=app_user \\
+    --spring.datasource.password=secure_password \\
+    --api.perudevs.key=your_production_api_key`} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="1-14" />
+</SourceReference>
+
+## Consideraciones de Despliegue
+
+### Lista de Verificación Pre-Despliegue
+
+<ImageViewer 
+    src="/src/assets/lista-verificacion-pre-despliegue.svg" 
+    alt="Lista de verificación de pre-despliegue en forma de diagrama de flujo, cubriendo la verificación de la compilación, configuración de la base de datos, validación de la configuración y revisiones de seguridad."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="1-14" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="1-93" />
+</SourceReference>
+
+### Configuración de la Base de Datos
+
+<ol>
+    <li>
+        <p><strong>Crear Base de Datos:</strong></p>
+        <CodeBlock language="sql" code={`CREATE DATABASE facturacion_db;`} />
+    </li>
+    <li>
+        <p><strong>Crear Usuario de Aplicación (Producción):</strong></p>
+        <CodeBlock language="sql" code={`CREATE USER clientes_app WITH PASSWORD 'secure_password';
+GRANT CONNECT ON DATABASE facturacion_db TO clientes_app;
+GRANT USAGE ON SCHEMA public TO clientes_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO clientes_app;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO clientes_app;`} />
+    </li>
+    <li>
+        <p><strong>Verificar Ejecución de Flyway:</strong> En el primer inicio, Flyway creará la tabla <code>flyway_schema_history</code> y ejecutará las migraciones. Verifique los logs en busca de:</p>
+        <CodeBlock language="text" code={`Flyway Community Edition ... by Redgate
+Successfully validated X migrations
+Current version of schema "public": << Empty Schema >>
+Migrating schema "public" to version X
+Successfully applied X migrations`} />
+    </li>
+</ol>
+
+### Configuración del Puerto
+
+<p>El servicio escucha en el puerto <code>8080</code> por defecto. Asegúrese de que este puerto esté:</p>
+<ul>
+    <li>Disponible en el sistema host.</li>
+    <li>Accesible a través de las reglas del firewall (si aplica).</li>
+    <li>Configurado correctamente en el proxy inverso/balanceador de carga (si se utiliza).</li>
+</ul>
+
+<p>Para cambiar el puerto:</p>
+<CodeBlock language="bash" code={`java -jar servicio-clientes.jar --server.port=9090`} />
+
+### Configuración de API Externa
+
+<p>La clave <code>api.perudevs.key</code> debe configurarse para que el servicio realice búsquedas de RUC/DNI. Sin esta clave:</p>
+<ul>
+    <li>Los endpoints de búsqueda externa fallarán.</li>
+    <li>Solo estarán disponibles los datos cacheados de la base de datos local.</li>
+</ul>
+
+<p>Obtenga una clave de API de PeruDevs y configúrela a través de variables de entorno:</p>
+<CodeBlock language="bash" code={`export API_PERUDEVS_KEY=your_api_key_here`} />
+
+### Ejecución de la Aplicación
+
+<p><strong>Modo de Desarrollo:</strong></p>
+<CodeBlock language="bash" code={`./mvnw spring-boot:run`} />
+
+<p><strong>Modo de Producción:</strong></p>
+<CodeBlock language="bash" code={`java -jar target/servicio-clientes-0.0.1-SNAPSHOT.jar`} />
+
+<p><strong>Con Configuración Personalizada:</strong></p>
+<CodeBlock language="bash" code={`java -jar servicio-clientes.jar \\
+    --spring.profiles.active=prod \\
+    --server.port=8080`} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="1-14" />
+</SourceReference>
+
+### Ejemplo de Arquitectura de Despliegue
+
+<ImageViewer 
+    src="/src/assets/ejemplo-arquitectura-despliegue.svg" 
+    alt="Ejemplo de arquitectura de despliegue en producción, mostrando clientes externos, un balanceador de carga, múltiples instancias del servicio 'servicio-clientes' y sus conexiones a servicios externos (PeruDevs API) y a la capa de datos (PostgreSQL)."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="1-14" />
+    <SourceBtn path="Back/servicio-clientes/pom.xml" lines="1-93" />
+</SourceReference>
+
+## Artefactos de Compilación y Control de Versiones
+
+### Excluidos del Control de Versiones
+
+<p>La configuración de <code>.gitignore</code> asegura que los artefactos de compilación y los archivos específicos del IDE no sean commiteados:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Patrón</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>target/</code></td>
+                <td>Directorio de salida de la compilación de Maven.</td>
+            </tr>
+            <tr>
+                <td><code>.mvn/wrapper/maven-wrapper.jar</code></td>
+                <td>JAR del Maven wrapper (descargado bajo demanda).</td>
+            </tr>
+            <tr>
+                <td><code>.idea/</code>, <code>\*.iml</code>, <code>\*.iws</code>, <code>*.ipr</code></td>
+                <td>Archivos de proyecto de IntelliJ IDEA.</td>
+            </tr>
+            <tr>
+                <td><code>.classpath</code>, <code>.project</code>, <code>.settings/</code></td>
+                <td>Archivos de proyecto de Eclipse/STS.</td>
+            </tr>
+            <tr>
+                <td><code>nbproject/</code>, <code>nbbuild/</code></td>
+                <td>Archivos de proyecto de NetBeans.</td>
+            </tr>
+            <tr>
+                <td><code>.vscode/</code></td>
+                <td>Ajustes de Visual Studio Code.</td>
+            </tr>
+            <tr>
+                <td><code>build/</code></td>
+                <td>Salida de compilación alternativa.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Esto asegura que solo el código fuente y los archivos de configuración estén bajo control de versiones, mientras que los artefactos de compilación y las configuraciones del IDE permanecen locales.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/.gitignore" lines="1-34" />
+</SourceReference>
+
+## Tabla de Referencia de Configuración
+
+### Referencia Completa de Propiedades
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Propiedad</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Por Defecto</th>
+                <th scope="col">Requerido</th>
+                <th scope="col">Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>spring.application.name</code></td>
+                <td>String</td>
+                <td><code>servicio-clientes</code></td>
+                <td>No</td>
+                <td>Identificador de la aplicación.</td>
+            </tr>
+            <tr>
+                <td><code>server.port</code></td>
+                <td>Integer</td>
+                <td><code>8080</code></td>
+                <td>No</td>
+                <td>Puerto del servidor HTTP.</td>
+            </tr>
+            <tr>
+                <td><code>api.perudevs.key</code></td>
+                <td>String</td>
+                <td><em>(vacío)</em></td>
+                <td><strong>Sí</strong></td>
+                <td>Clave de autenticación de la API de PeruDevs.</td>
+            </tr>
+            <tr>
+                <td><code>spring.datasource.url</code></td>
+                <td>String</td>
+                <td><code>jdbc:postgresql://localhost:5432/facturacion_db</code></td>
+                <td><strong>Sí</strong></td>
+                <td>URL de conexión JDBC.</td>
+            </tr>
+            <tr>
+                <td><code>spring.datasource.username</code></td>
+                <td>String</td>
+                <td><code>postgres</code></td>
+                <td><strong>Sí</strong></td>
+                <td>Nombre de usuario de la base de datos.</td>
+            </tr>
+            <tr>
+                <td><code>spring.datasource.password</code></td>
+                <td>String</td>
+                <td><code>admin</code></td>
+                <td><strong>Sí</strong></td>
+                <td>Contraseña de la base de datos.</td>
+            </tr>
+            <tr>
+                <td><code>spring.jpa.hibernate.ddl-auto</code></td>
+                <td>String</td>
+                <td><code>validate</code></td>
+                <td>No</td>
+                <td>Estrategia de gestión de esquema.</td>
+            </tr>
+            <tr>
+                <td><code>spring.jpa.open-in-view</code></td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>No</td>
+                <td>Control del patrón OSIV.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/resources/application.properties" lines="1-14" />
+</SourceReference>

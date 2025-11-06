@@ -1,0 +1,515 @@
+---
+title: "Integraciones Externas: API de PeruDevs"
+description: "Describe la integración entre servicio-clientes y el servicio de API externa PeruDevs, cubriendo la implementación del adaptador, los endpoints de la API, los modelos de respuesta y las estrategias de manejo de errores."
+---
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Integraciones Externas: API de PeruDevs
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsDniResponse.java" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsResponse.java" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento describe la integración entre <code class="artifact-id">servicio-clientes</code> y el servicio de API externa PeruDevs. PeruDevs proporciona validación y recuperación de información para documentos de identificación fiscal peruanos, específicamente RUC (Registro Único de Contribuyentes) y DNI (Documento Nacional de Identidad).</p>
+<p>La integración permite al servicio de gestión de clientes recuperar y validar datos de identificación de empresas e individuos desde fuentes oficiales peruanas. Este documento cubre la implementación del adaptador, los endpoints de la API, los modelos de petición/respuesta y las estrategias de manejo de errores.</p>
+<p>Para obtener información sobre cómo se utiliza esta integración dentro de la capa de servicio, consulte <a href="/docs/servicio-clientes/capa-servicio-logica-negocio" class="content-link">Capa de Servicio y Lógica de Negocio</a>. Para la exposición de los endpoints de la API, consulte <a href="/docs/servicio-clientes/endpoints-api-rest" class="content-link">Endpoints de la API REST</a>.</p>
+
+## Visión General de la Integración
+
+<p>La integración con PeruDevs se implementa utilizando el patrón Adapter (Adapter pattern), encapsulando toda la comunicación de la API externa dentro del componente <code class="artifact-id">PeruDevsAdapter</code>. El adaptador proporciona tres operaciones principales:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Operación</th>
+                <th scope="col">Propósito</th>
+                <th scope="col">Tipo de Retorno</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Consulta de RUC</td>
+                <td>Recuperar información de la empresa por número de RUC.</td>
+                <td><code>Optional&lt;ClienteData&gt;</code></td>
+            </tr>
+            <tr>
+                <td>Consulta Simple de DNI</td>
+                <td>Recuperar información de la persona por número de DNI.</td>
+                <td><code>Optional&lt;DniData&gt;</code></td>
+            </tr>
+            <tr>
+                <td>Validación DNI a RUC</td>
+                <td>Encontrar RUC 10 asociado a un DNI.</td>
+                <td><code>Optional&lt;ClienteData&gt;</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Diagrama de Arquitectura de Integración
+
+<ImageViewer 
+    src="/src/assets/diagrama-arquitectura-integracion.svg" 
+    alt="Diagrama de arquitectura de integración que muestra cómo la capa de servicio utiliza el PeruDevsAdapter para comunicarse con la API externa de PeruDevs, manejando la deserialización JSON y los modelos de respuesta."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="1-93" />
+</SourceReference>
+
+## Componente PeruDevsAdapter
+
+<p>La clase <code class="artifact-id">PeruDevsAdapter</code> sirve como el punto de integración principal con la API de PeruDevs. Es un componente gestionado por Spring que maneja la comunicación HTTP, la autenticación y la deserialización JSON.</p>
+
+### Estructura de Clases
+
+<ImageViewer 
+    src="/src/assets/estructura-clase-perudevs-adapter.svg" 
+    alt="Diagrama de clases UML que muestra PeruDevsAdapter y su relación con los modelos de respuesta PeruDevsResponse y PeruDevsDniResponse, que a su vez contienen los objetos de datos ClienteData y DniData."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="14-23" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsResponse.java" lines="1-89" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsDniResponse.java" lines="1-70" />
+</SourceReference>
+
+### Inicialización del Componente
+
+<p>El adaptador se instancia con una clave de API inyectada desde la configuración de la aplicación a través de la anotación <code class="artifact-id">@Value</code>:</p>
+
+<SourceReference variant="inline-box">
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="21-23" />
+</SourceReference>
+
+<SourceReference variant="inline" label='' textBefore='El adaptador crea una instancia reutilizable de <code class="artifact-id">HttpClient</code> y <code class="artifact-id">ObjectMapper</code> para el procesamiento JSON durante la inicialización:'> 
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="18-19" />
+</SourceReference>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="14-23" />
+</SourceReference>
+
+## Endpoints y Operaciones de la API
+
+<p>La API de PeruDevs proporciona tres endpoints que consume el adaptador. Cada endpoint sigue un patrón de URL consistente con parámetros de consulta para el número de documento y la clave de API.</p>
+
+### Especificaciones de los Endpoints
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Endpoint</th>
+                <th scope="col">Método</th>
+                <th scope="col">Propósito</th>
+                <th scope="col">Parámetros de Consulta</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/api/v1/ruc</code></td>
+                <td>GET</td>
+                <td>Consultar información de RUC.</td>
+                <td><code>document</code>, <code>key</code></td>
+            </tr>
+            <tr>
+                <td><code>/api/v1/dni/simple</code></td>
+                <td>GET</td>
+                <td>Consultar información de DNI.</td>
+                <td><code>document</code>, <code>key</code></td>
+            </tr>
+            <tr>
+                <td><code>/api/v1/dni/ruc-validate</code></td>
+                <td>GET</td>
+                <td>Encontrar RUC 10 para un DNI.</td>
+                <td><code>document</code>, <code>key</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Operación de Consulta de RUC
+
+<p>El método <code class="artifact-id">consultarRuc()</code> consulta la información de la empresa por número de RUC:</p>
+
+<ImageViewer 
+    src="/src/assets/flujo-consulta-ruc-perudevs.svg" 
+    alt="Diagrama de secuencia que detalla la operación de consulta de RUC, mostrando cómo el servicio llama al adaptador, que construye la URL, envía una solicitud HTTP, y deserializa la respuesta JSON."
+/>
+
+<SourceReference variant="inline" label='' textBefore='<strong>Implementación:</strong>'>
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="30-48" />
+</SourceReference>
+
+<SourceReference variant="inline" label='' textBefore='<strong>Construcción de URL:</strong> La URL se construye usando <code class="artifact-id">String.format()</code> con el RUC y la clave de API como parámetros:'>
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="31" />
+</SourceReference>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="25-48" />
+</SourceReference>
+
+### Operación de Validación DNI a RUC
+
+<p>El método <code class="artifact-id">consultarRucAsociadoADni()</code> encuentra el RUC 10 (identificación fiscal de persona natural con negocio) asociado a un DNI:</p>
+
+<SourceReference variant="inline" label='' textBefore='<strong>Implementación:</strong>'>
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="55-70" />
+</SourceReference>
+
+<SourceReference 
+    variant="inline" 
+    label='' 
+    textBefore='<strong>Construcción de URL:</strong>'
+    textAfter='Este endpoint es particularmente útil para individuos que operan como persona natural con negocio y tienen tanto un DNI como un RUC 10.'
+>
+    <SourceBtn buttonMode='inline' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="56" />
+</SourceReference>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="50-70" />
+</SourceReference>
+
+### Operación de Consulta Simple de DNI
+
+<p>El método <code class="artifact-id">consultarDniSimple()</code> recupera información de una persona por su número de DNI:</p>
+
+<SourceReference variant="inline" label='' textBefore='<strong>Implementación:</strong>'>
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="77-92" />
+</SourceReference>
+
+<SourceReference 
+    variant="inline" 
+    label='' 
+    textBefore='<strong>Construcción de URL:</strong>'
+    textAfter='Esta operación devuelve información personal en lugar de datos de negocio, retornando un objeto <code>DniData</code> en lugar de <code>ClienteData</code>.'
+>
+    <SourceBtn buttonMode='inline' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="78" />
+</SourceReference>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="72-92" />
+</SourceReference>
+
+## Modelos de Respuesta
+
+<p>El adaptador utiliza dos clases de modelo de respuesta principales para deserializar las respuestas JSON de la API de PeruDevs.</p>
+
+### Estructura de PeruDevsResponse
+
+<p>La clase <code class="artifact-id">PeruDevsResponse</code> maneja las respuestas de los endpoints relacionados con RUC:</p>
+
+<ImageViewer 
+    src="/src/assets/estructura-perudevsresponse.svg" 
+    alt="Diagrama de clases UML que muestra la estructura de PeruDevsResponse y su objeto anidado ClienteData, junto con las anotaciones de Jackson para el mapeo de propiedades."
+/>
+
+<p><strong>Mapeo de Campos:</strong></p>
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Campo JSON</th>
+                <th scope="col">Campo Java</th>
+                <th scope="col">Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>estado</code></td>
+                <td><code>estado</code></td>
+                <td>Estado de éxito/fallo.</td>
+            </tr>
+            <tr>
+                <td><code>mensaje</code></td>
+                <td><code>mensaje</code></td>
+                <td>Mensaje de respuesta.</td>
+            </tr>
+            <tr>
+                <td><code>resultado</code></td>
+                <td><code>resultado</code></td>
+                <td>Objeto de datos del cliente anidado.</td>
+            </tr>
+            <tr>
+                <td><code>resultado.id</code></td>
+                <td><code>ruc</code></td>
+                <td>Número de RUC (mapeado vía <code>@JsonProperty</code>).</td>
+            </tr>
+            <tr>
+                <td><code>resultado.razon_social</code></td>
+                <td><code>razonSocial</code></td>
+                <td>Razón social de la empresa.</td>
+            </tr>
+            <tr>
+                <td><code>resultado.direccion</code></td>
+                <td><code>direccion</code></td>
+                <td>Dirección de la empresa.</td>
+            </tr>
+            <tr>
+                <td><code>resultado.estado</code></td>
+                <td><code>estado</code></td>
+                <td>Estado de la empresa.</td>
+            </tr>
+            <tr>
+                <td><code>resultado.departamento</code></td>
+                <td><code>departamento</code></td>
+                <td>Departamento geográfico.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsResponse.java" lines="6-89" />
+</SourceReference>
+
+### Estructura de PeruDevsDniResponse
+
+<p>La clase <code class="artifact-id">PeruDevsDniResponse</code> maneja las respuestas del endpoint de consulta simple de DNI:</p>
+
+<ImageViewer 
+    src="/src/assets/estructura-perudevsdniresponse.svg" 
+    alt="Diagrama de clases UML que muestra la estructura de PeruDevsDniResponse y su objeto anidado DniData, con sus respectivas anotaciones de Jackson."
+/>
+
+<p><strong>Mapeo de Campos:</strong></p>
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Campo JSON</th>
+                <th scope="col">Campo Java</th>
+                <th scope="col">Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>estado</code></td>
+                <td><code>estado</code></td>
+                <td>Estado de éxito/fallo.</td>
+            </tr>
+            <tr>
+                <td><code>resultado.apellido_paterno</code></td>
+                <td><code>apellidoPaterno</code></td>
+                <td>Apellido paterno.</td>
+            </tr>
+            <tr>
+                <td><code>resultado.apellido_materno</code></td>
+                <td><code>apellidoMaterno</code></td>
+                <td>Apellido materno.</td>
+            </tr>
+            <tr>
+                <td><code>resultado.nombres</code></td>
+                <td><code>nombres</code></td>
+                <td>Nombre(s).</td>
+            </tr>
+            <tr>
+                <td><code>resultado.nombre_completo</code></td>
+                <td><code>nombreCompleto</code></td>
+                <td>Nombre completo.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsDniResponse.java" lines="6-70" />
+</SourceReference>
+
+### Anotaciones de Jackson
+
+<SourceReference variant="inline" label='' textBefore='Ambas clases de respuesta utilizan la anotación <code>@JsonIgnoreProperties(ignoreUnknown = true)</code> para ignorar cualquier campo adicional en la respuesta de la API que no sea necesario para la aplicación:'>
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsResponse.java" lines="6" />
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsDniResponse.java" lines="6" />
+</SourceReference>
+
+<SourceReference variant="inline" label='' textBefore='El mapeo de nombres de campos utiliza <code>@JsonProperty</code> para traducir entre las convenciones JSON snake_case y Java camelCase:'>
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsResponse.java" lines="16-18" />
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsDniResponse.java" lines="14-20" />
+</SourceReference>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsResponse.java" lines="1-89" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsDniResponse.java" lines="1-70" />
+</SourceReference>
+
+## Estrategia de Manejo de Errores
+
+<p>El adaptador implementa un enfoque defensivo para el manejo de errores que devuelve <code>Optional.empty()</code> para todos los escenarios de fallo, permitiendo que la capa de servicio que lo invoca maneje los datos faltantes de manera controlada.</p>
+
+### Flujo de Manejo de Errores
+
+<ImageViewer 
+    src="/src/assets/flujo-manejo-errores-perudevs.svg" 
+    alt="Diagrama de flujo que ilustra el manejo de errores en el adaptador, mostrando cómo las respuestas no exitosas, los errores de red o los datos inválidos resultan en un Optional.empty() como retorno."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="30-48" />
+</SourceReference>
+
+### Escenarios de Error
+
+<p>El adaptador maneja las siguientes condiciones de error:</p>
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Tipo de Error</th>
+                <th scope="col">Causa</th>
+                <th scope="col">Manejo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Estado HTTP no 200</td>
+                <td>Error de la API o solicitud inválida.</td>
+                <td>Retorna <code>Optional.empty()</code></td>
+            </tr>
+            <tr>
+                <td><code>estado == false</code></td>
+                <td>La API indica que la solicitud falló.</td>
+                <td>Retorna <code>Optional.empty()</code></td>
+            </tr>
+            <tr>
+                <td><code>resultado == null</code></td>
+                <td>No se encontraron datos para el documento.</td>
+                <td>Retorna <code>Optional.empty()</code></td>
+            </tr>
+            <tr>
+                <td><code>IOException</code></td>
+                <td>Problemas de conectividad de red.</td>
+                <td>Registra en stderr, retorna <code>Optional.empty()</code></td>
+            </tr>
+            <tr>
+                <td><code>InterruptedException</code></td>
+                <td>Timeout de la solicitud o interrupción del hilo.</td>
+                <td>Registra en stderr, retorna <code>Optional.empty()</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Registro de Errores (Logging)
+
+<p>Todas las excepciones son capturadas y registradas en la salida de error estándar con mensajes descriptivos:</p>
+
+<SourceReference variant="inline" label='' textBefore='<strong>Consulta de RUC:</strong>'>
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="43-45" />
+</SourceReference>
+
+<SourceReference variant="inline" label='' textBefore='<strong>Validación DNI a RUC:</strong>'>
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="66-68" />
+</SourceReference>
+
+<SourceReference variant="inline" label='' textBefore='<strong>Consulta Simple de DNI:</strong>'>
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="88-90" />
+</SourceReference>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="43-45" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="66-68" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="88-90" />
+</SourceReference>
+
+## Requisitos de Configuración
+
+<p>La integración con PeruDevs requiere una clave de API válida para autenticar las solicitudes. Esta clave debe ser configurada en las propiedades de la aplicación.</p>
+
+### Propiedad de Configuración Requerida
+
+<CodeBlock code={`api.perudevs.key=<your-api-key>`} />
+
+<p>La clave de API se inyecta en el constructor de <code class="artifact-id">PeruDevsAdapter</code> a través de la anotación <code class="artifact-id">@Value</code> de Spring:</p>
+<SourceReference variant="inline-box">
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="21-23" />
+</SourceReference>
+
+### Ubicación de la Configuración
+
+<p>La clave de API debe configurarse en una de las siguientes ubicaciones, dependiendo del entorno de despliegue:</p>
+
+<ul>
+    <li><code>src/main/resources/application.properties</code></li>
+    <li><code>src/main/resources/application.yml</code></li>
+    <li>Variables de entorno</li>
+    <li>Archivos de configuración externos</li>
+</ul>
+
+<p>Para consideraciones de despliegue y configuración específica del entorno, consulte <a href="/docs/servicio-clientes/configuracion-y-despliegue" class="content-link">Configuración y Despliegue</a>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="21-23" />
+</SourceReference>
+
+## Implementación del Cliente HTTP
+
+<p>El adaptador utiliza la API <code class="artifact-id">HttpClient</code> incorporada de Java (introducida en Java 11) para la comunicación HTTP, evitando la necesidad de librerías HTTP externas.</p>
+
+### Configuración del HttpClient
+
+<p>El adaptador crea una única instancia de <code class="artifact-id">HttpClient</code> que se reutiliza para todas las solicitudes:</p>
+<SourceReference variant="inline-box">
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="18" />
+</SourceReference>
+
+<p>Esta instancia utiliza la configuración por defecto con:</p>
+
+<ul>
+    <li>Soporte HTTP/2 con fallback a HTTP/1.1</li>
+    <li>Pool de conexiones por defecto</li>
+    <li>Configuraciones de timeout por defecto</li>
+</ul>
+
+### Construcción de la Solicitud
+
+<SourceReference variant="inline" label='' textBefore='Las solicitudes HTTP se construyen utilizando el patrón builder:'>
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="32" />
+</SourceReference>
+
+<p>Cada solicitud:</p>
+<ul>
+    <li>Utiliza el método GET (por defecto).</li>
+    <li>Contiene la URL completa con parámetros de consulta.</li>
+    <li>No tiene cabeceras ni cuerpo adicionales.</li>
+</ul>
+
+### Manejo de la Respuesta
+
+<SourceReference 
+    variant="inline"
+    label=''
+    textBefore='El adaptador utiliza <code class="artifact-id">BodyHandlers.ofString()</code> para procesar las respuestas como texto:'
+    textAfter='Esto permite que el cuerpo de la respuesta se pase directamente a Jackson para la deserialización JSON.'
+>
+    <SourceBtn buttonMode='inline-/n' path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="35" />
+</SourceReference>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="18" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="32" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="35" />
+</SourceReference>
+
+## Integración con la Capa de Servicio
+
+<p>El <code class="artifact-id">PeruDevsAdapter</code> se inyecta en <code>ClienteServiceImpl</code>, donde se utiliza como un fallback cuando los datos del cliente no se encuentran en la base de datos local. La capa de servicio maneja la estrategia de caché, almacenando los datos externos recuperados con éxito para futuras solicitudes.</p>
+<p>Para más detalles sobre cómo se utiliza el adaptador dentro de la estrategia de caché de la capa de servicio, consulte <a href="/docs/servicio-clientes/capa-servicio-logica-negocio" class="content-link">Capa de Servicio y Lógica de Negocio</a>.</p>
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/external/PeruDevsAdapter.java" lines="1-93" />
+</SourceReference>

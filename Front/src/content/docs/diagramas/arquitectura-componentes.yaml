@@ -1,0 +1,161 @@
+title: "1. Diagrama de Arquitectura de Componentes"
+page:
+  title: "Visión General"
+  url: "/docs/overview"
+image: "../../assets/arquitectura-componentes.svg"
+description: "Diagrama de flujo que muestra dos microservicios, 'Servicio de Clientes' y 'Servicio de Facturación', comunicándose con una base de datos PostgreSQL."
+plantUML: |
+  @startuml
+  ' --- Configuración de Estilo (Tema Oscuro) ---
+  !theme cyborg
+  
+  skinparam component {
+      BackgroundColor #334455
+      BorderColor #A9C5E8
+      FontColor #FFFFFF
+      ArrowColor #A9C5E8
+  }
+  skinparam rectangle {
+      BackgroundColor #223344
+      BorderColor #88AADD
+      FontColor #EFEFEF
+  }
+  skinparam database {
+      BackgroundColor #553322
+      BorderColor #E8C5A9
+      FontColor #FFFFFF
+  }
+  skinparam cloud {
+      BackgroundColor #444444
+      BorderColor #AAAAAA
+      FontColor #FFFFFF
+  }
+  skinparam arrow {
+      Color #CCCCCC
+      FontColor #CCCCCC
+  }
+  
+  ' --- Definición de Componentes ---
+  
+  ' Paquete: Servicio de Clientes
+  package "servicio-clientes" #222222 {
+      rectangle ClienteController [
+          <b>ClienteController</b>
+          /api/v1/clientes
+      ]
+  
+      rectangle ClienteServiceImpl [
+          <b>ClienteServiceImpl</b>
+      ]
+  
+      rectangle PeruDevsAdapter [
+          <b>PeruDevsAdapter</b>
+      ]
+  
+      rectangle ClienteRepository [
+          <b>ClienteRepository</b>
+      ]
+  
+      rectangle ClienteEntity [
+          <b>ClienteEntity</b>
+      ]
+  }
+  
+  ' Paquete: Servicio de Facturación
+  package "servicio-facturacion" #222222 {
+      rectangle FacturaController [
+          <b>FacturaController</b>
+      ]
+  
+      rectangle FacturaService [
+          <b>FacturaService</b>
+      ]
+  
+      rectangle FacturaRepository [
+          <b>FacturaRepository</b>
+      ]
+  
+      rectangle PdfGenerator [
+          <b>PdfGenerator</b>
+          <font size=10><i>OpenPDF</i></font>
+      ]
+  
+      rectangle QrCodeGenerator [
+          <b>QrCodeGenerator</b>
+          <font size=10><i>ZXing</i></font>
+      ]
+  }
+  
+  ' Paquete: Base de Datos
+  package "Database" #222222 {
+      database "facturacion_db\n<b>PostgreSQL</b>" as DB
+  }
+  
+  ' Paquete: Sistemas Externos
+  package "External Systems" #222222 {
+      cloud "<b>PeruDevs API</b>\nValidación RUC/DNI" as PeruDevsAPI
+  }
+  
+  
+  ' --- Definición de Relaciones ---
+  
+  ' Flujo en servicio-clientes
+  ClienteController -down-> ClienteServiceImpl
+  ClienteServiceImpl -down-> PeruDevsAdapter
+  ClienteServiceImpl -down-> ClienteRepository
+  ClienteRepository -down-> ClienteEntity
+  ClienteEntity -down-> DB
+  
+  ' Flujo en servicio-facturacion
+  FacturaController -down-> FacturaService
+  FacturaService -down-> FacturaRepository
+  FacturaService --> PdfGenerator
+  FacturaService --> QrCodeGenerator
+  FacturaRepository -down-> DB
+  
+  ' Conexión con sistema externo
+  PeruDevsAdapter -left-> PeruDevsAPI
+  
+  ' Conexión entre servicios (Referencia)
+  FacturaService ..> ClienteServiceImpl : Puede referenciar
+  @enduml
+mermaid: |
+  graph TB
+    subgraph "servicio-clientes"
+        CC["ClienteController<br/>/api/v1/clientes"]
+        CS["ClienteServiceImpl"]
+        CR["ClienteRepository"]
+        CE["ClienteEntity"]
+        PA["PeruDevsAdapter"]
+    end
+    
+    subgraph "servicio-facturacion"
+        FC["FacturaController"]
+        FS["FacturaService"]
+        FR["FacturaRepository"]
+        PG["PdfGenerator<br/>OpenPDF"]
+        QG["QrCodeGenerator<br/>ZXing"]
+    end
+    
+    subgraph "External Systems"
+        PD["PeruDevs API<br/>RUC/DNI Validation"]
+    end
+    
+    subgraph "Database"
+        DB[("facturacion_db<br/>PostgreSQL")]
+    end
+    
+    CC --> CS
+    CS --> CR
+    CS --> PA
+    CR --> CE
+    CE --> DB
+    PA --> PD
+    
+    FC --> FS
+    FS --> FR
+    FS --> PG
+    FS --> QG
+    FR --> DB
+    
+    FS -.->|"May reference"| CS

@@ -1,0 +1,383 @@
+---
+title: "Endpoints de la API REST"
+description: "Referencia completa para todos los endpoints de la API REST expuestos por el microservicio servicio-clientes. Estos endpoints habilitan operaciones de gestión de clientes, incluyendo búsqueda de RUC, validación de DNI y búsqueda unificada de documentos."
+---
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Endpoints de la API REST
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/config/WebConfig.java" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>
+    Este documento proporciona una referencia completa para todos los endpoints de la API REST expuestos por el microservicio <code class="artifact-id">servicio-clientes</code>. Estos endpoints habilitan operaciones de gestión de clientes, incluyendo búsqueda de RUC, validación de DNI y funcionalidad de búsqueda basada en documentos. Todos los endpoints siguen las convenciones RESTful y devuelven respuestas en formato JSON.
+</p>
+
+<p>
+    Para información sobre las estructuras de datos devueltas por estos endpoints, consulte 
+    <a href="/docs/servicio-clientes/objetos-transferencia-datos" class="content-link">Objetos de Transferencia de Datos (DTOs)</a>
+    . Para detalles sobre la lógica de negocio y la estrategia de caché detrás de estos endpoints, vea 
+    <a href="/docs/servicio-clientes/capa-servicio-logica-negocio" class="content-link">Capa de Servicio y Lógica de Negocio</a>
+    . Para la integración con servicios de validación externos, consulte 
+    <a href="/docs/servicio-clientes/integraciones-externas-perudevs" class="content-link">Integraciones Externas: PeruDevs API</a>
+    .
+</p>
+
+## Configuración Base de la API
+
+<p>La API de <code class="artifact-id">servicio-clientes</code> se expone bajo la ruta base <code>/api/v1/clientes</code> con semántica de versión 1. El servicio se ejecuta en el puerto 8080 por defecto e implementa un soporte CORS completo para permitir solicitudes de origen cruzado desde clientes web.</p>
+
+<p><strong>Estructura de la URL Base:</strong></p>
+<CodeBlock code={'http://localhost:8080/api/v1/clientes'} />
+
+<p><strong>Configuración de CORS:</strong></p>
+<ul>
+    <li><strong>Orígenes Permitidos:</strong> <code class="artifact-id">\*</code> (todos los orígenes)</li>
+    <li><strong>Métodos Permitidos:</strong> <code class="artifact-id">GET</code>, <code class="artifact-id">POST</code>, <code class="artifact-id">PUT</code>, <code class="artifact-id">DELETE</code>, <code class="artifact-id">OPTIONS</code></li>
+    <li><strong>Cabeceras Permitidas:</strong> <code class="artifact-id">\*</code> (todas las cabeceras)</li>
+</ul>
+<p>La configuración de CORS se implementa en la clase <code class="artifact-id">WebConfig</code>, que permite el acceso sin restricciones para facilitar la integración del frontend durante el desarrollo y el despliegue.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/config/WebConfig.java" lines="14-30" />
+</SourceReference>
+
+## Visión General de los Endpoints de la API
+
+<p>El <code class="artifact-id">ClienteController</code> expone cuatro endpoints primarios para la recuperación de datos de clientes. Todos los endpoints son operaciones de solo lectura (GET) e implementan una estrategia de caché donde primero se intenta una búsqueda en la base de datos local, seguida de consultas a APIs externas cuando sea necesario.</p>
+
+<ImageViewer 
+    src="/src/assets/endpoints-api-estructura.svg"
+    alt="Diagrama que muestra la estructura de los endpoints de la API REST y los métodos del controlador asociados, partiendo de una ruta base y ramificándose en cuatro endpoints GET para RUC, DNI, RUC asociado a DNI y búsqueda de documento universal."
+/>
+<p class="text-center italic">Diagrama: Estructura de Endpoints de la API REST y Métodos del Controlador</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="20-97" />
+</SourceReference>
+
+## Especificaciones de los Endpoints
+
+### Tabla Resumen
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Método HTTP</th>
+                <th>Ruta del Endpoint</th>
+                <th>Método del Controlador</th>
+                <th>Parámetro de Solicitud</th>
+                <th>DTO de Respuesta</th>
+                <th>Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>GET</td>
+                <td><code class="artifact-id">/ruc/{"{numeroRuc}"}</code></td>
+                <td><code class="artifact-id">obtenerClientePorRuc()</code></td>
+                <td>RUC de 11 dígitos</td>
+                <td><code class="artifact-id">ClienteResponse</code></td>
+                <td>Recuperar cliente por número de RUC</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td><code class="artifact-id">/dni/{"{numeroDni}"}</code></td>
+                <td><code class="artifact-id">obtenerClientePorDni()</code></td>
+                <td>DNI de 8 dígitos</td>
+                <td><code class="artifact-id">DniResponse</code></td>
+                <td>Recuperar datos de persona por DNI</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td><code class="artifact-id">/dni/{"{numeroDni}"}/ruc-asociado</code></td>
+                <td><code class="artifact-id">obtenerRucAsociadoADni()</code></td>
+                <td>DNI de 8 dígitos</td>
+                <td><code class="artifact-id">ClienteResponse</code></td>
+                <td>Encontrar RUC-10 asociado a un DNI</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td><code class="artifact-id">/documento/{"{numeroDocumento}"}</code></td>
+                <td><code class="artifact-id">buscarPorDocumento()</code></td>
+                <td>Documento de 8 u 11 dígitos</td>
+                <td><code class="artifact-id">ConsultaDocumentoResponse</code></td>
+                <td>Búsqueda universal de documentos</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="41-96" />
+</SourceReference>
+
+### 1. Buscar Cliente por RUC
+
+<p><strong>Endpoint:</strong> <code class="artifact-id">GET /api/v1/clientes/ruc/{"{numeroRuc}"}</code></p>
+<p><strong>Método del Controlador:</strong> <code class="artifact-id">obtenerClientePorRuc()</code></p>
+<p><strong>Descripción:</strong> Busca un cliente utilizando su número de RUC (Registro Único de Contribuyentes). El servicio primero consulta la base de datos local; si no lo encuentra, consulta la API externa de PeruDevs y almacena en caché el resultado.</p>
+<p><strong>Parámetros de Ruta:</strong></p>
+<ul>
+    <li><code class="artifact-id">numeroRuc</code> (String, requerido) - número de RUC de 11 dígitos del cliente</li>
+</ul>
+<p><strong>Tipo de Respuesta:</strong> <code class="artifact-id">ClienteResponse</code></p>
+<p><strong>Códigos de Estado HTTP:</strong></p>
+<ul>
+    <li><code class="artifact-id">200 OK</code> - Cliente encontrado y devuelto con éxito</li>
+    <li><code class="artifact-id">404 Not Found</code> - Cliente no encontrado en la base de datos local ni en el servicio externo</li>
+</ul>
+<p><strong>Anotaciones OpenAPI:</strong></p>
+<ul>
+    <li>Resumen: "Buscar un cliente por su número de RUC"</li>
+    <li>Descripción: "Busca un cliente primero en la base de datos local. Si no lo encuentra, consulta un servicio externo y guarda el resultado."</li>
+</ul>
+<p><strong>Solicitud de Ejemplo:</strong></p>
+<CodeBlock code={'GET /api/v1/clientes/ruc/20123456789'} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="31-49" />
+</SourceReference>
+
+### 2. Buscar Persona por DNI
+
+<p><strong>Endpoint:</strong> <code class="artifact-id">GET /api/v1/clientes/dni/{"{numeroDni}"}</code></p>
+<p><strong>Método del Controlador:</strong> <code class="artifact-id">obtenerClientePorDni()</code></p>
+<p><strong>Descripción:</strong> Recupera datos personales básicos de un individuo utilizando su número de DNI (Documento Nacional de Identidad). Este endpoint devuelve información simplificada de la persona, adecuada para la validación de identidad.</p>
+<p><strong>Parámetros de Ruta:</strong></p>
+<ul>
+    <li><code class="artifact-id">numeroDni</code> (String, requerido) - número de DNI de 8 dígitos</li>
+</ul>
+<p><strong>Tipo de Respuesta:</strong> <code class="artifact-id">DniResponse</code></p>
+<p><strong>Códigos de Estado HTTP:</strong></p>
+<ul>
+    <li><code class="artifact-id">200 OK</code> - Datos del DNI encontrados y devueltos</li>
+    <li><code class="artifact-id">404 Not Found</code> - DNI no encontrado</li>
+</ul>
+<p><strong>Anotaciones OpenAPI:</strong></p>
+<ul>
+    <li>Resumen: "Buscar datos básicos de una persona por su DNI"</li>
+</ul>
+<p><strong>Solicitud de Ejemplo:</strong></p>
+<CodeBlock code={'GET /api/v1/clientes/dni/12345678'} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="51-65" />
+</SourceReference>
+
+### 3. Encontrar RUC Asociado a un DNI
+
+<p><strong>Endpoint:</strong> <code class="artifact-id">GET /api/v1/clientes/dni/{"{numeroDni}"}/ruc-asociado</code></p>
+<p><strong>Método del Controlador:</strong> <code class="artifact-id">obtenerRucAsociadoADni()</code></p>
+<p><strong>Descripción:</strong> Determina si un DNI dado tiene un RUC-10 asociado (RUC de contribuyente individual). En Perú, las personas pueden tener un RUC-10 que comienza con "10" seguido de su DNI de 8 dígitos y un dígito de verificación.</p>
+<p><strong>Parámetros de Ruta:</strong></p>
+<ul>
+    <li><code class="artifact-id">numeroDni</code> (String, requerido) - número de DNI de 8 dígitos</li>
+</ul>
+<p><strong>Tipo de Respuesta:</strong> <code class="artifact-id">ClienteResponse</code></p>
+<p><strong>Códigos de Estado HTTP:</strong></p>
+<ul>
+    <li><code class="artifact-id">200 OK</code> - RUC asociado encontrado y datos del cliente devueltos</li>
+    <li><code class="artifact-id">404 Not Found</code> - No hay RUC asociado con el DNI proporcionado</li>
+</ul>
+<p><strong>Anotaciones OpenAPI:</strong></p>
+<ul>
+    <li>Resumen: "Buscar si un DNI tiene un RUC 10 asociado"</li>
+    <li>Respuesta 200: "RUC asociado encontrado (devuelve datos de cliente/RUC)"</li>
+    <li>Respuesta 404: "El DNI no tiene un RUC asociado"</li>
+</ul>
+<p><strong>Solicitud de Ejemplo:</strong></p>
+<CodeBlock code={'GET /api/v1/clientes/dni/12345678/ruc-asociado'} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="67-80" />
+</SourceReference>
+
+### 4. Búsqueda Universal de Documentos
+
+<p><strong>Endpoint:</strong> <code class="artifact-id">GET /api/v1/clientes/documento/{"{numeroDocumento}"}</code></p>
+<p><strong>Método del Controlador:</strong> <code class="artifact-id">buscarPorDocumento()</code></p>
+<p><strong>Descripción:</strong> Proporciona una interfaz de búsqueda unificada que acepta tanto DNI (8 dígitos) como RUC (11 dígitos) y enruta automáticamente a la lógica de búsqueda apropiada. La respuesta indica el tipo de documento detectado.</p>
+<p><strong>Parámetros de Ruta:</strong></p>
+<ul>
+    <li><code class="artifact-id">numeroDocumento</code> (String, requerido) - DNI de 8 dígitos o RUC de 11 dígitos</li>
+</ul>
+<p><strong>Tipo de Respuesta:</strong> <code class="artifact-id">ConsultaDocumentoResponse</code></p>
+<p><strong>Códigos de Estado HTTP:</strong></p>
+<ul>
+    <li><code class="artifact-id">200 OK</code> - Documento encontrado, la respuesta incluye un indicador de tipo</li>
+    <li><code class="artifact-id">404 Not Found</code> - Documento no encontrado</li>
+</ul>
+<p><strong>Anotaciones OpenAPI:</strong></p>
+<ul>
+    <li>Resumen: "Busca un cliente por DNI (8 dígitos) o RUC (11 dígitos)"</li>
+    <li>Respuesta 200: "Documento encontrado. El cuerpo de la respuesta indicará si es de tipo RUC o DNI."</li>
+</ul>
+<p><strong>Solicitudes de Ejemplo:</strong></p>
+<CodeBlock code={`GET /api/v1/clientes/documento/12345678        # Búsqueda por DNI
+GET /api/v1/clientes/documento/20123456789     # Búsqueda por RUC`} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="83-96" />
+</SourceReference>
+
+## Flujo de Petición/Respuesta
+
+<p>El siguiente diagrama ilustra el flujo típico de petición/respuesta para cualquiera de los endpoints de la API, mostrando cómo el controlador delega a la capa de servicio y devuelve las respuestas HTTP apropiadas.</p>
+
+<ImageViewer 
+    src="/src/assets/flujo-peticion-respuesta.svg"
+    alt="Diagrama de secuencia del flujo de petición/respuesta, mostrando a un cliente HTTP que llama a un controlador, el cual invoca un servicio, recibe un Optional y devuelve 200 OK si el Optional está presente, o 404 Not Found si está vacío."
+/>
+<p class="text-center italic">Diagrama: Flujo de Petición/Respuesta para el Endpoint de Búsqueda de RUC</p>
+
+<p>Todos los endpoints siguen este patrón:</p>
+<ol>
+    <li>El controlador recibe la petición HTTP con un parámetro de ruta.</li>
+    <li>El controlador invoca el método de servicio correspondiente.</li>
+    <li>El servicio devuelve un <code class="artifact-id">Optional{"<T>"};</code> que contiene el DTO de respuesta.</li>
+    <li>
+        El controlador mapea el <code class="artifact-id">Optional</code> a un <code class="artifact-id">ResponseEntity</code>:
+        <ul>
+            <li>Si está presente: <code>ResponseEntity.ok(dto)</code> → 200 OK</li>
+            <li>Si está vacío: <code>ResponseEntity.notFound().build()</code> → 404 Not Found</li>
+        </ul>
+    </li>
+</ol>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="46-48" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="62-64" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="77-79" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="93-95" />
+</SourceReference>
+
+## Documentación y Descubrimiento de la API
+
+<p>La API de <code class="artifact-id">servicio-clientes</code> se autodocumenta utilizando anotaciones OpenAPI 3.0 (SpringDoc). Cada endpoint incluye:</p>
+<ul>
+    <li><strong>@Operation</strong> - Resumen y descripción del propósito del endpoint.</li>
+    <li><strong>@Parameter</strong> - Documentación para los parámetros de ruta.</li>
+    <li><strong>@ApiResponses</strong> - Códigos de respuesta HTTP esperados y sus significados.</li>
+    <li><strong>@Schema</strong> - Definiciones de esquema JSON para los cuerpos de respuesta.</li>
+</ul>
+<p>Estas anotaciones permiten la generación automática de documentación de API interactiva accesible a través de Swagger UI.</p>
+
+<p><strong>URL de Swagger UI:</strong></p>
+<CodeBlock code={'http://localhost:8080/swagger-ui.html'} />
+
+<p><strong>Especificación JSON de OpenAPI:</strong></p>
+<CodeBlock code={'http://localhost:8080/v3/api-docs'} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="7-12" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="31-39" />
+</SourceReference>
+
+## Detalles de Implementación del Controlador
+
+### Inyección de Dependencias
+
+<p>El <code class="artifact-id">ClienteController</code> utiliza inyección de dependencias basada en constructor para recibir su dependencia <code class="artifact-id">ClienteService</code>. Este es el enfoque recomendado por Spring para las dependencias requeridas.</p>
+
+<CodeBlock lang="java" code={`private final ClienteService clienteService;
+
+@Autowired
+public ClienteController(ClienteService clienteService) {
+    this.clienteService = clienteService;
+}`} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="24-29" />
+</SourceReference>
+
+### Anotaciones del Controlador
+
+<ul>
+    <li><strong>@RestController</strong> - Marca la clase como un controlador REST con serialización JSON automática.</li>
+    <li><strong>@RequestMapping("/api/v1/clientes")</strong> - Define la ruta base para todos los endpoints en este controlador.</li>
+    <li><strong>@GetMapping</strong> - Mapea las peticiones HTTP GET a los métodos manejadores.</li>
+    <li><strong>@PathVariable</strong> - Vincula las variables de la plantilla de URI a los parámetros del método.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="20-21" />
+</SourceReference>
+
+## Detalles de la Política de CORS
+
+<p>El servicio implementa una política de CORS permisiva para dar soporte a aplicaciones de frontend alojadas en varios dominios. La configuración está centralizada en la clase <code class="artifact-id">WebConfig</code>.</p>
+
+### Configuración Actual
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr><th>Configuración</th><th>Valor</th><th>Notas</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Orígenes Permitidos</td><td><code>\*</code></td><td>Todos los orígenes permitidos</td></tr>
+            <tr><td>Métodos Permitidos</td><td>GET, POST, PUT, DELETE, OPTIONS</td><td>Soporte completo de métodos REST</td></tr>
+            <tr><td>Cabeceras Permitidas</td><td><code>\*</code></td><td>Todas las cabeceras permitidas</td></tr>
+            <tr><td>Soporte de Credenciales</td><td>Deshabilitado (comentado)</td><td>Actualmente no se usan credenciales</td></tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Lista Blanca de Orígenes Comentada
+
+<p>La configuración incluye una sección comentada que muestra orígenes específicos que fueron previamente puestos en lista blanca:</p>
+<ul>
+    <li><code class="artifact-id">{"https://sdutp.xyz"}</code></li>
+    <li><code class="artifact-id">{"https://app.sdutp.xyz"}</code></li>
+    <li><code class="artifact-id">{"http://localhost:8080"}</code></li>
+    <li>Direcciones de loopback (127.0.0.1:\*)</li>
+</ul>
+<p>Esto sugiere que el servicio fue configurado inicialmente para dominios de producción y desarrollo específicos, pero luego se abrió a todos los orígenes para mayor flexibilidad de despliegue.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/config/WebConfig.java" lines="9-33" />
+</SourceReference>
+
+## Manejo de Errores
+
+<p>Todos los endpoints implementan un manejo de errores consistente a través del patrón <code class="artifact-id">ResponseEntity</code> de Spring:</p>
+
+### 404 No Encontrado
+
+<p>Se devuelve cuando:</p>
+<ul>
+    <li>El número de RUC no se encuentra en la base de datos local ni en el servicio externo.</li>
+    <li>El número de DNI no se encuentra.</li>
+    <li>El DNI no tiene un RUC-10 asociado.</li>
+    <li>El número de documento no se encuentra.</li>
+</ul>
+
+### Formato de Respuesta de Error
+
+<p>Cuando se devuelve un estado 404, el cuerpo de la respuesta está vacío (<code class="artifact-id">ResponseEntity.notFound().build()</code>). Los clientes deben confiar en el código de estado HTTP para determinar el éxito o el fracaso.</p>
+
+### Manejo de Excepciones
+
+<p>El controlador delega todo el manejo de excepciones a la capa de servicio. Cualquier excepción lanzada durante la ejecución del servicio será manejada por el mecanismo de manejo de excepciones por defecto de Spring o por manejadores de excepciones personalizados (si se configuran en otra parte de la aplicación).</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="48" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="64" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="79" />
+    <SourceBtn path="Back/servicio-clientes/src/main/java/com/facturacion/servicioclientes/controller/ClienteController.java" lines="95" />
+</SourceReference>

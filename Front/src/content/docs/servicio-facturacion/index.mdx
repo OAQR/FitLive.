@@ -1,0 +1,487 @@
+---
+title: "servicio-facturacion: Servicio de Facturación"
+description: "Este documento describe el microservicio servicio-facturacion, responsable de la creación y gestión de facturas dentro del sistema de facturación FitLive. El servicio genera facturas en PDF con códigos QR embebidos."
+---
+
+import SourceBtn from '@docs_components/SourceBtn.astro'; 
+import SourceReference from '@docs_components/SourceReference.astro'; 
+import ImageViewer from '@docs_components/ImageViewer.astro'; 
+import TableWrapper from '@docs_components/TableWrapper.astro'; 
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# servicio-facturacion: Servicio de Facturación
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/servicio-facturacion/.gitignore" buttonMode="custom"/>
+            <SourceBtn path="Back/servicio-facturacion/pom.xml" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento describe el microservicio <code class="artifact-id">servicio-facturacion</code>, que es responsable de la creación y gestión de facturas dentro del sistema de facturación FitLive. El servicio genera facturas en PDF con códigos QR embebidos para propósitos de validación y seguimiento.</p>
+<p>Para información sobre la gestión de datos de clientes que pueden ser referenciados en las facturas, consulte <a href="/docs/servicio-clientes" class="content-link">servicio-clientes: Servicio de Gestión de Clientes</a>. Para detalles sobre la implementación de la generación de PDF y códigos QR, consulte <a href="/docs/servicio-facturacion/generacion-pdf-qr" class="content-link">Generación de PDF y Códigos QR</a>. Para especificaciones de compilación y configuración, consulte <a href="/docs/servicio-facturacion/configuracion-y-ajuste" class="content-link">Configuración y Ajuste</a>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="14-15" />
+</SourceReference>
+
+## Visión General
+
+<p>El microservicio <code class="artifact-id">servicio-facturacion</code> está diseñado para gestionar la creación de facturas ("gestionar la creación de facturas") dentro de una arquitectura de microservicios basada en Spring Boot. El servicio se especializa en generar documentos PDF formateados con códigos QR integrados para la verificación y seguimiento de facturas.</p>
+<p>Como parte del sistema FitLive más amplio, este servicio trabaja en conjunto con <code class="artifact-id">servicio-clientes</code> para proporcionar capacidades de facturación completas. Ambos servicios comparten acceso a la base de datos PostgreSQL <code>facturacion_db</code>.</p>
+
+<ImageViewer 
+    src="/src/assets/servicio-facturacion-arquitectura-alto-nivel.svg" 
+    alt="Diagrama de arquitectura de alto nivel para servicio-facturacion, mostrando las capas de API REST, Servicio de Facturas, y Repositorio de Datos, junto con sus dependencias externas como OpenPDF, ZXing y el servicio-clientes."
+/>
+
+<p class="img-caption">Figura 1: Arquitectura de Alto Nivel de servicio-facturacion</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="1-104" />
+</SourceReference>
+
+## Stack Tecnológico
+
+<p>El servicio está construido sobre Spring Boot 3.5.6 con Java 22, proporcionando una base moderna y preparada para la nube para el procesamiento de facturas.</p>
+
+### Dependencias del Framework Principal
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Dependencia</th>
+                <th scope="col">Versión</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Spring Boot</td>
+                <td>3.5.6</td>
+                <td>Framework principal y entorno de ejecución de la aplicación</td>
+            </tr>
+            <tr>
+                <td>Java</td>
+                <td>22</td>
+                <td>Lenguaje de programación y entorno de ejecución</td>
+            </tr>
+            <tr>
+                <td>Spring Web</td>
+                <td>(Gestionado por Boot)</td>
+                <td>Capacidades de API REST</td>
+            </tr>
+            <tr>
+                <td>Spring Data JPA</td>
+                <td>(Gestionado por Boot)</td>
+                <td>Capa de persistencia de datos</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="6-9" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="29-30" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="33-46" />
+</SourceReference>
+
+### Librerías de Generación de Documentos
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Librería</th>
+                <th scope="col">Versión</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>OpenPDF</td>
+                <td>3.0.0</td>
+                <td>Generación de documentos PDF</td>
+            </tr>
+            <tr>
+                <td>ZXing Core</td>
+                <td>3.5.3</td>
+                <td>Codificación/decodificación de códigos QR</td>
+            </tr>
+            <tr>
+                <td>ZXing JavaSE</td>
+                <td>3.5.3</td>
+                <td>Generación de imágenes de códigos QR para Java SE</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="44-65" />
+</SourceReference>
+
+### Soporte de Base de Datos
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Componente</th>
+                <th scope="col">Versión</th>
+                <th scope="col">Ámbito</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Driver PostgreSQL</td>
+                <td>42.7.8</td>
+                <td>Runtime</td>
+                <td>Conectividad con la base de datos de producción</td>
+            </tr>
+            <tr>
+                <td>H2 Database</td>
+                <td>2.4.240</td>
+                <td>Runtime</td>
+                <td>Base de datos en memoria para desarrollo/pruebas</td>
+            </tr>
+            <tr>
+                <td>Flyway Core</td>
+                <td>11.14.0</td>
+                <td>Runtime</td>
+                <td>Gestión de migraciones de base de datos</td>
+            </tr>
+            <tr>
+                <td>Flyway PostgreSQL</td>
+                <td>11.14.0</td>
+                <td>Runtime</td>
+                <td>Soporte de migración específico para PostgreSQL</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="67-92" />
+</SourceReference>
+
+## Arquitectura y Componentes
+
+<p>Basado en la configuración de compilación y los patrones estándar de Spring Boot, el servicio sigue una arquitectura en capas típica de las aplicaciones Spring.</p>
+
+<ImageViewer 
+    src="/src/assets/arquitectura-componentes-servicio.svg" 
+    alt="Diagrama de la arquitectura de componentes del servicio, mostrando las capas de API, Servicio y Datos, y su interacción con librerías externas como OpenPDF y ZXing, y la gestión de la base de datos a través de Flyway."
+/>
+
+<p class="img-caption">Figura 2: Arquitectura de Componentes del Servicio</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="32-65" />
+</SourceReference>
+
+## Configuración de Compilación
+
+<p>El servicio utiliza Maven como su herramienta de compilación con el plugin Spring Boot Maven para el empaquetado y la ejecución.</p>
+
+### Coordenadas del Proyecto
+
+<CodeBlock language="xml" code={`<groupId>com.facturacion</groupId>
+<artifactId>servicio-facturacion</artifactId>
+<version>0.0.1-SNAPSHOT</version>`} />
+
+<p>El servicio está empaquetado bajo el identificador de grupo <code>com.facturacion</code> con el nombre de artefacto <code>servicio-facturacion</code>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="11-14" />
+</SourceReference>
+
+### Configuración del Plugin de Compilación
+
+<p>El plugin <code>spring-boot-maven-plugin</code> está configurado para crear un JAR ejecutable con todas las dependencias empaquetadas:</p>
+
+<CodeBlock language="xml" code={`<plugin>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-maven-plugin</artifactId>
+</plugin>`} />
+
+<p>Esto permite ejecutar el servicio con <code>java -jar servicio-facturacion-0.0.1-SNAPSHOT.jar</code>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="95-101" />
+</SourceReference>
+
+### Exclusiones del Entorno de Desarrollo
+
+<p>El archivo <code class="artifact-id">.gitignore</code> excluye artefactos comunes de IDE y salidas de compilación:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Patrón</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>target/</code></td>
+                <td>Directorio de salida de la compilación de Maven</td>
+            </tr>
+            <tr>
+                <td><code>.idea</code>, <code>\*.iml</code>, <code>*.ipr</code></td>
+                <td>Archivos de proyecto de IntelliJ IDEA</td>
+            </tr>
+            <tr>
+                <td><code>.classpath</code>, <code>.project</code>, <code>.settings/</code></td>
+                <td>Archivos de proyecto de Eclipse/STS</td>
+            </tr>
+            <tr>
+                <td><code>/nbproject/</code></td>
+                <td>Archivos de proyecto de NetBeans</td>
+            </tr>
+            <tr>
+                <td><code>.vscode/</code></td>
+                <td>Ajustes de Visual Studio Code</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Esto soporta el desarrollo a través de IntelliJ IDEA, Eclipse/Spring Tool Suite, NetBeans y Visual Studio Code.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/.gitignore" lines="1-34" />
+</SourceReference>
+
+## Integración con la Base de Datos
+
+<p>El servicio se integra con PostgreSQL para entornos de producción y H2 para desarrollo/pruebas, gestionado a través de Spring Data JPA y migraciones de Flyway.</p>
+
+<ImageViewer 
+    src="/src/assets/estrategia-configuracion-bd.svg" 
+    alt="Diagrama de la estrategia de configuración de la base de datos, mostrando cómo la aplicación utiliza Spring Data JPA y Flyway para interactuar con una base de datos H2 en desarrollo o una PostgreSQL en producción."
+/>
+
+<p class="img-caption">Figura 3: Estrategia de Configuración de la Base de Datos</p>
+
+### Dependencias de Drivers de Base de Datos
+
+<p>El driver de PostgreSQL proporciona conectividad a las bases de datos de producción:</p>
+<ul>
+    <li><strong>Grupo:</strong> <code class="artifact-id">org.postgresql</code></li>
+    <li><strong>Artefacto:</strong> <code class="artifact-id">postgresql</code></li>
+    <li><strong>Versión:</strong> <code class="artifact-id">42.7.8</code></li>
+    <li><strong>Ámbito:</strong> <code class="artifact-id">runtime</code></li>
+</ul>
+<p>El driver de H2 permite un desarrollo ligero sin necesidad de configurar una base de datos externa:</p>
+<ul>
+    <li><strong>Grupo:</strong> <code class="artifact-id">com.h2database</code></li>
+    <li><strong>Artefacto:</strong> <code class="artifact-id">h2</code></li>
+    <li><strong>Versión:</strong> <code class="artifact-id">2.4.240</code></li>
+    <li><strong>Ámbito:</strong> <code class="artifact-id">runtime</code></li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="80-92" />
+</SourceReference>
+
+### Gestión de Migración de Esquema
+
+<p>Flyway gestiona la evolución del esquema de la base de datos con dos dependencias:</p>
+<ol>
+    <li><strong>Flyway Core</strong> (versión 11.14.0): Motor de migración principal.</li>
+    <li><strong>Flyway PostgreSQL</strong> (versión 11.14.0): Soporte de migración específico para PostgreSQL.</li>
+</ol>
+<p>Se espera que los scripts de migración residan en <code>src/main/resources/db/migration/</code> siguiendo las convenciones de nomenclatura de Flyway (<code>V1__description.sql</code>, <code>V2__description.sql</code>, etc.).</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="67-78" />
+</SourceReference>
+
+## Generación de PDF con OpenPDF
+
+<p>El servicio utiliza OpenPDF (anteriormente iText) para la generación de facturas en PDF. OpenPDF es una librería de Java para crear y manipular documentos PDF.</p>
+
+### Dependencia de OpenPDF
+
+<CodeBlock language="xml" code={`<dependency>
+    <groupId>com.github.librepdf</groupId>
+    <artifactId>openpdf</artifactId>
+    <version>3.0.0</version>
+</dependency>`} />
+
+<p>OpenPDF 3.0.0 proporciona las siguientes capacidades:</p>
+<ul>
+    <li>Creación y formateo de documentos PDF</li>
+    <li>Renderizado de texto con múltiples fuentes</li>
+    <li>Generación de tablas y layouts</li>
+    <li>Embebido de imágenes (usado para códigos QR)</li>
+    <li>Encabezados de página, pies de página y marcas de agua</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="44-53" />
+</SourceReference>
+
+### Flujo Esperado de Generación de PDF
+
+<ImageViewer 
+    src="/src/assets/flujo-generacion-factura.svg" 
+    alt="Diagrama de secuencia del flujo de trabajo de generación de facturas, mostrando el proceso desde una solicitud POST del cliente hasta el guardado de la entidad y la devolución de un enlace al PDF."
+/>
+
+<p class="img-caption">Figura 4: Flujo de Trabajo de Generación de Facturas</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="44-53" />
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="55-65" />
+</SourceReference>
+
+## Generación de Códigos QR con ZXing
+
+<p>El servicio utiliza ZXing ("Zebra Crossing") para la generación de códigos QR. ZXing es una librería de procesamiento de imágenes de códigos de barras que soporta la codificación y decodificación de códigos QR.</p>
+
+### Dependencias de ZXing
+
+<p>Se incluyen dos artefactos de ZXing:</p>
+
+<CodeBlock language="xml" code={`<dependency>
+    <groupId>com.google.zxing</groupId>
+    <artifactId>core</artifactId>
+    <version>3.5.3</version>
+</dependency>
+
+<dependency>
+    <groupId>com.google.zxing</groupId>
+    <artifactId>javase</artifactId>
+    <version>3.5.3</version>
+</dependency>`} />
+
+<p><strong>ZXing Core</strong> (<code>com.google.zxing:core</code>):</p>
+<ul>
+    <li>Algoritmos de codificación/decodificación de códigos QR</li>
+    <li>Codificación de datos en varios formatos (numérico, alfanumérico, binario)</li>
+    <li>Configuración del nivel de corrección de errores</li>
+</ul>
+<p><strong>ZXing JavaSE</strong> (<code>com.google.zxing:javase</code>):</p>
+<ul>
+    <li>Salida de imagen para entornos Java SE</li>
+    <li>Generación de BufferedImage</li>
+    <li>Utilidades de E/S de archivos para imágenes de códigos QR</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="55-65" />
+</SourceReference>
+
+### Puntos de Integración de Códigos QR
+
+<ImageViewer 
+    src="/src/assets/generacion-embebido-qr.svg" 
+    alt="Diagrama que muestra cómo los datos de la factura se utilizan para generar un código QR, que luego se embebe en un documento PDF."
+/>
+
+<p class="img-caption">Figura 5: Generación y Embebido de Códigos QR</p>
+
+<p>Los códigos QR probablemente codifican identificadores de factura o URLs de validación que pueden ser escaneados para la verificación o recuperación de la factura.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="55-65" />
+</SourceReference>
+
+## Infraestructura de Pruebas
+
+<p>El servicio incluye el Spring Boot Test starter para capacidades de prueba completas.</p>
+
+<CodeBlock language="xml" code={`<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>`} />
+
+<p>Esto proporciona:</p>
+<ul>
+    <li>JUnit 5 para la ejecución de pruebas</li>
+    <li>Spring Test & Spring Boot Test para pruebas de integración</li>
+    <li>Mockito para mocking</li>
+    <li>AssertJ para aserciones fluidas</li>
+    <li>JSONassert para pruebas de JSON</li>
+    <li>Hamcrest para aserciones basadas en matchers</li>
+</ul>
+<p>Se espera que las clases de prueba se encuentren en <code>src/test/java/</code> y los recursos de prueba en <code>src/test/resources/</code>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="38-42" />
+</SourceReference>
+
+## Visión General de Dependencias
+
+<p>El árbol de dependencias completo para el servicio:</p>
+
+<ImageViewer 
+    src="/src/assets/grafo-dependencias-completo.svg" 
+    alt="Gráfico de dependencias completo para el servicio, mostrando las relaciones entre el servicio y sus dependencias principales como Spring Boot, OpenPDF, ZXing y las librerías de base de datos."
+/>
+
+<p class="img-caption">Figura 6: Gráfico de Dependencias Completo</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="32-93" />
+</SourceReference>
+
+## Compilación y Ejecución
+
+<p>El servicio utiliza el ciclo de vida de compilación estándar de Spring Boot gestionado por Maven.</p>
+
+### Compilando el Servicio
+
+<CodeBlock language="bash" code={`# Usando Maven Wrapper (recomendado)
+./mvnw clean package
+
+# Usando Maven del sistema
+mvn clean package`} />
+
+<p>Esto produce un JAR ejecutable en <code>target/servicio-facturacion-0.0.1-SNAPSHOT.jar</code>.</p>
+
+### Ejecutando el Servicio
+
+<CodeBlock language="bash" code={`# Usando Maven Wrapper
+./mvnw spring-boot:run
+
+# Ejecutando el JAR empaquetado
+java -jar target/servicio-facturacion-0.0.1-SNAPSHOT.jar`} />
+
+### Ejecutando Pruebas
+
+<CodeBlock language="bash" code={`# Todas las pruebas
+./mvnw test
+
+# Clase de prueba específica
+./mvnw test -Dtest=InvoiceServiceTest`} />
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="95-101" />
+</SourceReference>
+
+## Metadatos del Servicio
+
+<p>El servicio se identifica con los siguientes metadatos en su configuración POM:</p>
+<ul>
+    <li><strong>Nombre:</strong> <code class="artifact-id">servicio-facturacion</code></li>
+    <li><strong>Descripción:</strong> "Microservicio para gestionar la creación de facturas"</li>
+    <li><strong>Versión:</strong> <code>0.0.1-SNAPSHOT</code> (versión de desarrollo pre-lanzamiento)</li>
+    <li><strong>Padre:</strong> Spring Boot 3.5.6</li>
+</ul>
+<p>El sufijo <code>-SNAPSHOT</code> indica que esta es una versión de desarrollo que puede recibir actualizaciones.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/servicio-facturacion/pom.xml" lines="11-16" />
+</SourceReference>

@@ -59,7 +59,7 @@ Ambos servicios comparten una base tecnológica común, garantizando consistenci
 
 | Tecnología | Versión | Propósito |
 | :--- | :--- | :--- |
-| **Java** | 22 | Entorno de ejecución y lenguaje |
+| **Java** | 21 | Entorno de ejecución y lenguaje |
 | **Spring Boot** | 3.5.6 | Framework principal de la aplicación |
 | **Spring Data JPA** | 3.5.6 | Capa de persistencia de datos |
 | **PostgreSQL** | 42.7.8 | Base de datos de producción |
@@ -89,7 +89,7 @@ Sigue estos pasos para configurar y ejecutar el proyecto en tu entorno local.
 
 ### Prerrequisitos
 
-- **JDK 22** o superior.
+- **JDK 21** o superior.
 - **Git** para clonar el repositorio.
 - (Opcional) Un cliente de base de datos para PostgreSQL.
 

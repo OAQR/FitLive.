@@ -18,8 +18,8 @@ public class PeruDevsAdapter {
     private final HttpClient clienteHttp = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public PeruDevsAdapter(@Value("${api.perudevs.key}") String apiKey) {
-        this.API_KEY = apiKey;
+    public PeruDevsAdapter() {
+        this.API_KEY = "";
     }
 
     /**

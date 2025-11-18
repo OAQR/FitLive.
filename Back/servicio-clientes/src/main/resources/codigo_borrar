@@ -1,0 +1,3398 @@
+WebConfig.java:"package com.facturacion.servicioclientes.config;
+
+                import org.springframework.context.annotation.Bean;
+                import org.springframework.context.annotation.Configuration;
+                import org.springframework.web.servlet.config.annotation.CorsRegistry;
+                import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+                @Configuration
+                public class WebConfig {
+                    @Bean
+                    public WebMvcConfigurer corsConfigurer() {
+                        return new WebMvcConfigurer() {
+                            @Override
+                            public void addCorsMappings(CorsRegistry registry) {
+                                registry.addMapping("/**")
+                                        /*.allowedOrigins(
+                                                "https://sdutp.xyz",
+                                                "https://app.sdutp.xyz",
+                                                "http://localhost:8080",
+                                                "http://192.168.1.43:8080",
+                                                "http://192.168.1.43:8081",
+                                                "http://192.168.1.43:8082",
+                                                "http://127.0.0.1:8080",
+                                                "http://127.0.0.1:8081",
+                                                "http://127.0.0.1:8082"
+                                        )*/
+                                        .allowedOrigins("*")
+                                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                                        .allowedHeaders("*");
+                                        //.allowCredentials(true);
+                            }
+                        };
+                    }
+                }
+",
+ClienteController.java:"package com.facturacion.servicioclientes.controller;
+
+                        import com.facturacion.servicioclientes.dto.ClienteResponse;
+                        import com.facturacion.servicioclientes.dto.ConsultaDocumentoResponse;
+                        import com.facturacion.servicioclientes.dto.DniResponse;
+                        import com.facturacion.servicioclientes.service.ClienteService;
+                        import io.swagger.v3.oas.annotations.Operation;
+                        import io.swagger.v3.oas.annotations.Parameter;
+                        import io.swagger.v3.oas.annotations.media.Content;
+                        import io.swagger.v3.oas.annotations.media.Schema;
+                        import io.swagger.v3.oas.annotations.responses.ApiResponse;
+                        import io.swagger.v3.oas.annotations.responses.ApiResponses;
+                        import org.springframework.beans.factory.annotation.Autowired;
+                        import org.springframework.http.ResponseEntity;
+                        import org.springframework.web.bind.annotation.GetMapping;
+                        import org.springframework.web.bind.annotation.PathVariable;
+                        import org.springframework.web.bind.annotation.RequestMapping;
+                        import org.springframework.web.bind.annotation.RestController;
+
+                        @RestController
+                        @RequestMapping("/api/v1/clientes")
+                        public class ClienteController {
+
+                            private final ClienteService clienteService;
+
+                            @Autowired
+                            public ClienteController(ClienteService clienteService) {
+                                this.clienteService = clienteService;
+                            }
+
+                            @Operation(summary = "Buscar un cliente por su número de RUC",
+                                    description = "Busca un cliente primero en la base de datos local. Si no lo encuentra, consulta un servicio externo y guarda el resultado.")
+                            @ApiResponses(value = {
+                                    @ApiResponse(responseCode = "200", description = "Cliente encontrado",
+                                            content = { @Content(mediaType = "application/json",
+                                                    schema = @Schema(implementation = ClienteResponse.class)) }),
+                                    @ApiResponse(responseCode = "404", description = "Cliente no encontrado",
+                                            content = @Content)
+                            })
+
+                            @GetMapping("/ruc/{numeroRuc}")
+                            public ResponseEntity<ClienteResponse> obtenerClientePorRuc(
+                                    @Parameter(description = "Número de RUC de 11 dígitos del cliente a buscar.")
+                                    @PathVariable String numeroRuc) {
+
+                                return clienteService.buscarPorRuc(numeroRuc)
+                                        .map(ResponseEntity::ok)
+                                        .orElse(ResponseEntity.notFound().build());
+                            }
+
+                            @Operation(summary = "Buscar datos básicos de una persona por su DNI")
+                            @ApiResponses(value = {
+                                    @ApiResponse(responseCode = "200", description = "Datos de DNI encontrados"),
+                                    @ApiResponse(responseCode = "404", description = "DNI no encontrado")
+                            })
+
+                            @GetMapping("/dni/{numeroDni}")
+                            public ResponseEntity<DniResponse> obtenerClientePorDni(
+                                    @Parameter(description = "Número de DNI de 8 dígitos.")
+                                    @PathVariable String numeroDni) {
+
+                                return clienteService.buscarPorDniSimple(numeroDni)
+                                        .map(ResponseEntity::ok)
+                                        .orElse(ResponseEntity.notFound().build());
+                            }
+
+                            @Operation(summary = "Buscar si un DNI tiene un RUC 10 asociado")
+                            @ApiResponses(value = {
+                                    @ApiResponse(responseCode = "200", description = "RUC asociado encontrado (devuelve datos de cliente/RUC)"),
+                                    @ApiResponse(responseCode = "404", description = "El DNI no tiene un RUC asociado")
+                            })
+                            @GetMapping("/dni/{numeroDni}/ruc-asociado")
+                            public ResponseEntity<ClienteResponse> obtenerRucAsociadoADni(
+                                    @Parameter(description = "Número de DNI de 8 dígitos.")
+                                    @PathVariable String numeroDni) {
+
+                                return clienteService.buscarRucAsociadoADni(numeroDni)
+                                        .map(ResponseEntity::ok)
+                                        .orElse(ResponseEntity.notFound().build());
+                            }
+
+
+                            @Operation(summary = "Busca un cliente por DNI (8 dígitos) o RUC (11 dígitos)")
+                            @ApiResponses(value = {
+                                    @ApiResponse(responseCode = "200", description = "Documento encontrado. El cuerpo de la respuesta indicará si es de tipo RUC o DNI."),
+                                    @ApiResponse(responseCode = "404", description = "Documento no encontrado")
+                            })
+                            @GetMapping("/documento/{numeroDocumento}")
+                            public ResponseEntity<ConsultaDocumentoResponse> buscarPorDocumento(
+                                    @Parameter(description = "Número de DNI (8 dígitos) o RUC (11 dígitos).")
+                                    @PathVariable String numeroDocumento) {
+
+                                return clienteService.buscarPorDocumento(numeroDocumento)
+                                        .map(ResponseEntity::ok)
+                                        .orElse(ResponseEntity.notFound().build());
+                            }
+                        }",
+ClienteResponse.java:"package com.facturacion.servicioclientes.dto;
+
+                      public class ClienteResponse {
+
+                          private String ruc;
+                          private String razon_social;
+                          private String direccion;
+                          private String estado;
+                          private String departamento;
+
+                          public String getDepartamento() {
+                              return departamento;
+                          }
+
+                          public void setDepartamento(String departamento) {
+                              this.departamento = departamento;
+                          }
+
+                          public String getEstado() {
+                              return estado;
+                          }
+
+                          public void setEstado(String estado) {
+                              this.estado = estado;
+                          }
+
+                          public String getDireccion() {
+                              return direccion;
+                          }
+
+                          public void setDireccion(String direccion) {
+                              this.direccion = direccion;
+                          }
+
+                          public String getRazon_social() {
+                              return razon_social;
+                          }
+
+                          public void setRazon_social(String razon_social) {
+                              this.razon_social = razon_social;
+                          }
+
+                          public String getRuc() {
+                              return ruc;
+                          }
+
+                          public void setRuc(String ruc) {
+                              this.ruc = ruc;
+                          }
+                      }",
+ConsultaDocumentoResponse.java:"package com.facturacion.servicioclientes.dto;
+
+                                import com.fasterxml.jackson.annotation.JsonInclude;
+
+                                @JsonInclude(JsonInclude.Include.NON_NULL)
+                                public class ConsultaDocumentoResponse {
+
+                                    public enum TipoDocumento {
+                                        RUC, DNI
+                                    }
+
+                                    private TipoDocumento tipo;
+                                    private ClienteResponse datosRuc;
+                                    private DniResponse datosDni;
+
+                                    public TipoDocumento getTipo() { return tipo; }
+                                    public void setTipo(TipoDocumento tipo) { this.tipo = tipo; }
+                                    public ClienteResponse getDatosRuc() { return datosRuc; }
+                                    public void setDatosRuc(ClienteResponse datosRuc) { this.datosRuc = datosRuc; }
+                                    public DniResponse getDatosDni() { return datosDni; }
+                                    public void setDatosDni(DniResponse datosDni) { this.datosDni = datosDni; }
+                                }",
+DniResponse.java:"package com.facturacion.servicioclientes.dto;
+
+                  public class DniResponse {
+
+                      private String nombres;
+                      private String apellidoPaterno;
+                      private String apellidoMaterno;
+                      private String nombreCompleto;
+
+                      public String getNombres() {
+                          return nombres;
+                      }
+
+                      public void setNombres(String nombres) {
+                          this.nombres = nombres;
+                      }
+
+                      public String getApellidoPaterno() {
+                          return apellidoPaterno;
+                      }
+
+                      public void setApellidoPaterno(String apellidoPaterno) {
+                          this.apellidoPaterno = apellidoPaterno;
+                      }
+
+                      public String getApellidoMaterno() {
+                          return apellidoMaterno;
+                      }
+
+                      public void setApellidoMaterno(String apellidoMaterno) {
+                          this.apellidoMaterno = apellidoMaterno;
+                      }
+
+                      public String getNombreCompleto() {
+                          return nombreCompleto;
+                      }
+
+                      public void setNombreCompleto(String nombreCompleto) {
+                          this.nombreCompleto = nombreCompleto;
+                      }
+
+                  }",
+ClienteEntity.java:"package com.facturacion.servicioclientes.entity;
+
+                    import jakarta.persistence.Column;
+                    import jakarta.persistence.Entity;
+                    import jakarta.persistence.GeneratedValue;
+                    import jakarta.persistence.GenerationType;
+                    import jakarta.persistence.Id;
+                    import jakarta.persistence.Table;
+
+                    @Entity
+                    @Table(name = "clientes")
+                    public class ClienteEntity {
+
+                        @Id
+                        @GeneratedValue(strategy = GenerationType.IDENTITY)
+                        private Long id;
+
+                        @Column(name = "ruc", unique = true, nullable = false, length = 11)
+                        private String ruc;
+
+                        @Column(name = "razonSocial")
+                        private String razonSocial;
+
+                        @Column(name = "direccion")
+                        private String direccion;
+
+                        @Column(name = "estado")
+                        private String estado;
+
+                        @Column(name = "departamento")
+                        private String departamento;
+
+                        public ClienteEntity() {
+                        }
+
+                        public Long getId() {
+                            return id;
+                        }
+
+                        public void setId(Long id) {
+                            this.id = id;
+                        }
+
+                        public String getRuc() {
+                            return ruc;
+                        }
+
+                        public void setRuc(String ruc) {
+                            this.ruc = ruc;
+                        }
+
+                        public String getRazonSocial() {
+                            return razonSocial;
+                        }
+
+                        public void setRazonSocial(String razon_social) {
+                            this.razonSocial = razon_social;
+                        }
+
+                        public String getDireccion() {
+                            return direccion;
+                        }
+
+                        public void setDireccion(String direccion) {
+                            this.direccion = direccion;
+                        }
+
+                        public String getEstado() {
+                            return estado;
+                        }
+
+                        public void setEstado(String estado) {
+                            this.estado = estado;
+                        }
+
+                        public String getDepartamento() {
+                            return departamento;
+                        }
+
+                        public void setDepartamento(String departamento) {
+                            this.departamento = departamento;
+                        }
+                    }",
+PeruDevsAdapter.java:"package com.facturacion.servicioclientes.external;
+
+                      import com.fasterxml.jackson.databind.ObjectMapper;
+                      import org.springframework.beans.factory.annotation.Value;
+                      import org.springframework.stereotype.Component;
+
+                      import java.io.IOException;
+                      import java.net.URI;
+                      import java.net.http.HttpClient;
+                      import java.net.http.HttpRequest;
+                      import java.net.http.HttpResponse;
+                      import java.util.Optional;
+
+                      @Component
+                      public class PeruDevsAdapter {
+
+                          private final String API_KEY;
+                          private final HttpClient clienteHttp = HttpClient.newHttpClient();
+                          private final ObjectMapper objectMapper = new ObjectMapper();
+
+                          public PeruDevsAdapter(@Value("${api.perudevs.key}") String apiKey) {
+                              this.API_KEY = apiKey;
+                          }
+
+                          /**
+                           * Llama a la API de PeruDevs para obtener datos de un RUC.
+                           * @param ruc El RUC a consultar.
+                           * @return Un Optional con los datos de la respuesta externa si tiene éxito.
+                           */
+                          public Optional<PeruDevsResponse.ClienteData> consultarRuc(String ruc) {
+                              String urlCompleta = String.format("https://api.perudevs.com/api/v1/ruc?document=%s&key=%s", ruc, API_KEY);
+                              HttpRequest solicitud = HttpRequest.newBuilder().uri(URI.create(urlCompleta)).build();
+
+                              try {
+                                  HttpResponse<String> respuestaHttp = clienteHttp.send(solicitud, HttpResponse.BodyHandlers.ofString());
+
+                                  if (respuestaHttp.statusCode() == 200) {
+                                      PeruDevsResponse respuestaApi = objectMapper.readValue(respuestaHttp.body(), PeruDevsResponse.class);
+                                      if (respuestaApi.isEstado() && respuestaApi.getResultado() != null) {
+                                          return Optional.of(respuestaApi.getResultado());
+                                      }
+                                  }
+                              } catch (IOException | InterruptedException e) {
+                                  System.err.println("Error al conectar con la API de PeruDevs: " + e.getMessage());
+                              }
+
+                              return Optional.empty();
+                          }
+
+                          /**
+                           * Llama a la API de PeruDevs para buscar un RUC 10 asociado a un DNI.
+                           * @param dni El DNI a consultar.
+                           * @return Un Optional con los datos del RUC si se encuentra.
+                           */
+                          public Optional<PeruDevsResponse.ClienteData> consultarRucAsociadoADni(String dni) {
+                              String urlCompleta = String.format("https://api.perudevs.com/api/v1/dni/ruc-validate?document=%s&key=%s", dni, API_KEY);
+                              HttpRequest solicitud = HttpRequest.newBuilder().uri(URI.create(urlCompleta)).build();
+                              try {
+                                  HttpResponse<String> respuestaHttp = clienteHttp.send(solicitud, HttpResponse.BodyHandlers.ofString());
+                                  if (respuestaHttp.statusCode() == 200) {
+                                      PeruDevsResponse respuestaApi = objectMapper.readValue(respuestaHttp.body(), PeruDevsResponse.class);
+                                      if (respuestaApi.isEstado() && respuestaApi.getResultado() != null) {
+                                          return Optional.of(respuestaApi.getResultado());
+                                      }
+                                  }
+                              } catch (IOException | InterruptedException e) {
+                                  System.err.println("Error al conectar con la API de PeruDevs (ruc-validate): " + e.getMessage());
+                              }
+                              return Optional.empty();
+                          }
+
+                          /**
+                           * Llama a la API de PeruDevs para una consulta simple de DNI.
+                           * @param dni El DNI a consultar.
+                           * @return Un Optional con los datos de la persona si se encuentra.
+                           */
+                          public Optional<PeruDevsDniResponse.DniData> consultarDniSimple(String dni) {
+                              String urlCompleta = String.format("https://api.perudevs.com/api/v1/dni/simple?document=%s&key=%s", dni, API_KEY);
+                              HttpRequest solicitud = HttpRequest.newBuilder().uri(URI.create(urlCompleta)).build();
+                              try {
+                                  HttpResponse<String> respuestaHttp = clienteHttp.send(solicitud, HttpResponse.BodyHandlers.ofString());
+                                  if (respuestaHttp.statusCode() == 200) {
+                                      PeruDevsDniResponse respuestaApi = objectMapper.readValue(respuestaHttp.body(), PeruDevsDniResponse.class);
+                                      if (respuestaApi.isEstado() && respuestaApi.getResultado() != null) {
+                                          return Optional.of(respuestaApi.getResultado());
+                                      }
+                                  }
+                              } catch (IOException | InterruptedException e) {
+                                  System.err.println("Error al conectar con la API de PeruDevs (dni-simple): " + e.getMessage());
+                              }
+                              return Optional.empty();
+                          }
+                      }",
+PeruDevsDniResponse.java:"package com.facturacion.servicioclientes.external;
+
+                          import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+                          import com.fasterxml.jackson.annotation.JsonProperty;
+
+                          @JsonIgnoreProperties(ignoreUnknown = true)
+                          public class PeruDevsDniResponse {
+
+                              private boolean estado;
+                              private DniData resultado;
+
+                              @JsonIgnoreProperties(ignoreUnknown = true)
+                              public static class DniData {
+                                  @JsonProperty("apellido_paterno")
+                                  private String apellidoPaterno;
+                                  @JsonProperty("apellido_materno")
+                                  private String apellidoMaterno;
+                                  private String nombres;
+                                  @JsonProperty("nombre_completo")
+                                  private String nombreCompleto;
+
+                                  public String getApellidoPaterno() {
+                                      return apellidoPaterno;
+                                  }
+
+                                  public void setApellidoPaterno(String apellidoPaterno) {
+                                      this.apellidoPaterno = apellidoPaterno;
+                                  }
+
+                                  public String getApellidoMaterno() {
+                                      return apellidoMaterno;
+                                  }
+
+                                  public void setApellidoMaterno(String apellidoMaterno) {
+                                      this.apellidoMaterno = apellidoMaterno;
+                                  }
+
+                                  public String getNombres() {
+                                      return nombres;
+                                  }
+
+                                  public void setNombres(String nombres) {
+                                      this.nombres = nombres;
+                                  }
+
+                                  public String getNombreCompleto() {
+                                      return nombreCompleto;
+                                  }
+
+                                  public void setNombreCompleto(String nombreCompleto) {
+                                      this.nombreCompleto = nombreCompleto;
+                                  }
+                              }
+
+                              public boolean isEstado() {
+                                  return estado;
+                              }
+
+                              public void setEstado(boolean estado) {
+                                  this.estado = estado;
+                              }
+
+                              public DniData getResultado() {
+                                  return resultado;
+                              }
+
+                              public void setResultado(DniData resultado) {
+                                  this.resultado = resultado;
+                              }
+                          }",
+PeruDevsResponse.java:"package com.facturacion.servicioclientes.external;
+
+                       import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+                       import com.fasterxml.jackson.annotation.JsonProperty;
+
+                       @JsonIgnoreProperties(ignoreUnknown = true)
+                       public class PeruDevsResponse {
+
+                           private boolean estado;
+                           private String mensaje;
+                           private ClienteData resultado;
+
+                           @JsonIgnoreProperties(ignoreUnknown = true)
+                           public static class ClienteData {
+                               @JsonProperty("id")
+                               private String ruc;
+
+                               @JsonProperty("razon_social")
+                               private String razonSocial;
+
+                               private String direccion;
+                               private String estado;
+                               private String departamento;
+
+                               public String getRuc() {
+                                   return ruc;
+                               }
+
+                               public void setRuc(String ruc) {
+                                   this.ruc = ruc;
+                               }
+
+                               public String getRazonSocial() {
+                                   return razonSocial;
+                               }
+
+                               public void setRazonSocial(String razonSocial) {
+                                   this.razonSocial = razonSocial;
+                               }
+
+                               public String getDireccion() {
+                                   return direccion;
+                               }
+
+                               public void setDireccion(String direccion) {
+                                   this.direccion = direccion;
+                               }
+
+                               public String getEstado() {
+                                   return estado;
+                               }
+
+                               public void setEstado(String estado) {
+                                   this.estado = estado;
+                               }
+
+                               public String getDepartamento() {
+                                   return departamento;
+                               }
+
+                               public void setDepartamento(String departamento) {
+                                   this.departamento = departamento;
+                               }
+                           }
+
+                           public boolean isEstado() {
+                               return estado;
+                           }
+
+                           public void setEstado(boolean estado) {
+                               this.estado = estado;
+                           }
+
+                           public String getMensaje() {
+                               return mensaje;
+                           }
+
+                           public void setMensaje(String mensaje) {
+                               this.mensaje = mensaje;
+                           }
+
+                           public ClienteData getResultado() {
+                               return resultado;
+                           }
+
+                           public void setResultado(ClienteData resultado) {
+                               this.resultado = resultado;
+                           }
+                       }",
+ClienteMapper.java:"package com.facturacion.servicioclientes.mapper;
+
+                    import com.facturacion.servicioclientes.dto.ClienteResponse;
+                    import com.facturacion.servicioclientes.dto.DniResponse;
+                    import com.facturacion.servicioclientes.entity.ClienteEntity;
+                    import com.facturacion.servicioclientes.external.PeruDevsResponse;
+                    import com.facturacion.servicioclientes.external.PeruDevsDniResponse;
+                    import org.springframework.stereotype.Component;
+
+                    @Component
+                    public class ClienteMapper {
+
+                        /**
+                         * Convierte una Entidad de Cliente a un DTO de Respuesta.
+                         * @param entity El objeto que viene de la base de datos.
+                         * @return El DTO que se expondrá en la API.
+                         */
+                        public ClienteResponse toResponse(ClienteEntity entity) {
+                            if (entity == null) {
+                                return null;
+                            }
+                            ClienteResponse dto = new ClienteResponse();
+                            dto.setRuc(entity.getRuc());
+                            dto.setRazon_social(entity.getRazonSocial());
+                            dto.setDireccion(entity.getDireccion());
+                            dto.setEstado(entity.getEstado());
+                            dto.setDepartamento(entity.getDepartamento());
+                            return dto;
+                        }
+
+                        /**
+                         * Convierte los datos de la API externa a nuestra Entidad de Cliente.
+                         * @param externalData El objeto DTO que viene de la respuesta de PeruDevs.
+                         * @return La Entidad lista para ser guardada en la base de datos.
+                         */
+                        public ClienteEntity toEntity(PeruDevsResponse.ClienteData externalData) {
+                            if (externalData == null) {
+                                return null;
+                            }
+                            ClienteEntity entity = new ClienteEntity();
+                            entity.setRuc(externalData.getRuc());
+                            entity.setRazonSocial(externalData.getRazonSocial());
+                            entity.setDireccion(externalData.getDireccion());
+                            entity.setEstado(externalData.getEstado());
+                            entity.setDepartamento(externalData.getDepartamento());
+                            return entity;
+                        }
+
+
+                        /**
+                         * Convierte los datos de DNI de la API externa a nuestro DTO de respuesta de DNI.
+                         * @param externalData El objeto DTO que viene de la respuesta de PeruDevs.
+                         * @return El DTO que se expondrá en nuestra API.
+                         */
+                        public DniResponse toDniResponse(PeruDevsDniResponse.DniData externalData) {
+                            if (externalData == null) {
+                                return null;
+                            }
+                            DniResponse dto = new DniResponse();
+                            dto.setNombres(externalData.getNombres());
+                            dto.setApellidoPaterno(externalData.getApellidoPaterno());
+                            dto.setApellidoMaterno(externalData.getApellidoMaterno());
+                            dto.setNombreCompleto(externalData.getNombreCompleto());
+                            return dto;
+                        }
+                    }",
+ClienteRepository.java:"package com.facturacion.servicioclientes.repository;
+
+                        import com.facturacion.servicioclientes.entity.ClienteEntity;
+                        import org.springframework.data.jpa.repository.JpaRepository;
+                        import org.springframework.stereotype.Repository;
+
+                        import java.util.Optional;
+
+                        @Repository
+                        public interface ClienteRepository extends JpaRepository<ClienteEntity, Long> {
+
+                            Optional<ClienteEntity> findByRuc(String ruc);
+                        }",
+ClienteService.java:"package com.facturacion.servicioclientes.service;
+
+                     import com.facturacion.servicioclientes.dto.ClienteResponse;
+                     import com.facturacion.servicioclientes.dto.ConsultaDocumentoResponse;
+                     import com.facturacion.servicioclientes.dto.DniResponse;
+                     import java.util.Optional;
+
+                     public interface ClienteService {
+
+                         /**
+                          * Busca un cliente por su número de RUC.
+                          * Puede obtenerlo de una fuente externa si no existe en la base de datos local.
+                          * @param ruc El número de RUC a buscar.
+                          * @return Un Optional que contiene el ClienteResponse si se encuentra, o vacío si no.
+                          */
+                         Optional<ClienteResponse> buscarPorRuc(String ruc);
+
+                         Optional<DniResponse> buscarPorDniSimple(String dni);
+                         Optional<ClienteResponse> buscarRucAsociadoADni(String dni);
+
+                         /**
+                          * Busca un documento que puede ser RUC o DNI y devuelve la información apropiada.
+                          * @param documento El número de documento (8 o 11 dígitos).
+                          * @return Un DTO contenedor con los datos de RUC o DNI.
+                          */
+                         Optional<ConsultaDocumentoResponse> buscarPorDocumento(String documento);
+                     }",
+ClienteServiceImpl.java:"package com.facturacion.servicioclientes.service;
+
+                         import com.facturacion.servicioclientes.dto.ClienteResponse;
+                         import com.facturacion.servicioclientes.dto.ConsultaDocumentoResponse;
+                         import com.facturacion.servicioclientes.dto.DniResponse;
+                         import com.facturacion.servicioclientes.entity.ClienteEntity;
+                         import com.facturacion.servicioclientes.external.PeruDevsAdapter;
+                         import com.facturacion.servicioclientes.mapper.ClienteMapper; // <-- IMPORTAR
+                         import com.facturacion.servicioclientes.repository.ClienteRepository;
+                         import org.springframework.beans.factory.annotation.Autowired;
+                         import org.springframework.stereotype.Service;
+
+                         import java.util.Optional;
+
+                         @Service
+                         public class ClienteServiceImpl implements ClienteService {
+
+                             private final ClienteRepository clienteRepository;
+                             private final PeruDevsAdapter peruDevsAdapter;
+                             private final ClienteMapper clienteMapper;
+
+                             @Autowired
+                             public ClienteServiceImpl(ClienteRepository clienteRepository,
+                                                       PeruDevsAdapter peruDevsAdapter,
+                                                       ClienteMapper clienteMapper) {
+                                 this.clienteRepository = clienteRepository;
+                                 this.peruDevsAdapter = peruDevsAdapter;
+                                 this.clienteMapper = clienteMapper;
+                             }
+
+                             @Override
+                             public Optional<ClienteResponse> buscarPorRuc(String ruc) {
+                                 Optional<ClienteEntity> clienteDesdeDb = clienteRepository.findByRuc(ruc);
+
+                                 if (clienteDesdeDb.isPresent()) {
+                                     System.out.println("Cliente encontrado en la base de datos local.");
+                                     ClienteResponse dto = clienteMapper.toResponse(clienteDesdeDb.get());
+                                     return Optional.of(dto);
+                                 }
+
+                                 System.out.println("Cliente no encontrado en BD. Consultando servicio externo...");
+                                 return peruDevsAdapter.consultarRuc(ruc).map(datosExternos -> {
+                                     ClienteEntity nuevaEntidad = clienteMapper.toEntity(datosExternos);
+
+                                     ClienteEntity entidadGuardada = clienteRepository.save(nuevaEntidad);
+                                     System.out.println("Nuevo cliente guardado en la base de datos.");
+
+                                     return clienteMapper.toResponse(entidadGuardada);
+                                 });
+                             }
+
+                             @Override
+                             public Optional<DniResponse> buscarPorDniSimple(String dni) {
+                                 return peruDevsAdapter.consultarDniSimple(dni)
+                                         .map(clienteMapper::toDniResponse);
+                             }
+
+                             @Override
+                             public Optional<ClienteResponse> buscarRucAsociadoADni(String dni) {
+                                 return peruDevsAdapter.consultarRucAsociadoADni(dni)
+                                         .map(datosExternos -> {
+                                             ClienteResponse dto = new ClienteResponse();
+                                             dto.setRuc(datosExternos.getRuc());
+                                             dto.setRazon_social(datosExternos.getRazonSocial());
+                                             dto.setDireccion(datosExternos.getDireccion());
+                                             return dto;
+                                         });
+                             }
+
+                             @Override
+                             public Optional<ConsultaDocumentoResponse> buscarPorDocumento(String documento) {
+                                 if (documento == null || (documento.length() != 8 && documento.length() != 11)) {
+                                     return Optional.empty();
+                                 }
+
+                                 if (documento.length() == 11) {
+                                     // --- Flujo para RUC ---
+                                     return this.buscarPorRuc(documento).map(clienteRuc -> {
+                                         ConsultaDocumentoResponse response = new ConsultaDocumentoResponse();
+                                         response.setTipo(ConsultaDocumentoResponse.TipoDocumento.RUC);
+                                         response.setDatosRuc(clienteRuc);
+                                         return response;
+                                     });
+                                 } else { // documento.length() == 8
+
+                                     // intentar buscar si el DNI tiene un RUC 10 asociado
+                                     Optional<ClienteResponse> rucAsociadoOpt = this.buscarRucAsociadoADni(documento);
+
+                                     // El DNI tiene RUC?
+                                     if (rucAsociadoOpt.isPresent()) {
+
+                                         ConsultaDocumentoResponse response = new ConsultaDocumentoResponse();
+                                         response.setTipo(ConsultaDocumentoResponse.TipoDocumento.RUC);
+                                         response.setDatosRuc(rucAsociadoOpt.get());
+                                         return Optional.of(response);
+                                     } else {
+                                         // Buscar los datos de la persona para la boleta
+                                         return this.buscarPorDniSimple(documento).map(clienteDni -> {
+                                             ConsultaDocumentoResponse response = new ConsultaDocumentoResponse();
+                                             response.setTipo(ConsultaDocumentoResponse.TipoDocumento.DNI);
+                                             response.setDatosDni(clienteDni);
+                                             return response;
+                                         });
+                                     }
+                                 }
+                             }
+                         }",
+ServicioClientesApplication.java:"package com.facturacion.servicioclientes;
+
+                                  import org.springframework.boot.SpringApplication;
+                                  import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+                                  @SpringBootApplication
+                                  public class ServicioClientesApplication {
+
+                                  	public static void main(String[] args) {
+                                  		SpringApplication.run(ServicioClientesApplication.class, args);
+                                  	}
+
+                                  }
+",
+V1__Initial_Schema.sql:"-- V1: Creación de las tablas iniciales para el sistema de facturación
+
+                        -- Tabla para almacenar la información de los clientes cacheados
+                        CREATE TABLE clientes (
+                            id BIGSERIAL PRIMARY KEY,
+                            ruc VARCHAR(11) NOT NULL UNIQUE,
+                            razon_social VARCHAR(255),
+                            direccion TEXT,
+                            estado VARCHAR(50),
+                            departamento VARCHAR(100)
+                        );
+
+                        -- Tabla principal para las facturas
+                        CREATE TABLE facturas (
+                            id BIGSERIAL PRIMARY KEY,
+                            serie VARCHAR(4) NOT NULL,
+                            correlativo VARCHAR(8) NOT NULL,
+                            fecha_emision DATE NOT NULL,
+                            ruc_cliente VARCHAR(11) NOT NULL,
+                            subtotal NUMERIC(10, 2) NOT NULL,
+                            total_igv NUMERIC(10, 2) NOT NULL,
+                            importe_total NUMERIC(10, 2) NOT NULL,
+                            codigo_hash VARCHAR(64)
+                        );
+
+                        -- Tabla para los ítems de cada factura
+                        CREATE TABLE factura_items (
+                            id BIGSERIAL PRIMARY KEY,
+                            producto VARCHAR(255) NOT NULL,
+                            cantidad INTEGER NOT NULL,
+                            precio_unitario NUMERIC(10, 2) NOT NULL,
+                            factura_id BIGINT NOT NULL,
+                            CONSTRAINT fk_factura
+                                FOREIGN KEY(factura_id)
+                                REFERENCES facturas(id)
+                        );",
+V2__Add_Moneda_To_Facturas.sql:"-- V2: Añadir la columna 'moneda' a la tabla de facturas, que faltaba en la V1.
+
+                                ALTER TABLE facturas
+                                ADD COLUMN moneda VARCHAR(3) NOT NULL DEFAULT 'PEN';",
+application.properties:"spring.application.name=servicio-clientes
+                        server.port=8080
+
+                        api.perudevs.key=
+
+                        spring.datasource.url=jdbc:postgresql://localhost:5432/facturacion_db
+                        spring.datasource.username=postgres
+                        spring.datasource.password=admin
+
+                        spring.jpa.hibernate.ddl-auto=validate
+                        spring.jpa.open-in-view=false
+
+
+",
+main.iml:"<?xml version="1.0" encoding="UTF-8"?>
+          <module type="JAVA_MODULE" version="4">
+            <component name="NewModuleRootManager" inherit-compiler-output="true">
+              <exclude-output />
+              <content url="file://$MODULE_DIR$">
+                <sourceFolder url="file://$MODULE_DIR$/java" isTestSource="false" />
+              </content>
+              <orderEntry type="inheritedJdk" />
+              <orderEntry type="sourceFolder" forTests="false" />
+            </component>
+          </module>",
+.gitattributes:"/mvnw text eol=lf
+                *.cmd text eol=crlf
+",
+.gitignore:"HELP.md
+            target/
+            .mvn/wrapper/maven-wrapper.jar
+            !**/src/main/**/target/
+            !**/src/test/**/target/
+
+            ### STS ###
+            .apt_generated
+            .classpath
+            .factorypath
+            .project
+            .settings
+            .springBeans
+            .sts4-cache
+
+            ### IntelliJ IDEA ###
+            .idea
+            *.iws
+            *.iml
+            *.ipr
+
+            ### NetBeans ###
+            /nbproject/private/
+            /nbbuild/
+            /dist/
+            /nbdist/
+            /.nb-gradle/
+            build/
+            !**/src/main/**/build/
+            !**/src/test/**/build/
+
+            ### VS Code ###
+            .vscode/
+",
+HELP.md:"# Getting Started
+
+         ### Reference Documentation
+         For further reference, please consider the following sections:
+
+         * [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
+         * [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/3.5.6/maven-plugin)
+         * [Create an OCI image](https://docs.spring.io/spring-boot/3.5.6/maven-plugin/build-image.html)
+
+         ### Maven Parent overrides
+
+         Due to Maven's design, elements are inherited from the parent POM to the project POM.
+         While most of the inheritance is fine, it also inherits unwanted elements like `<license>` and `<developers>` from the parent.
+         To prevent this, the project POM contains empty overrides for these elements.
+         If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
+
+",
+mvnw:"#!/bin/sh
+      # ----------------------------------------------------------------------------
+      # Licensed to the Apache Software Foundation (ASF) under one
+      # or more contributor license agreements.  See the NOTICE file
+      # distributed with this work for additional information
+      # regarding copyright ownership.  The ASF licenses this file
+      # to you under the Apache License, Version 2.0 (the
+      # "License"); you may not use this file except in compliance
+      # with the License.  You may obtain a copy of the License at
+      #
+      #    http://www.apache.org/licenses/LICENSE-2.0
+      #
+      # Unless required by applicable law or agreed to in writing,
+      # software distributed under the License is distributed on an
+      # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+      # KIND, either express or implied.  See the License for the
+      # specific language governing permissions and limitations
+      # under the License.
+      # ----------------------------------------------------------------------------
+
+      # ----------------------------------------------------------------------------
+      # Apache Maven Wrapper startup batch script, version 3.3.4
+      #
+      # Optional ENV vars
+      # -----------------
+      #   JAVA_HOME - location of a JDK home dir, required when download maven via java source
+      #   MVNW_REPOURL - repo url base for downloading maven distribution
+      #   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
+      #   MVNW_VERBOSE - true: enable verbose log; debug: trace the mvnw script; others: silence the output
+      # ----------------------------------------------------------------------------
+
+      set -euf
+      [ "${MVNW_VERBOSE-}" != debug ] || set -x
+
+      # OS specific support.
+      native_path() { printf %s\\n "$1"; }
+      case "$(uname)" in
+      CYGWIN* | MINGW*)
+        [ -z "${JAVA_HOME-}" ] || JAVA_HOME="$(cygpath --unix "$JAVA_HOME")"
+        native_path() { cygpath --path --windows "$1"; }
+        ;;
+      esac
+
+      # set JAVACMD and JAVACCMD
+      set_java_home() {
+        # For Cygwin and MinGW, ensure paths are in Unix format before anything is touched
+        if [ -n "${JAVA_HOME-}" ]; then
+          if [ -x "$JAVA_HOME/jre/sh/java" ]; then
+            # IBM's JDK on AIX uses strange locations for the executables
+            JAVACMD="$JAVA_HOME/jre/sh/java"
+            JAVACCMD="$JAVA_HOME/jre/sh/javac"
+          else
+            JAVACMD="$JAVA_HOME/bin/java"
+            JAVACCMD="$JAVA_HOME/bin/javac"
+
+            if [ ! -x "$JAVACMD" ] || [ ! -x "$JAVACCMD" ]; then
+              echo "The JAVA_HOME environment variable is not defined correctly, so mvnw cannot run." >&2
+              echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"\$JAVA_HOME/bin/java\" or \"\$JAVA_HOME/bin/javac\" does not exist." >&2
+              return 1
+            fi
+          fi
+        else
+          JAVACMD="$(
+            'set' +e
+            'unset' -f command 2>/dev/null
+            'command' -v java
+          )" || :
+          JAVACCMD="$(
+            'set' +e
+            'unset' -f command 2>/dev/null
+            'command' -v javac
+          )" || :
+
+          if [ ! -x "${JAVACMD-}" ] || [ ! -x "${JAVACCMD-}" ]; then
+            echo "The java/javac command does not exist in PATH nor is JAVA_HOME set, so mvnw cannot run." >&2
+            return 1
+          fi
+        fi
+      }
+
+      # hash string like Java String::hashCode
+      hash_string() {
+        str="${1:-}" h=0
+        while [ -n "$str" ]; do
+          char="${str%"${str#?}"}"
+          h=$(((h * 31 + $(LC_CTYPE=C printf %d "'$char")) % 4294967296))
+          str="${str#?}"
+        done
+        printf %x\\n $h
+      }
+
+      verbose() { :; }
+      [ "${MVNW_VERBOSE-}" != true ] || verbose() { printf %s\\n "${1-}"; }
+
+      die() {
+        printf %s\\n "$1" >&2
+        exit 1
+      }
+
+      trim() {
+        # MWRAPPER-139:
+        #   Trims trailing and leading whitespace, carriage returns, tabs, and linefeeds.
+        #   Needed for removing poorly interpreted newline sequences when running in more
+        #   exotic environments such as mingw bash on Windows.
+        printf "%s" "${1}" | tr -d '[:space:]'
+      }
+
+      scriptDir="$(dirname "$0")"
+      scriptName="$(basename "$0")"
+
+      # parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
+      while IFS="=" read -r key value; do
+        case "${key-}" in
+        distributionUrl) distributionUrl=$(trim "${value-}") ;;
+        distributionSha256Sum) distributionSha256Sum=$(trim "${value-}") ;;
+        esac
+      done <"$scriptDir/.mvn/wrapper/maven-wrapper.properties"
+      [ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
+
+      case "${distributionUrl##*/}" in
+      maven-mvnd-*bin.*)
+        MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/
+        case "${PROCESSOR_ARCHITECTURE-}${PROCESSOR_ARCHITEW6432-}:$(uname -a)" in
+        *AMD64:CYGWIN* | *AMD64:MINGW*) distributionPlatform=windows-amd64 ;;
+        :Darwin*x86_64) distributionPlatform=darwin-amd64 ;;
+        :Darwin*arm64) distributionPlatform=darwin-aarch64 ;;
+        :Linux*x86_64*) distributionPlatform=linux-amd64 ;;
+        *)
+          echo "Cannot detect native platform for mvnd on $(uname)-$(uname -m), use pure java version" >&2
+          distributionPlatform=linux-amd64
+          ;;
+        esac
+        distributionUrl="${distributionUrl%-bin.*}-$distributionPlatform.zip"
+        ;;
+      maven-mvnd-*) MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/ ;;
+      *) MVN_CMD="mvn${scriptName#mvnw}" _MVNW_REPO_PATTERN=/org/apache/maven/ ;;
+      esac
+
+      # apply MVNW_REPOURL and calculate MAVEN_HOME
+      # maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
+      [ -z "${MVNW_REPOURL-}" ] || distributionUrl="$MVNW_REPOURL$_MVNW_REPO_PATTERN${distributionUrl#*"$_MVNW_REPO_PATTERN"}"
+      distributionUrlName="${distributionUrl##*/}"
+      distributionUrlNameMain="${distributionUrlName%.*}"
+      distributionUrlNameMain="${distributionUrlNameMain%-bin}"
+      MAVEN_USER_HOME="${MAVEN_USER_HOME:-${HOME}/.m2}"
+      MAVEN_HOME="${MAVEN_USER_HOME}/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
+
+      exec_maven() {
+        unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
+        exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
+      }
+
+      if [ -d "$MAVEN_HOME" ]; then
+        verbose "found existing MAVEN_HOME at $MAVEN_HOME"
+        exec_maven "$@"
+      fi
+
+      case "${distributionUrl-}" in
+      *?-bin.zip | *?maven-mvnd-?*-?*.zip) ;;
+      *) die "distributionUrl is not valid, must match *-bin.zip or maven-mvnd-*.zip, but found '${distributionUrl-}'" ;;
+      esac
+
+      # prepare tmp dir
+      if TMP_DOWNLOAD_DIR="$(mktemp -d)" && [ -d "$TMP_DOWNLOAD_DIR" ]; then
+        clean() { rm -rf -- "$TMP_DOWNLOAD_DIR"; }
+        trap clean HUP INT TERM EXIT
+      else
+        die "cannot create temp dir"
+      fi
+
+      mkdir -p -- "${MAVEN_HOME%/*}"
+
+      # Download and Install Apache Maven
+      verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
+      verbose "Downloading from: $distributionUrl"
+      verbose "Downloading to: $TMP_DOWNLOAD_DIR/$distributionUrlName"
+
+      # select .zip or .tar.gz
+      if ! command -v unzip >/dev/null; then
+        distributionUrl="${distributionUrl%.zip}.tar.gz"
+        distributionUrlName="${distributionUrl##*/}"
+      fi
+
+      # verbose opt
+      __MVNW_QUIET_WGET=--quiet __MVNW_QUIET_CURL=--silent __MVNW_QUIET_UNZIP=-q __MVNW_QUIET_TAR=''
+      [ "${MVNW_VERBOSE-}" != true ] || __MVNW_QUIET_WGET='' __MVNW_QUIET_CURL='' __MVNW_QUIET_UNZIP='' __MVNW_QUIET_TAR=v
+
+      # normalize http auth
+      case "${MVNW_PASSWORD:+has-password}" in
+      '') MVNW_USERNAME='' MVNW_PASSWORD='' ;;
+      has-password) [ -n "${MVNW_USERNAME-}" ] || MVNW_USERNAME='' MVNW_PASSWORD='' ;;
+      esac
+
+      if [ -z "${MVNW_USERNAME-}" ] && command -v wget >/dev/null; then
+        verbose "Found wget ... using wget"
+        wget ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} "$distributionUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName" || die "wget: Failed to fetch $distributionUrl"
+      elif [ -z "${MVNW_USERNAME-}" ] && command -v curl >/dev/null; then
+        verbose "Found curl ... using curl"
+        curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} -f -L -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl" || die "curl: Failed to fetch $distributionUrl"
+      elif set_java_home; then
+        verbose "Falling back to use Java to download"
+        javaSource="$TMP_DOWNLOAD_DIR/Downloader.java"
+        targetZip="$TMP_DOWNLOAD_DIR/$distributionUrlName"
+        cat >"$javaSource" <<-END
+      	public class Downloader extends java.net.Authenticator
+      	{
+      	  protected java.net.PasswordAuthentication getPasswordAuthentication()
+      	  {
+      	    return new java.net.PasswordAuthentication( System.getenv( "MVNW_USERNAME" ), System.getenv( "MVNW_PASSWORD" ).toCharArray() );
+      	  }
+      	  public static void main( String[] args ) throws Exception
+      	  {
+      	    setDefault( new Downloader() );
+      	    java.nio.file.Files.copy( java.net.URI.create( args[0] ).toURL().openStream(), java.nio.file.Paths.get( args[1] ).toAbsolutePath().normalize() );
+      	  }
+      	}
+      	END
+        # For Cygwin/MinGW, switch paths to Windows format before running javac and java
+        verbose " - Compiling Downloader.java ..."
+        "$(native_path "$JAVACCMD")" "$(native_path "$javaSource")" || die "Failed to compile Downloader.java"
+        verbose " - Running Downloader.java ..."
+        "$(native_path "$JAVACMD")" -cp "$(native_path "$TMP_DOWNLOAD_DIR")" Downloader "$distributionUrl" "$(native_path "$targetZip")"
+      fi
+
+      # If specified, validate the SHA-256 sum of the Maven distribution zip file
+      if [ -n "${distributionSha256Sum-}" ]; then
+        distributionSha256Result=false
+        if [ "$MVN_CMD" = mvnd.sh ]; then
+          echo "Checksum validation is not supported for maven-mvnd." >&2
+          echo "Please disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
+          exit 1
+        elif command -v sha256sum >/dev/null; then
+          if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | sha256sum -c - >/dev/null 2>&1; then
+            distributionSha256Result=true
+          fi
+        elif command -v shasum >/dev/null; then
+          if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | shasum -a 256 -c >/dev/null 2>&1; then
+            distributionSha256Result=true
+          fi
+        else
+          echo "Checksum validation was requested but neither 'sha256sum' or 'shasum' are available." >&2
+          echo "Please install either command, or disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
+          exit 1
+        fi
+        if [ $distributionSha256Result = false ]; then
+          echo "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised." >&2
+          echo "If you updated your Maven version, you need to update the specified distributionSha256Sum property." >&2
+          exit 1
+        fi
+      fi
+
+      # unzip and move
+      if command -v unzip >/dev/null; then
+        unzip ${__MVNW_QUIET_UNZIP:+"$__MVNW_QUIET_UNZIP"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -d "$TMP_DOWNLOAD_DIR" || die "failed to unzip"
+      else
+        tar xzf${__MVNW_QUIET_TAR:+"$__MVNW_QUIET_TAR"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -C "$TMP_DOWNLOAD_DIR" || die "failed to untar"
+      fi
+
+      # Find the actual extracted directory name (handles snapshots where filename != directory name)
+      actualDistributionDir=""
+
+      # First try the expected directory name (for regular distributions)
+      if [ -d "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain" ]; then
+        if [ -f "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain/bin/$MVN_CMD" ]; then
+          actualDistributionDir="$distributionUrlNameMain"
+        fi
+      fi
+
+      # If not found, search for any directory with the Maven executable (for snapshots)
+      if [ -z "$actualDistributionDir" ]; then
+        # enable globbing to iterate over items
+        set +f
+        for dir in "$TMP_DOWNLOAD_DIR"/*; do
+          if [ -d "$dir" ]; then
+            if [ -f "$dir/bin/$MVN_CMD" ]; then
+              actualDistributionDir="$(basename "$dir")"
+              break
+            fi
+          fi
+        done
+        set -f
+      fi
+
+      if [ -z "$actualDistributionDir" ]; then
+        verbose "Contents of $TMP_DOWNLOAD_DIR:"
+        verbose "$(ls -la "$TMP_DOWNLOAD_DIR")"
+        die "Could not find Maven distribution directory in extracted archive"
+      fi
+
+      verbose "Found extracted Maven distribution directory: $actualDistributionDir"
+      printf %s\\n "$distributionUrl" >"$TMP_DOWNLOAD_DIR/$actualDistributionDir/mvnw.url"
+      mv -- "$TMP_DOWNLOAD_DIR/$actualDistributionDir" "$MAVEN_HOME" || [ -d "$MAVEN_HOME" ] || die "fail to move MAVEN_HOME"
+
+      clean || :
+      exec_maven "$@"
+",
+mvnw.cmd:"<# : batch portion
+          @REM ----------------------------------------------------------------------------
+          @REM Licensed to the Apache Software Foundation (ASF) under one
+          @REM or more contributor license agreements.  See the NOTICE file
+          @REM distributed with this work for additional information
+          @REM regarding copyright ownership.  The ASF licenses this file
+          @REM to you under the Apache License, Version 2.0 (the
+          @REM "License"); you may not use this file except in compliance
+          @REM with the License.  You may obtain a copy of the License at
+          @REM
+          @REM    http://www.apache.org/licenses/LICENSE-2.0
+          @REM
+          @REM Unless required by applicable law or agreed to in writing,
+          @REM software distributed under the License is distributed on an
+          @REM "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          @REM KIND, either express or implied.  See the License for the
+          @REM specific language governing permissions and limitations
+          @REM under the License.
+          @REM ----------------------------------------------------------------------------
+
+          @REM ----------------------------------------------------------------------------
+          @REM Apache Maven Wrapper startup batch script, version 3.3.4
+          @REM
+          @REM Optional ENV vars
+          @REM   MVNW_REPOURL - repo url base for downloading maven distribution
+          @REM   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
+          @REM   MVNW_VERBOSE - true: enable verbose log; others: silence the output
+          @REM ----------------------------------------------------------------------------
+
+          @IF "%__MVNW_ARG0_NAME__%"=="" (SET __MVNW_ARG0_NAME__=%~nx0)
+          @SET __MVNW_CMD__=
+          @SET __MVNW_ERROR__=
+          @SET __MVNW_PSMODULEP_SAVE=%PSModulePath%
+          @SET PSModulePath=
+          @FOR /F "usebackq tokens=1* delims==" %%A IN (`powershell -noprofile "& {$scriptDir='%~dp0'; $script='%__MVNW_ARG0_NAME__%'; icm -ScriptBlock ([Scriptblock]::Create((Get-Content -Raw '%~f0'))) -NoNewScope}"`) DO @(
+            IF "%%A"=="MVN_CMD" (set __MVNW_CMD__=%%B) ELSE IF "%%B"=="" (echo %%A) ELSE (echo %%A=%%B)
+          )
+          @SET PSModulePath=%__MVNW_PSMODULEP_SAVE%
+          @SET __MVNW_PSMODULEP_SAVE=
+          @SET __MVNW_ARG0_NAME__=
+          @SET MVNW_USERNAME=
+          @SET MVNW_PASSWORD=
+          @IF NOT "%__MVNW_CMD__%"=="" ("%__MVNW_CMD__%" %*)
+          @echo Cannot start maven from wrapper >&2 && exit /b 1
+          @GOTO :EOF
+          : end batch / begin powershell #>
+
+          $ErrorActionPreference = "Stop"
+          if ($env:MVNW_VERBOSE -eq "true") {
+            $VerbosePreference = "Continue"
+          }
+
+          # calculate distributionUrl, requires .mvn/wrapper/maven-wrapper.properties
+          $distributionUrl = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionUrl
+          if (!$distributionUrl) {
+            Write-Error "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
+          }
+
+          switch -wildcard -casesensitive ( $($distributionUrl -replace '^.*/','') ) {
+            "maven-mvnd-*" {
+              $USE_MVND = $true
+              $distributionUrl = $distributionUrl -replace '-bin\.[^.]*$',"-windows-amd64.zip"
+              $MVN_CMD = "mvnd.cmd"
+              break
+            }
+            default {
+              $USE_MVND = $false
+              $MVN_CMD = $script -replace '^mvnw','mvn'
+              break
+            }
+          }
+
+          # apply MVNW_REPOURL and calculate MAVEN_HOME
+          # maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
+          if ($env:MVNW_REPOURL) {
+            $MVNW_REPO_PATTERN = if ($USE_MVND -eq $False) { "/org/apache/maven/" } else { "/maven/mvnd/" }
+            $distributionUrl = "$env:MVNW_REPOURL$MVNW_REPO_PATTERN$($distributionUrl -replace "^.*$MVNW_REPO_PATTERN",'')"
+          }
+          $distributionUrlName = $distributionUrl -replace '^.*/',''
+          $distributionUrlNameMain = $distributionUrlName -replace '\.[^.]*$','' -replace '-bin$',''
+
+          $MAVEN_M2_PATH = "$HOME/.m2"
+          if ($env:MAVEN_USER_HOME) {
+            $MAVEN_M2_PATH = "$env:MAVEN_USER_HOME"
+          }
+
+          if (-not (Test-Path -Path $MAVEN_M2_PATH)) {
+              New-Item -Path $MAVEN_M2_PATH -ItemType Directory | Out-Null
+          }
+
+          $MAVEN_WRAPPER_DISTS = $null
+          if ((Get-Item $MAVEN_M2_PATH).Target[0] -eq $null) {
+            $MAVEN_WRAPPER_DISTS = "$MAVEN_M2_PATH/wrapper/dists"
+          } else {
+            $MAVEN_WRAPPER_DISTS = (Get-Item $MAVEN_M2_PATH).Target[0] + "/wrapper/dists"
+          }
+
+          $MAVEN_HOME_PARENT = "$MAVEN_WRAPPER_DISTS/$distributionUrlNameMain"
+          $MAVEN_HOME_NAME = ([System.Security.Cryptography.SHA256]::Create().ComputeHash([byte[]][char[]]$distributionUrl) | ForEach-Object {$_.ToString("x2")}) -join ''
+          $MAVEN_HOME = "$MAVEN_HOME_PARENT/$MAVEN_HOME_NAME"
+
+          if (Test-Path -Path "$MAVEN_HOME" -PathType Container) {
+            Write-Verbose "found existing MAVEN_HOME at $MAVEN_HOME"
+            Write-Output "MVN_CMD=$MAVEN_HOME/bin/$MVN_CMD"
+            exit $?
+          }
+
+          if (! $distributionUrlNameMain -or ($distributionUrlName -eq $distributionUrlNameMain)) {
+            Write-Error "distributionUrl is not valid, must end with *-bin.zip, but found $distributionUrl"
+          }
+
+          # prepare tmp dir
+          $TMP_DOWNLOAD_DIR_HOLDER = New-TemporaryFile
+          $TMP_DOWNLOAD_DIR = New-Item -Itemtype Directory -Path "$TMP_DOWNLOAD_DIR_HOLDER.dir"
+          $TMP_DOWNLOAD_DIR_HOLDER.Delete() | Out-Null
+          trap {
+            if ($TMP_DOWNLOAD_DIR.Exists) {
+              try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force | Out-Null }
+              catch { Write-Warning "Cannot remove $TMP_DOWNLOAD_DIR" }
+            }
+          }
+
+          New-Item -Itemtype Directory -Path "$MAVEN_HOME_PARENT" -Force | Out-Null
+
+          # Download and Install Apache Maven
+          Write-Verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
+          Write-Verbose "Downloading from: $distributionUrl"
+          Write-Verbose "Downloading to: $TMP_DOWNLOAD_DIR/$distributionUrlName"
+
+          $webclient = New-Object System.Net.WebClient
+          if ($env:MVNW_USERNAME -and $env:MVNW_PASSWORD) {
+            $webclient.Credentials = New-Object System.Net.NetworkCredential($env:MVNW_USERNAME, $env:MVNW_PASSWORD)
+          }
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          $webclient.DownloadFile($distributionUrl, "$TMP_DOWNLOAD_DIR/$distributionUrlName") | Out-Null
+
+          # If specified, validate the SHA-256 sum of the Maven distribution zip file
+          $distributionSha256Sum = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionSha256Sum
+          if ($distributionSha256Sum) {
+            if ($USE_MVND) {
+              Write-Error "Checksum validation is not supported for maven-mvnd. `nPlease disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties."
+            }
+            Import-Module $PSHOME\Modules\Microsoft.PowerShell.Utility -Function Get-FileHash
+            if ((Get-FileHash "$TMP_DOWNLOAD_DIR/$distributionUrlName" -Algorithm SHA256).Hash.ToLower() -ne $distributionSha256Sum) {
+              Write-Error "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised. If you updated your Maven version, you need to update the specified distributionSha256Sum property."
+            }
+          }
+
+          # unzip and move
+          Expand-Archive "$TMP_DOWNLOAD_DIR/$distributionUrlName" -DestinationPath "$TMP_DOWNLOAD_DIR" | Out-Null
+
+          # Find the actual extracted directory name (handles snapshots where filename != directory name)
+          $actualDistributionDir = ""
+
+          # First try the expected directory name (for regular distributions)
+          $expectedPath = Join-Path "$TMP_DOWNLOAD_DIR" "$distributionUrlNameMain"
+          $expectedMvnPath = Join-Path "$expectedPath" "bin/$MVN_CMD"
+          if ((Test-Path -Path $expectedPath -PathType Container) -and (Test-Path -Path $expectedMvnPath -PathType Leaf)) {
+            $actualDistributionDir = $distributionUrlNameMain
+          }
+
+          # If not found, search for any directory with the Maven executable (for snapshots)
+          if (!$actualDistributionDir) {
+            Get-ChildItem -Path "$TMP_DOWNLOAD_DIR" -Directory | ForEach-Object {
+              $testPath = Join-Path $_.FullName "bin/$MVN_CMD"
+              if (Test-Path -Path $testPath -PathType Leaf) {
+                $actualDistributionDir = $_.Name
+              }
+            }
+          }
+
+          if (!$actualDistributionDir) {
+            Write-Error "Could not find Maven distribution directory in extracted archive"
+          }
+
+          Write-Verbose "Found extracted Maven distribution directory: $actualDistributionDir"
+          Rename-Item -Path "$TMP_DOWNLOAD_DIR/$actualDistributionDir" -NewName $MAVEN_HOME_NAME | Out-Null
+          try {
+            Move-Item -Path "$TMP_DOWNLOAD_DIR/$MAVEN_HOME_NAME" -Destination $MAVEN_HOME_PARENT | Out-Null
+          } catch {
+            if (! (Test-Path -Path "$MAVEN_HOME" -PathType Container)) {
+              Write-Error "fail to move MAVEN_HOME"
+            }
+          } finally {
+            try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force | Out-Null }
+            catch { Write-Warning "Cannot remove $TMP_DOWNLOAD_DIR" }
+          }
+
+          Write-Output "MVN_CMD=$MAVEN_HOME/bin/$MVN_CMD"
+",
+pom.xml:"<?xml version="1.0" encoding="UTF-8"?>
+         <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         	<modelVersion>4.0.0</modelVersion>
+         	<parent>
+         		<groupId>org.springframework.boot</groupId>
+         		<artifactId>spring-boot-starter-parent</artifactId>
+         		<version>3.5.6</version>
+         		<relativePath/> <!-- lookup parent from repository -->
+         	</parent>
+         	<groupId>com.facturacion</groupId>
+         	<artifactId>servicio-clientes</artifactId>
+         	<version>0.0.1-SNAPSHOT</version>
+         	<name>servicio-clientes</name>
+         	<description>Microservicio para gestionar la información de clientes.</description>
+         	<url/>
+         	<licenses>
+         		<license/>
+         	</licenses>
+         	<developers>
+         		<developer/>
+         	</developers>
+         	<scm>
+         		<connection/>
+         		<developerConnection/>
+         		<tag/>
+         		<url/>
+         	</scm>
+         	<properties>
+         		<java.version>21</java.version>
+         	</properties>
+         	<dependencies>
+
+         		<dependency>
+         			<groupId>org.springframework.boot</groupId>
+         			<artifactId>spring-boot-starter-web</artifactId>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>org.springframework.boot</groupId>
+         			<artifactId>spring-boot-starter-test</artifactId>
+         			<scope>test</scope>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>org.springframework.boot</groupId>
+         			<artifactId>spring-boot-starter-data-jpa</artifactId>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>org.springdoc</groupId>
+         			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+         			<version>2.8.13</version>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>org.flywaydb</groupId>
+         			<artifactId>flyway-core</artifactId>
+         			<version>11.14.0</version>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>org.flywaydb</groupId>
+         			<artifactId>flyway-database-postgresql</artifactId>
+         			<version>11.14.0</version>
+         			<scope>runtime</scope>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>com.h2database</groupId>
+         			<artifactId>h2</artifactId>
+         			<version>2.4.240</version>
+         			<scope>runtime</scope>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>org.postgresql</groupId>
+         			<artifactId>postgresql</artifactId>
+         			<version>42.7.8</version>
+         			<scope>runtime</scope>
+         		</dependency>
+         	</dependencies>
+
+         	<build>
+         		<plugins>
+         			<plugin>
+         				<groupId>org.springframework.boot</groupId>
+         				<artifactId>spring-boot-maven-plugin</artifactId>
+         			</plugin>
+         		</plugins>
+         	</build>
+
+         </project>
+",
+ClienteApiClient.java:"package com.facturacion.serviciofacturacion.client;
+
+                       import com.facturacion.serviciofacturacion.dto.ClienteDTO;
+                       import com.fasterxml.jackson.databind.ObjectMapper;
+                       import org.springframework.beans.factory.annotation.Value;
+                       import org.springframework.stereotype.Component;
+
+                       import java.io.IOException;
+                       import java.net.URI;
+                       import java.net.http.HttpClient;
+                       import java.net.http.HttpRequest;
+                       import java.net.http.HttpResponse;
+                       import java.util.Optional;
+
+                       @Component
+                       public class ClienteApiClient {
+
+                           private final HttpClient httpClient = HttpClient.newHttpClient();
+                           private final ObjectMapper objectMapper = new ObjectMapper();
+
+                           private final String clienteServiceBaseUrl;
+
+                           public ClienteApiClient(@Value("${api.clientes.base-url}") String clienteServiceBaseUrl) {
+                               this.clienteServiceBaseUrl = clienteServiceBaseUrl;
+                           }
+
+                           public Optional<ClienteDTO> getClientePorRuc(String ruc) {
+                               HttpRequest request = HttpRequest.newBuilder()
+                                       .uri(URI.create(clienteServiceBaseUrl + "/ruc/" + ruc))
+                                       .build();
+
+                               try {
+                                   HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+                                   if (response.statusCode() == 200) {
+                                       ClienteDTO cliente = objectMapper.readValue(response.body(), ClienteDTO.class);
+                                       return Optional.of(cliente);
+                                   } else {
+                                       System.err.println("El servicio de clientes respondió con un código de error: " + response.statusCode());
+                                   }
+
+                               } catch (IOException | InterruptedException e) {
+                                   System.err.println("Error de conexión al llamar al servicio de clientes: " + e.getMessage());
+                               }
+
+                               return Optional.empty();
+                           }
+                       }",
+WebConfig.java:"package com.facturacion.serviciofacturacion.config;
+
+                import org.springframework.context.annotation.Bean;
+                import org.springframework.context.annotation.Configuration;
+                import org.springframework.web.servlet.config.annotation.CorsRegistry;
+                import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+
+                @Configuration
+                public class WebConfig {
+                    @Bean
+                    public WebMvcConfigurer corsConfigurer() {
+                        return new WebMvcConfigurer() {
+                            @Override
+                            public void addCorsMappings(CorsRegistry registry) {
+                                registry.addMapping("/**")
+                                        /*.allowedOrigins(
+                                                "https://sdutp.xyz",
+                                                "https://app.sdutp.xyz",
+                                                "http://localhost:8080",
+                                                "http://192.168.1.43:8080",
+                                                "http://192.168.1.43:8081",
+                                                "http://192.168.1.43:8082",
+                                                "http://127.0.0.1:8080",
+                                                "http://127.0.0.1:8081",
+                                                "http://127.0.0.1:8082"
+                                        )*/
+                                        .allowedOrigins("*")
+                                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                                        .allowedHeaders("*");
+                                        //.allowCredentials(true);
+                            }
+                        };
+                    }
+                }
+",
+FacturaController.java:"package com.facturacion.serviciofacturacion.controller;
+
+                        import com.facturacion.serviciofacturacion.dto.CreacionFacturaRequest;
+                        import com.facturacion.serviciofacturacion.dto.FacturaResponse;
+                        import com.facturacion.serviciofacturacion.service.FacturaService;
+                        import com.facturacion.serviciofacturacion.service.PdfServiceImpl;
+                        import com.google.zxing.WriterException;
+                        import org.springframework.beans.factory.annotation.Autowired;
+                        import org.springframework.http.HttpHeaders;
+                        import org.springframework.http.MediaType;
+                        import org.springframework.http.ResponseEntity;
+                        import org.springframework.web.bind.annotation.*;
+
+                        import java.io.IOException;
+
+                        @RestController
+                        @RequestMapping("/api/v1/facturas") // <-- Versionar la API
+                        public class FacturaController {
+
+                            private final FacturaService facturaService;
+                            private final PdfServiceImpl pdfServiceImpl;
+
+                            @Autowired
+                            public FacturaController(FacturaService facturaService, PdfServiceImpl pdfServiceImpl) {
+                                this.facturaService = facturaService;
+                                this.pdfServiceImpl = pdfServiceImpl;
+                            }
+
+                            @PostMapping("/crear")
+                            public ResponseEntity<FacturaResponse> crearNuevaFactura(@RequestBody CreacionFacturaRequest request) {
+                                FacturaResponse response = facturaService.crearFactura(request);
+                                return ResponseEntity.ok(response);
+                            }
+
+                            @GetMapping("/{id}/pdf")
+                            public ResponseEntity<byte[]> descargarFacturaPdf(@PathVariable Long id) throws IOException, WriterException{
+                                // 6. El PdfService ahora se encargará de obtener los datos que necesita
+                                byte[] pdfBytes = pdfServiceImpl.generarFacturaPdf(id);
+
+                                HttpHeaders headers = new HttpHeaders();
+                                headers.setContentType(MediaType.APPLICATION_PDF);
+                                headers.setContentDispositionFormData("attachment", "factura-" + id + ".pdf");
+                                headers.setContentLength(pdfBytes.length);
+
+                                return ResponseEntity.ok()
+                                        .headers(headers)
+                                        .body(pdfBytes);
+                            }
+                        }",
+NumeroLetrasController.java:"package com.facturacion.serviciofacturacion.controller;
+
+                             import org.slf4j.Logger;
+                             import org.slf4j.LoggerFactory;
+                             import org.springframework.http.HttpStatus;
+                             import org.springframework.http.ResponseEntity;
+                             import org.springframework.web.bind.annotation.GetMapping;
+                             import org.springframework.web.bind.annotation.RequestMapping;
+                             import org.springframework.web.bind.annotation.RequestParam;
+                             import org.springframework.web.bind.annotation.RestController;
+                             import com.facturacion.serviciofacturacion.util.NumeroLetras;
+
+                             @RestController
+                             @RequestMapping("/api/v1/numeroletra")
+                             public class NumeroLetrasController {
+                                 private final static Logger logger = LoggerFactory.getLogger(NumeroLetrasController.class);
+
+                                 @GetMapping("/")
+                                 public ResponseEntity<String> convertir(
+                                         @RequestParam(name = "numero") String numero,
+                                         @RequestParam(name = "moneda", required = false) String codigoMoneda,
+                                         @RequestParam(name = "mayusculas", defaultValue = "false") boolean mayusculas) {
+
+                                     logger.info("Petición a /numeroletra: numero={}, moneda={}, mayusculas={}", numero, codigoMoneda, mayusculas);
+
+                                     NumeroLetras conversor = new NumeroLetras();
+                                     String resultado = conversor.convertir(numero, codigoMoneda, mayusculas);
+
+                                     if (resultado.toLowerCase().contains("inválido") || resultado.toLowerCase().contains("error")) {
+                                         logger.error("Error en la conversión: {}", resultado);
+                                         return new ResponseEntity<>(resultado, HttpStatus.BAD_REQUEST);
+                                     }
+
+                                     logger.info("Resultado: {}", resultado);
+                                     return new ResponseEntity<>(resultado, HttpStatus.OK);
+                                 }
+                             }",
+ClienteDTO.java:"package com.facturacion.serviciofacturacion.dto;
+
+                 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+                 import com.fasterxml.jackson.annotation.JsonProperty;
+
+                 @JsonIgnoreProperties(ignoreUnknown = true)
+                 public class ClienteDTO {
+
+                     @JsonProperty("id")
+                     private String ruc;
+
+                     private String razon_social;
+                     private String direccion;
+
+                     public ClienteDTO() {
+                     }
+
+                     public String getRuc() {
+                         return ruc;
+                     }
+
+                     public void setRuc(String ruc) {
+                         this.ruc = ruc;
+                     }
+
+                     public String getRazon_social() {
+                         return razon_social;
+                     }
+
+                     public void setRazon_social(String razon_social) {
+                         this.razon_social = razon_social;
+                     }
+
+                     public String getDireccion() {
+                         return direccion;
+                     }
+
+                     public void setDireccion(String direccion) {
+                         this.direccion = direccion;
+                     }
+                 }",
+CreacionFacturaRequest.java:"package com.facturacion.serviciofacturacion.dto;
+
+                             import java.math.BigDecimal;
+                             import java.util.List;
+
+                             public class CreacionFacturaRequest {
+
+                                 private String rucCliente;
+                                 private List<ItemRequest> items;
+
+                                 public static class ItemRequest {
+                                     private String producto;
+                                     private int cantidad;
+                                     private BigDecimal precioUnitario;
+
+                                     public String getProducto() { return producto; }
+                                     public void setProducto(String producto) { this.producto = producto; }
+                                     public int getCantidad() { return cantidad; }
+                                     public void setCantidad(int cantidad) { this.cantidad = cantidad; }
+                                     public BigDecimal getPrecioUnitario() { return precioUnitario; }
+                                     public void setPrecioUnitario(BigDecimal precioUnitario) { this.precioUnitario = precioUnitario; }
+                                 }
+
+                                 public String getRucCliente() { return rucCliente; }
+                                 public void setRucCliente(String rucCliente) { this.rucCliente = rucCliente; }
+                                 public List<ItemRequest> getItems() { return items; }
+                                 public void setItems(List<ItemRequest> items) { this.items = items; }
+                             }",
+FacturaResponse.java:"// Contenido de FacturaResponse.java
+                      package com.facturacion.serviciofacturacion.dto;
+
+                      import java.math.BigDecimal;
+                      import java.time.LocalDate;
+
+                      public class FacturaResponse {
+                          private Long id;
+                          private String serieCorrelativo;
+                          private LocalDate fechaEmision;
+                          private BigDecimal importeTotal;
+                          private String rucCliente;
+                          private String mensaje;
+
+                          public Long getId() {
+                              return id;
+                          }
+
+                          public void setId(Long id) {
+                              this.id = id;
+                          }
+
+                          public String getSerieCorrelativo() {
+                              return serieCorrelativo;
+                          }
+
+                          public void setSerieCorrelativo(String serieCorrelativo) {
+                              this.serieCorrelativo = serieCorrelativo;
+                          }
+
+                          public LocalDate getFechaEmision() {
+                              return fechaEmision;
+                          }
+
+                          public void setFechaEmision(LocalDate fechaEmision) {
+                              this.fechaEmision = fechaEmision;
+                          }
+
+                          public BigDecimal getImporteTotal() {
+                              return importeTotal;
+                          }
+
+                          public void setImporteTotal(BigDecimal importeTotal) {
+                              this.importeTotal = importeTotal;
+                          }
+
+                          public String getRucCliente() {
+                              return rucCliente;
+                          }
+
+                          public void setRucCliente(String rucCliente) {
+                              this.rucCliente = rucCliente;
+                          }
+
+                          public String getMensaje() {
+                              return mensaje;
+                          }
+
+                          public void setMensaje(String mensaje) {
+                              this.mensaje = mensaje;
+                          }
+                      }",
+FacturaEntity.java:"package com.facturacion.serviciofacturacion.entity;
+
+                    import jakarta.persistence.*;
+                    import java.math.BigDecimal;
+                    import java.time.LocalDate;
+                    import java.util.ArrayList;
+                    import java.util.List;
+
+                    /**
+                     * Representa la tabla 'facturas' en la base de datos.
+                     * Contiene el estado mínimo y fundamental de una factura que debe ser persistido.
+                     */
+                    @Entity
+                    @Table(name = "facturas")
+                    public class FacturaEntity {
+
+                        @Id
+                        @GeneratedValue(strategy = GenerationType.IDENTITY)
+                        private Long id;
+
+                        @Column(nullable = false, length = 4)
+                        private String serie;
+
+                        @Column(nullable = false, length = 8)
+                        private String correlativo;
+
+                        @Column(name = "fecha_emision", nullable = false)
+                        private LocalDate fechaEmision;
+
+                        @Column(nullable = false, length = 3)
+                        private String moneda;
+
+                        @Column(name = "ruc_cliente", nullable = false, length = 11)
+                        private String rucCliente;
+
+                        @Column(nullable = false, precision = 10, scale = 2)
+                        private BigDecimal subtotal;
+
+                        @Column(name = "total_igv", nullable = false, precision = 10, scale = 2)
+                        private BigDecimal totalIgv;
+
+                        @Column(name = "importe_total", nullable = false, precision = 10, scale = 2)
+                        private BigDecimal importeTotal;
+
+                        @Column(name = "codigo_hash", length = 64)
+                        private String codigoHash;
+
+                        @OneToMany(
+                                mappedBy = "factura",
+                                cascade = CascadeType.ALL,
+                                orphanRemoval = true,
+                                fetch = FetchType.LAZY
+                        )
+                        private List<ItemFacturaEntity> items = new ArrayList<>();
+
+                        public FacturaEntity() {
+                        }
+
+                        public void addItem(ItemFacturaEntity item) {
+                            items.add(item);
+                            item.setFactura(this);
+                        }
+
+                        public void removeItem(ItemFacturaEntity item) {
+                            items.remove(item);
+                            item.setFactura(null);
+                        }
+
+                        public Long getId() {
+                            return id;
+                        }
+
+                        public void setId(Long id) {
+                            this.id = id;
+                        }
+
+                        public String getSerie() {
+                            return serie;
+                        }
+
+                        public void setSerie(String serie) {
+                            this.serie = serie;
+                        }
+
+                        public String getCorrelativo() {
+                            return correlativo;
+                        }
+
+                        public void setCorrelativo(String correlativo) {
+                            this.correlativo = correlativo;
+                        }
+
+                        public LocalDate getFechaEmision() {
+                            return fechaEmision;
+                        }
+
+                        public void setFechaEmision(LocalDate fechaEmision) {
+                            this.fechaEmision = fechaEmision;
+                        }
+
+                        public String getMoneda() {
+                            return moneda;
+                        }
+
+                        public void setMoneda(String moneda) {
+                            this.moneda = moneda;
+                        }
+
+                        public String getRucCliente() {
+                            return rucCliente;
+                        }
+
+                        public void setRucCliente(String rucCliente) {
+                            this.rucCliente = rucCliente;
+                        }
+
+                        public BigDecimal getSubtotal() {
+                            return subtotal;
+                        }
+
+                        public void setSubtotal(BigDecimal subtotal) {
+                            this.subtotal = subtotal;
+                        }
+
+                        public BigDecimal getTotalIgv() {
+                            return totalIgv;
+                        }
+
+                        public void setTotalIgv(BigDecimal totalIgv) {
+                            this.totalIgv = totalIgv;
+                        }
+
+                        public BigDecimal getImporteTotal() {
+                            return importeTotal;
+                        }
+
+                        public void setImporteTotal(BigDecimal importeTotal) {
+                            this.importeTotal = importeTotal;
+                        }
+
+                        public String getCodigoHash() {
+                            return codigoHash;
+                        }
+
+                        public void setCodigoHash(String codigoHash) {
+                            this.codigoHash = codigoHash;
+                        }
+
+                        public List<ItemFacturaEntity> getItems() {
+                            return items;
+                        }
+
+                        public void setItems(List<ItemFacturaEntity> items) {
+                            this.items = items;
+                        }
+                    }",
+ItemFacturaEntity.java:"package com.facturacion.serviciofacturacion.entity;
+
+                        import jakarta.persistence.*;
+                        import java.math.BigDecimal;
+
+                        @Entity
+                        @Table(name = "factura_items")
+                        public class ItemFacturaEntity {
+
+                            @Id
+                            @GeneratedValue(strategy = GenerationType.IDENTITY)
+                            private Long id;
+
+                            @Column(nullable = false)
+                            private String producto;
+
+                            @Column(nullable = false)
+                            private int cantidad;
+
+                            @Column(nullable = false)
+                            private BigDecimal precioUnitario;
+
+
+                            @ManyToOne(fetch = FetchType.LAZY)
+                            @JoinColumn(name = "factura_id", nullable = false)
+                            private FacturaEntity factura;
+
+                            public Long getId() {
+                                return id;
+                            }
+
+                            public void setId(Long id) {
+                                this.id = id;
+                            }
+
+                            public String getProducto() {
+                                return producto;
+                            }
+
+                            public void setProducto(String producto) {
+                                this.producto = producto;
+                            }
+
+                            public int getCantidad() {
+                                return cantidad;
+                            }
+
+                            public void setCantidad(int cantidad) {
+                                this.cantidad = cantidad;
+                            }
+
+                            public BigDecimal getPrecioUnitario() {
+                                return precioUnitario;
+                            }
+
+                            public void setPrecioUnitario(BigDecimal precioUnitario) {
+                                this.precioUnitario = precioUnitario;
+                            }
+
+                            public FacturaEntity getFactura() {
+                                return factura;
+                            }
+
+                            public void setFactura(FacturaEntity factura) {
+                                this.factura = factura;
+                            }
+                        }",
+FacturaMapper.java:"package com.facturacion.serviciofacturacion.mapper;
+
+                    import com.facturacion.serviciofacturacion.dto.CreacionFacturaRequest;
+                    import com.facturacion.serviciofacturacion.dto.FacturaResponse;
+                    import com.facturacion.serviciofacturacion.entity.FacturaEntity;
+                    import com.facturacion.serviciofacturacion.entity.ItemFacturaEntity;
+                    import org.springframework.stereotype.Component;
+
+                    import java.math.BigDecimal;
+
+                    @Component
+                    public class FacturaMapper {
+
+                        /**
+                         * Convierte un DTO de creación a una Entidad.
+                         * No calcula totales, solo mapea los datos de entrada.
+                         * @param request El DTO de la petición.
+                         * @return Una FacturaEntity parcialmente construida.
+                         */
+                        public FacturaEntity toEntity(CreacionFacturaRequest request) {
+                            if (request == null) {
+                                return null;
+                            }
+
+                            FacturaEntity entity = new FacturaEntity();
+                            entity.setRucCliente(request.getRucCliente());
+
+                            for (CreacionFacturaRequest.ItemRequest itemDto : request.getItems()) {
+                                ItemFacturaEntity itemEntity = new ItemFacturaEntity();
+                                itemEntity.setProducto(itemDto.getProducto());
+                                itemEntity.setCantidad(itemDto.getCantidad());
+                                itemEntity.setPrecioUnitario(itemDto.getPrecioUnitario());
+
+                                entity.addItem(itemEntity); // Usa el helper para mantener la relación
+                            }
+
+                            return entity;
+                        }
+
+                        /**
+                         * Convierte una Entidad ya guardada a un DTO de respuesta.
+                         * @param entity La entidad que viene de la base de datos.
+                         * @param mensaje Un mensaje adicional para la respuesta.
+                         * @return El DTO que se expondrá en la API.
+                         */
+                        public FacturaResponse toResponse(FacturaEntity entity, String mensaje) {
+                            if (entity == null) {
+                                return null;
+                            }
+
+                            FacturaResponse response = new FacturaResponse();
+                            response.setId(entity.getId());
+                            response.setSerieCorrelativo(entity.getSerie() + "-" + entity.getCorrelativo());
+                            response.setFechaEmision(entity.getFechaEmision());
+                            response.setImporteTotal(entity.getImporteTotal());
+                            response.setRucCliente(entity.getRucCliente());
+                            response.setMensaje(mensaje);
+
+                            return response;
+                        }
+                    }",
+FacturaRepository.java:"package com.facturacion.serviciofacturacion.repository;
+
+                        import com.facturacion.serviciofacturacion.entity.FacturaEntity;
+                        import org.springframework.data.jpa.repository.JpaRepository;
+                        import org.springframework.stereotype.Repository;
+
+                        import java.util.Optional;
+
+                        @Repository
+                        public interface FacturaRepository extends JpaRepository<FacturaEntity, Long> {
+
+                            Optional<FacturaEntity> findBySerieAndCorrelativo(String serie, String correlativo);
+
+                        }",
+ItemFacturaRepository.java:"package com.facturacion.serviciofacturacion.repository;
+
+                            import com.facturacion.serviciofacturacion.entity.ItemFacturaEntity;
+                            import org.springframework.data.jpa.repository.JpaRepository;
+                            import org.springframework.stereotype.Repository;
+
+                            @Repository
+                            public interface ItemFacturaRepository extends JpaRepository<ItemFacturaEntity, Long> {
+
+                                // List<ItemFacturaEntity> findByProducto(String producto);
+                            }",
+FacturaService.java:"package com.facturacion.serviciofacturacion.service;
+
+                     import com.facturacion.serviciofacturacion.dto.CreacionFacturaRequest;
+                     import com.facturacion.serviciofacturacion.dto.FacturaResponse;
+
+                     public interface FacturaService {
+
+                         /**
+                          * Crea una nueva factura, la persiste en la base de datos y devuelve una respuesta.
+                          * @param request El DTO que contiene el RUC del cliente y los items.
+                          * @return Un DTO con la información de la factura creada.
+                          */
+                         FacturaResponse crearFactura(CreacionFacturaRequest request);
+                     }",
+FacturaServiceImpl.java:"package com.facturacion.serviciofacturacion.service;
+
+                         import com.facturacion.serviciofacturacion.client.ClienteApiClient;
+                         import com.facturacion.serviciofacturacion.dto.CreacionFacturaRequest;
+                         import com.facturacion.serviciofacturacion.dto.FacturaResponse;
+                         import com.facturacion.serviciofacturacion.entity.FacturaEntity;
+                         import com.facturacion.serviciofacturacion.mapper.FacturaMapper;
+                         import com.facturacion.serviciofacturacion.repository.FacturaRepository;
+                         import com.facturacion.serviciofacturacion.util.NumeroLetras;
+
+                         import org.springframework.beans.factory.annotation.Autowired;
+                         import org.springframework.stereotype.Service;
+                         import org.springframework.transaction.annotation.Transactional;
+
+                         import java.math.BigDecimal;
+                         import java.time.LocalDate;
+
+                         @Service
+                         public class FacturaServiceImpl implements FacturaService {
+
+                             private final FacturaRepository facturaRepository;
+                             private final ClienteApiClient clienteApiClient;
+                             private final FacturaMapper facturaMapper;
+
+                             @Autowired
+                             public FacturaServiceImpl(FacturaRepository facturaRepository,
+                                                       ClienteApiClient clienteApiClient,
+                                                       FacturaMapper facturaMapper) {
+                                 this.facturaRepository = facturaRepository;
+                                 this.clienteApiClient = clienteApiClient;
+                                 this.facturaMapper = facturaMapper;
+                             }
+
+                             @Override
+                             @Transactional
+                             public FacturaResponse crearFactura(CreacionFacturaRequest request) {
+                                 clienteApiClient.getClientePorRuc(request.getRucCliente())
+                                         .orElseThrow(() -> new RuntimeException("Cliente no encontrado con RUC: " + request.getRucCliente()));
+
+                                 FacturaEntity facturaEntity = facturaMapper.toEntity(request);
+
+                                 facturaEntity.setFechaEmision(LocalDate.now());
+                                 facturaEntity.setSerie("F001");
+                                 facturaEntity.setCorrelativo(String.format("%08d", facturaRepository.count() + 1));
+                                 facturaEntity.setMoneda("PEN");
+                                 facturaEntity.setCodigoHash(java.util.UUID.randomUUID().toString().replace("-", ""));
+
+                                 BigDecimal subtotal = facturaEntity.getItems().stream()
+                                         .map(item -> item.getPrecioUnitario().multiply(new BigDecimal(item.getCantidad())))
+                                         .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                                 BigDecimal tasaIgv = new BigDecimal("0.18");
+                                 BigDecimal totalIgv = subtotal.multiply(tasaIgv);
+                                 BigDecimal importeTotal = subtotal.add(totalIgv);
+
+                                 facturaEntity.setSubtotal(subtotal);
+                                 facturaEntity.setTotalIgv(totalIgv);
+                                 facturaEntity.setImporteTotal(importeTotal);
+
+                                 FacturaEntity facturaGuardada = facturaRepository.save(facturaEntity);
+
+                                 String importeEnLetras = new NumeroLetras().convertir(facturaGuardada.getImporteTotal().toString(), "SOLES", true);
+                                 String mensaje = "Factura creada exitosamente. Total a pagar: " + importeEnLetras;
+
+                                 return facturaMapper.toResponse(facturaGuardada, mensaje);
+                             }
+                         }",
+PdfService.java:"package com.facturacion.serviciofacturacion.service;
+
+                 import com.google.zxing.WriterException;
+                 import java.io.IOException;
+
+                 public interface PdfService {
+                     byte[] generarFacturaPdf(Long facturaId) throws IOException, WriterException;
+                 }",
+PdfServiceImpl.java:"package com.facturacion.serviciofacturacion.service;
+
+                     import com.facturacion.serviciofacturacion.client.ClienteApiClient;
+                     import com.facturacion.serviciofacturacion.dto.ClienteDTO;
+                     import com.facturacion.serviciofacturacion.entity.FacturaEntity;
+                     import com.facturacion.serviciofacturacion.entity.ItemFacturaEntity;
+                     import com.facturacion.serviciofacturacion.repository.FacturaRepository;
+                     import com.facturacion.serviciofacturacion.util.NumeroLetras;
+
+                     import org.springframework.beans.factory.annotation.Autowired;
+                     import org.springframework.stereotype.Service;
+
+                     import com.google.zxing.BarcodeFormat;
+                     import com.google.zxing.WriterException;
+                     import com.google.zxing.client.j2se.MatrixToImageWriter;
+                     import com.google.zxing.common.BitMatrix;
+                     import com.google.zxing.qrcode.QRCodeWriter;
+
+                     import org.openpdf.text.Font;
+                     import org.openpdf.text.Image;
+                     import org.openpdf.text.pdf.PdfPCell;
+                     import org.openpdf.text.pdf.PdfPTable;
+                     import org.openpdf.text.pdf.PdfWriter;
+                     import org.openpdf.text.Document;
+                     import org.openpdf.text.DocumentException;
+                     import org.openpdf.text.Element;
+                     import org.openpdf.text.PageSize;
+                     import org.openpdf.text.Paragraph;
+
+                     import java.awt.Color;
+                     import java.io.ByteArrayOutputStream;
+                     import java.io.IOException;
+                     import java.io.InputStream;
+                     import java.math.BigDecimal;
+                     import java.math.RoundingMode;
+                     import java.text.DecimalFormat;
+
+                     @Service
+                     public class PdfServiceImpl implements PdfService {
+
+                         private static final String EMISOR_RAZON_SOCIAL = "MI EMPRESA TECNOLÓGICA S.A.C.";
+                         private static final String EMISOR_RUC = "20123456789";
+                         private static final String EMISOR_DIRECCION = "AV. PRINCIPAL 123, LIMA, LIMA, PERU";
+
+                         private final FacturaRepository facturaRepository;
+                         private final ClienteApiClient clienteApiClient;
+
+                         @Autowired
+                         public PdfServiceImpl(FacturaRepository facturaRepository, ClienteApiClient clienteApiClient) {
+                             this.facturaRepository = facturaRepository;
+                             this.clienteApiClient = clienteApiClient;
+                         }
+
+                         @Override
+                         public byte[] generarFacturaPdf(Long facturaId) throws IOException, WriterException, DocumentException {
+                             FacturaEntity factura = facturaRepository.findById(facturaId)
+                                     .orElseThrow(() -> new RuntimeException("Factura no encontrada con ID: " + facturaId));
+
+                             ClienteDTO cliente = clienteApiClient.getClientePorRuc(factura.getRucCliente())
+                                     .orElseThrow(() -> new RuntimeException("Datos del cliente no encontrados para RUC: " + factura.getRucCliente()));
+
+                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                             Document document = new Document(PageSize.A4);
+                             PdfWriter.getInstance(document, baos);
+
+                             document.open();
+
+                             Font fontHeader = new Font(Font.HELVETICA, 12, Font.BOLD);
+                             Font fontTitulo = new Font(Font.HELVETICA, 16, Font.BOLD, Color.BLUE);
+                             Font fontSubTitulo = new Font(Font.HELVETICA, 10, Font.BOLD);
+                             Font fontNormal = new Font(Font.HELVETICA, 9, Font.NORMAL);
+                             Font fontBold = new Font(Font.HELVETICA, 9, Font.BOLD);
+
+                             PdfPTable headerTable = new PdfPTable(3);
+                             headerTable.setWidthPercentage(100);
+                             headerTable.setWidths(new float[]{3f, 4f, 3f}); // Proporciones de las columnas
+                             headerTable.getDefaultCell().setBorder(PdfPCell.NO_BORDER);
+
+                             // Columna 1: Logo
+                             PdfPCell logoCell = new PdfPCell();
+                             logoCell.setBorder(PdfPCell.NO_BORDER);
+                             try (InputStream logoStream = getClass().getClassLoader().getResourceAsStream("images/logo.png")) {
+                                 if (logoStream != null) {
+                                     byte[] logoBytes = logoStream.readAllBytes();
+                                     Image logo = Image.getInstance(logoBytes);
+                                     logo.scaleToFit(80, 80); // tamaño del logo
+                                     logoCell.addElement(logo);
+                                 } else {
+                                     logoCell.addElement(new Paragraph("Logo no encontrado"));
+                                 }
+                             } catch (IOException | NullPointerException e) {
+                                 System.err.println("No se pudo cargar el logo: " + e.getMessage());
+                                 logoCell.addElement(new Paragraph("Error al cargar logo"));
+                             }
+                             headerTable.addCell(logoCell);
+
+                             // Columna 2: Datos del Emisor
+                             PdfPCell emisorCell = new PdfPCell();
+                             emisorCell.setBorder(PdfPCell.NO_BORDER);
+                             emisorCell.addElement(new Paragraph(EMISOR_RAZON_SOCIAL, fontHeader)); // <-- CORREGIDO
+                             emisorCell.addElement(new Paragraph("RUC: " + EMISOR_RUC, fontNormal)); // <-- CORREGIDO
+                             emisorCell.addElement(new Paragraph(EMISOR_DIRECCION, fontNormal));
+                             headerTable.addCell(""); // Placeholder para logo
+                             headerTable.addCell(emisorCell);
+
+                             // Columna 3: Caja de Factura
+                             PdfPTable rucTable = new PdfPTable(1);
+                             PdfPCell rucCell = new PdfPCell(new Paragraph("FACTURA ELECTRÓNICA", fontTitulo));
+                             rucCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                             rucTable.addCell(rucCell);
+                             PdfPCell numeroCell = new PdfPCell(new Paragraph("RUC: " + EMISOR_RUC, fontBold));
+                             numeroCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                             rucTable.addCell(numeroCell);
+                             PdfPCell serieCell = new PdfPCell(new Paragraph(factura.getSerie() + " - " + factura.getCorrelativo(), fontBold));
+                             serieCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                             rucTable.addCell(serieCell);
+                             headerTable.addCell(rucTable);
+
+                             document.add(headerTable);
+                             document.add(new Paragraph("\n"));
+
+                             // --- 2. ZONA: DATOS DEL CLIENTE ---
+                             PdfPTable clienteTable = new PdfPTable(1);
+                             clienteTable.setWidthPercentage(100);
+                             PdfPCell clienteHeaderCell = new PdfPCell(new Paragraph("DATOS DEL CLIENTE", fontSubTitulo));
+                             clienteHeaderCell.setBackgroundColor(Color.LIGHT_GRAY);
+                             clienteTable.addCell(clienteHeaderCell);
+
+                             String clienteInfo = "Razón Social: " + cliente.getRazon_social() + "\n" +
+                                     "RUC: " + cliente.getRuc() + "\n" +
+                                     "Dirección: " + cliente.getDireccion();
+                             clienteTable.addCell(new Paragraph(clienteInfo, fontNormal));
+                             document.add(clienteTable);
+                             document.add(new Paragraph("\n"));
+
+                             // --- 3. ZONA: TABLA DE ITEMS ---
+                             PdfPTable itemsTable = new PdfPTable(5);
+                             itemsTable.setWidthPercentage(100);
+                             itemsTable.setWidths(new float[]{1f, 5f, 1.5f, 1.5f, 2f});
+                             // Encabezados
+                             itemsTable.addCell(new Paragraph("Cant.", fontBold));
+                             itemsTable.addCell(new Paragraph("Descripción", fontBold));
+                             itemsTable.addCell(new Paragraph("V. Unitario", fontBold));
+                             itemsTable.addCell(new Paragraph("P. Unitario", fontBold));
+                             itemsTable.addCell(new Paragraph("Importe", fontBold));
+
+                             DecimalFormat df = new DecimalFormat("#,##0.00");
+                             for (ItemFacturaEntity item : factura.getItems()) {
+                                 itemsTable.addCell(new Paragraph(String.valueOf(item.getCantidad()), fontNormal));
+                                 itemsTable.addCell(new Paragraph(item.getProducto(), fontNormal));
+
+                                 BigDecimal valorUnitario = item.getPrecioUnitario(); // Asumimos que el precio es sin IGV
+                                 itemsTable.addCell(new Paragraph(df.format(valorUnitario), fontNormal));
+
+                                 BigDecimal precioUnitario = valorUnitario.multiply(new BigDecimal("1.18")).setScale(2, RoundingMode.HALF_UP);
+                                 itemsTable.addCell(new Paragraph(df.format(precioUnitario), fontNormal));
+
+                                 BigDecimal importe = valorUnitario.multiply(new BigDecimal(item.getCantidad()));
+                                 itemsTable.addCell(new Paragraph(df.format(importe), fontNormal));
+                             }
+                             document.add(itemsTable);
+
+                             // --- 4. ZONA: TOTALES ---
+                             document.add(new Paragraph("\n"));
+                             PdfPTable totalesTable = new PdfPTable(2);
+                             totalesTable.setWidthPercentage(40);
+                             totalesTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                             totalesTable.getDefaultCell().setBorder(PdfPCell.NO_BORDER);
+
+                             totalesTable.addCell(new Paragraph("Subtotal:", fontNormal));
+                             totalesTable.addCell(new Paragraph("S/ " + df.format(factura.getSubtotal()), fontNormal));
+                             totalesTable.addCell(new Paragraph("IGV (18%):", fontNormal));
+                             totalesTable.addCell(new Paragraph("S/ " + df.format(factura.getTotalIgv()), fontNormal));
+                             totalesTable.addCell(new Paragraph("IMPORTE TOTAL:", fontBold));
+                             totalesTable.addCell(new Paragraph("S/ " + df.format(factura.getImporteTotal()), fontBold));
+                             document.add(totalesTable);
+
+                             document.add(new Paragraph("\n"));
+                             String importeEnLetras = new NumeroLetras().convertir(factura.getImporteTotal().toString(), "SOLES", true);
+                             Paragraph montoEnLetras = new Paragraph("SON: " + importeEnLetras, fontBold);
+                             document.add(montoEnLetras);
+
+                             // --- 5. ZONA: PIE (QR y HASH) ---
+                             document.add(new Paragraph("\n\n"));
+                             PdfPTable footerTable = new PdfPTable(2);
+                             footerTable.setWidthPercentage(100);
+                             footerTable.setWidths(new float[]{2f, 8f});
+                             footerTable.getDefaultCell().setBorder(PdfPCell.NO_BORDER);
+
+                             String qrData = String.join("|",
+                                     "20123456789",
+                                     "01", // Factura
+                                     factura.getSerie(),
+                                     factura.getCorrelativo(),
+                                     factura.getTotalIgv().toString(),
+                                     factura.getImporteTotal().toString(),
+                                     factura.getFechaEmision().toString(),
+                                     "6", // RUC
+                                     cliente.getRuc()
+                             );
+
+                             // Columna QR
+                             Image qrImage = generarCodigoQR(qrData, 100);
+                             PdfPCell qrCell = new PdfPCell(qrImage);
+                             qrCell.setBorder(PdfPCell.NO_BORDER);
+                             qrCell.setVerticalAlignment(Element.ALIGN_TOP);
+                             footerTable.addCell(qrCell);
+
+                             // Columna Hash y Leyendas
+                             PdfPCell leyendasCell = new PdfPCell();
+                             leyendasCell.setBorder(PdfPCell.NO_BORDER);
+                             leyendasCell.setVerticalAlignment(Element.ALIGN_TOP);
+                             leyendasCell.addElement(new Paragraph("HASH: " + factura.getCodigoHash(), new Font(Font.COURIER, 7)));
+                             leyendasCell.addElement(new Paragraph("\nEsta es una representación impresa de la Factura Electrónica, generada en el sistema.", fontNormal));
+                             leyendasCell.addElement(new Paragraph("Puede verificarla utilizando su clave SOL en el portal de SUNAT.", fontNormal));
+                             footerTable.addCell(leyendasCell);
+
+                             document.add(footerTable);
+
+                             document.close();
+                             return baos.toByteArray();
+                         }
+
+                         /**
+                          * Método auxiliar para generar una imagen de Código QR a partir de un texto.
+                          *
+                          * @param data Los datos a codificar en el QR.
+                          * @param size El tamaño (ancho y alto) de la imagen en píxeles.
+                          * @return Un objeto Image de OpenPDF.
+                          * */
+                             private Image generarCodigoQR(String data, int size) throws WriterException, IOException {
+                             QRCodeWriter qrCodeWriter = new QRCodeWriter();
+                             BitMatrix bitMatrix = qrCodeWriter.encode(data, BarcodeFormat.QR_CODE, size, size);
+
+                             ByteArrayOutputStream pngOutputStream = new ByteArrayOutputStream();
+                             MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream);
+                             byte[] pngData = pngOutputStream.toByteArray();
+
+                             return Image.getInstance(pngData);
+                         }
+                     }",
+NumeroLetras.java:"package com.facturacion.serviciofacturacion.util;
+
+                   import java.math.BigDecimal;
+                   import java.math.BigInteger;
+                   import java.math.RoundingMode;
+                   import java.util.ArrayList;
+                   import java.util.Collections;
+                   import java.util.List;
+                   import java.util.Map;
+                   import java.util.stream.Collectors;
+                   import java.util.stream.Stream;
+
+                           public class NumeroLetras {
+
+                               private static final String[] UNIDADES = {
+                                       "", "UN ", "DOS ", "TRES ", "CUATRO ", "CINCO ", "SEIS ", "SIETE ", "OCHO ", "NUEVE ", "DIEZ ",
+                                       "ONCE ", "DOCE ", "TRECE ", "CATORCE ", "QUINCE ", "DIECISEIS ", "DIECISIETE ", "DIECIOCHO ",
+                                       "DIECINUEVE ", "VEINTE "
+                               };
+
+                               private static final String[] DECENAS = {
+                                       "VEINTI", "TREINTA ", "CUARENTA ", "CINCUENTA ", "SESENTA ", "SETENTA ", "OCHENTA ", "NOVENTA ", "CIEN "
+                               };
+
+                               private static final String[] CENTENAS = {
+                                       "CIENTO ", "DOSCIENTOS ", "TRESCIENTOS ", "CUATROCIENTOS ", "QUINIENTOS ", "SEISCIENTOS ",
+                                       "SETECIENTOS ", "OCHOCIENTOS ", "NOVECIENTOS "
+                               };
+
+                               // Soporte para números grandes
+                               private static final String[][] GRUPOS = {
+                                       {"", ""}, // Nivel 0
+                                       {"MIL ", "MIL "}, // Nivel 1
+                                       {"MILLÓN ", "MILLONES "}, // Nivel 2
+                                       {"MIL ", "MIL "}, // Nivel 3 (de Millones)
+                                       {"BILLÓN ", "BILLONES "}, // Nivel 4
+                                       {"MIL ", "MIL "}, // Nivel 5 (de Billones)
+                                       {"TRILLÓN ", "TRILLONES "}, // Nivel 6
+                                       {"MIL ", "MIL "}, // Nivel 7 (de Trillones)
+                                       {"CUATRILLÓN ", "CUATRILLONES "}, // Nivel 8
+                                       {"MIL ", "MIL "}, // etc.
+                                       {"QUINTILLÓN ", "QUINTILLONES "},
+                                       {"MIL ", "MIL "},
+                                       {"SEXTILLÓN ", "SEXTILLONES "},
+                                       {"MIL ", "MIL "},
+                                       {"SEPTILLÓN ", "SEPTILLONES "},
+                                       {"MIL ", "MIL "},
+                                       {"OCTILLÓN ", "OCTILLONES "},
+                                       {"MIL ", "MIL "},
+                                       {"NONILLÓN ", "NONILLONES "},
+                                       {"MIL ", "MIL "},
+                                       {"DECILLÓN ", "DECILLONES "},
+                                       {"MIL ", "MIL "},
+                                       {"UNDECILLÓN ", "UNDECILLONES "},
+                                       {"MIL ", "MIL "},
+                                       {"DUODECILLÓN ", "DUODECILLONES "}
+                               };
+
+                               /**
+                                * Clase para almacenar la información de la moneda de forma estructurada.
+                                */
+                               public record Moneda(String pais, String codigo, String singular, String plural, String decimalSingular, String decimalPlural, String simbolo) {}
+
+                               // Mapa estático para un acceso eficiente a las monedas por su código ISO 4217
+                               private static final Map<String, Moneda> MONEDAS = Stream.of(
+                                       new Moneda("Colombia", "COP", "PESO COLOMBIANO", "PESOS COLOMBIANOS", "CENTAVO", "CENTAVOS", "$"),
+                                       new Moneda("Estados Unidos", "USD", "DÓLAR", "DÓLARES", "CENTAVO", "CENTAVOS", "US$"),
+                                       new Moneda("Europa", "EUR", "EURO", "EUROS", "CÉNTIMO", "CÉNTIMOS", "€"),
+                                       new Moneda("México", "MXN", "PESO MEXICANO", "PESOS MEXICANOS", "CENTAVO", "CENTAVOS", "$"),
+                                       new Moneda("Perú", "PEN", "NUEVO SOL", "NUEVOS SOLES", "CÉNTIMO", "CÉNTIMOS", "S/."),
+                                       new Moneda("Reino Unido", "GBP", "LIBRA", "LIBRAS", "PENIQUE", "PENIQUES", "£")
+                               ).collect(Collectors.toMap(Moneda::codigo, m -> m));
+
+
+                               /**
+                                * Método principal para convertir un número a su representación en palabras.
+                                *
+                                * @param valor      El número a convertir. Puede ser un entero o un decimal.
+                                * @param codigoMoneda El código de la moneda (ej. "COP", "USD", "EUR"). Si es nulo o vacío, no se añadirá texto de moneda.
+                                * @param mayusculas   true para devolver el resultado en mayúsculas, false para minúsculas tipo título.
+                                * @return El número representado en palabras con la moneda especificada.
+                                */
+                               public String convertir(String valor, String codigoMoneda, boolean mayusculas) {
+                                   if (valor == null || valor.isEmpty()) {
+                                       return "Valor inválido";
+                                   }
+
+                                   try {
+                                       BigDecimal numero = new BigDecimal(valor.replace(",", ".")).setScale(2, RoundingMode.HALF_UP);
+
+                                       BigInteger parteEntera = numero.toBigInteger();
+                                       int parteDecimal = numero.remainder(BigDecimal.ONE).multiply(new BigDecimal(100)).abs().intValue();
+
+                                       Moneda moneda = (codigoMoneda != null && !codigoMoneda.isBlank()) ? MONEDAS.get(codigoMoneda.toUpperCase()) : null;
+
+                                       String literalEntero = convertirEntero(parteEntera);
+
+                                       // Ajuste gramatical: "UNO" se convierte en "UN" antes de la moneda
+                                       if (literalEntero.endsWith("UNO ")) {
+                                           literalEntero = literalEntero.substring(0, literalEntero.length() - 2) + " ";
+                                       }
+
+                                       StringBuilder resultado = new StringBuilder(literalEntero);
+
+                                       if (moneda != null) {
+                                           resultado.append(parteEntera.equals(BigInteger.ONE) ? moneda.singular() : moneda.plural());
+                                       }
+
+                                       if (parteDecimal > 0) {
+                                           resultado.append(" CON ");
+                                           String literalDecimal = convertirEntero(BigInteger.valueOf(parteDecimal));
+
+                                           // Ajuste gramatical para la parte decimal
+                                           if (literalDecimal.endsWith("UNO ")) {
+                                               literalDecimal = literalDecimal.substring(0, literalDecimal.length() - 2) + " ";
+                                           }
+
+                                           resultado.append(literalDecimal);
+                                           if (moneda != null) {
+                                               resultado.append(parteDecimal == 1 ? moneda.decimalSingular() : moneda.decimalPlural());
+                                           }
+                                       }
+
+                                       String resultadoFinal = capitalizar(resultado.toString().trim().replaceAll("\\s+", " "), mayusculas);
+                                       return resultadoFinal;
+
+                                   } catch (NumberFormatException e) {
+                                       return "Formato de número inválido";
+                                   } catch (Exception e) {
+                                       return "Error al convertir el número: " + e.getMessage();
+                                   }
+                               }
+
+                               private String convertirEntero(BigInteger n) {
+                                   if (n.equals(BigInteger.ZERO)) {
+                                       return "CERO ";
+                                   }
+
+                                   String numeroStr = n.toString();
+                                   List<String> grupos = new ArrayList<>();
+
+                                   // Dividir el número en grupos de 3 desde la derecha
+                                   int longitud = numeroStr.length();
+                                   for (int i = longitud; i > 0; i -= 3) {
+                                       grupos.add(numeroStr.substring(Math.max(0, i - 3), i));
+                                   }
+
+                                   List<String> partes = new ArrayList<>();
+                                   for (int i = 0; i < grupos.size(); i++) {
+                                       int valorGrupo = Integer.parseInt(grupos.get(i));
+                                       if (valorGrupo == 0) {
+                                           continue;
+                                       }
+
+                                       String textoGrupo = convertirGrupo(grupos.get(i));
+
+                                       // Aplicar la lógica de escala (MILLONES, BILLONES, etc.)
+                                       if (i > 0) {
+                                           // Ajuste gramatical: "UNO" se convierte en "UN" antes de "MIL", "MILLÓN", etc.
+                                           if (valorGrupo == 1 && i % 2 != 0) { // Si es "MIL"
+                                               textoGrupo = ""; // "UN MIL" se convierte en "MIL"
+                                           } else if (textoGrupo.equals("UNO ")) {
+                                               textoGrupo = "UN ";
+                                           }
+
+                                           String[] nombresGrupo = GRUPOS[i];
+                                           partes.add(nombresGrupo[valorGrupo == 1 ? 0 : 1]);
+                                       }
+                                       partes.add(textoGrupo);
+                                   }
+
+                                   Collections.reverse(partes);
+
+                                   // Unir las partes y realizar limpiezas finales
+                                   String resultado = String.join("", partes);
+
+                                   // Limpieza final: "MIL MILLONES" -> Se maneja por el orden de los GRUPOS.
+                                   // Evitar "UN MIL" -> "MIL".
+                                   if (resultado.startsWith("UN MIL ")) {
+                                       resultado = resultado.substring(3);
+                                   }
+
+                                   return resultado;
+                               }
+
+                               private String convertirGrupo(String numero) {
+                                   int n = Integer.parseInt(numero);
+
+                                   if (n == 0) {
+                                       return "";
+                                   } else if (n == 100) {
+                                       return "CIEN ";
+                                   }
+
+                                   StringBuilder sb = new StringBuilder();
+                                   int centenas = n / 100;
+                                   int decenasYUnidades = n % 100;
+
+                                   if (centenas > 0) {
+                                       sb.append(CENTENAS[centenas - 1]);
+                                   }
+
+                                   if (decenasYUnidades > 0) {
+                                       if (decenasYUnidades <= 20) {
+                                           sb.append(UNIDADES[decenasYUnidades]);
+                                       } else {
+                                           int decena = decenasYUnidades / 10;
+                                           int unidad = decenasYUnidades % 10;
+
+                                           if (decena == 2) { // Caso "VEINTI..."
+                                               sb.append(DECENAS[0]).append(UNIDADES[unidad].toLowerCase().trim()).append(" ");
+                                           } else {
+                                               sb.append(DECENAS[decena - 2]);
+                                               if (unidad > 0) {
+                                                   sb.append("Y ").append(UNIDADES[unidad]);
+                                               }
+                                           }
+                                       }
+                                   }
+                                   return sb.toString();
+                               }
+
+                               private String capitalizar(String texto, boolean todoMayusculas) {
+                                   if (texto == null || texto.isEmpty()) return "";
+
+                                   if (todoMayusculas) {
+                                       return texto.toUpperCase();
+                                   } else {
+                                       // Capitalización tipo título
+                                       String[] palabras = texto.toLowerCase().split(" ");
+                                       StringBuilder resultado = new StringBuilder();
+                                       for (String palabra : palabras) {
+                                           if (!palabra.isEmpty()) {
+                                               resultado.append(Character.toUpperCase(palabra.charAt(0)))
+                                                       .append(palabra.substring(1))
+                                                       .append(" ");
+                                           }
+                                       }
+                                       return resultado.toString().trim();
+                                   }
+                               }
+                           }",
+ServicioFacturacionApplication.java:"package com.facturacion.serviciofacturacion;
+
+                                     import org.springframework.boot.SpringApplication;
+                                     import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+                                     @SpringBootApplication
+                                     public class ServicioFacturacionApplication {
+
+                                     	public static void main(String[] args) {
+                                     		SpringApplication.run(ServicioFacturacionApplication.class, args);
+                                     	}
+
+                                     }
+",
+application.properties:"spring.application.name=servicio-facturacion
+                        server.port=8081
+
+                        spring.datasource.url=jdbc:postgresql://localhost:5432/facturacion_db
+                        spring.datasource.username=postgres
+                        spring.datasource.password=admin
+
+                        api.clientes.base-url=http://192.168.1.43:8080/api/v1/clientes
+
+                        spring.jpa.hibernate.ddl-auto=validate
+
+                        spring.flyway.enabled=true",
+main2.iml:"<?xml version="1.0" encoding="UTF-8"?>
+           <module type="JAVA_MODULE" version="4">
+             <component name="NewModuleRootManager" inherit-compiler-output="true">
+               <exclude-output />
+               <content url="file://$MODULE_DIR$">
+                 <sourceFolder url="file://$MODULE_DIR$/java" isTestSource="false" />
+               </content>
+               <orderEntry type="inheritedJdk" />
+               <orderEntry type="sourceFolder" forTests="false" />
+             </component>
+           </module>",
+.gitattributes:"/mvnw text eol=lf
+                *.cmd text eol=crlf
+",
+.gitignore:"HELP.md
+            target/
+            .mvn/wrapper/maven-wrapper.jar
+            !**/src/main/**/target/
+            !**/src/test/**/target/
+
+            ### STS ###
+            .apt_generated
+            .classpath
+            .factorypath
+            .project
+            .settings
+            .springBeans
+            .sts4-cache
+
+            ### IntelliJ IDEA ###
+            .idea
+            *.iws
+            *.iml
+            *.ipr
+
+            ### NetBeans ###
+            /nbproject/private/
+            /nbbuild/
+            /dist/
+            /nbdist/
+            /.nb-gradle/
+            build/
+            !**/src/main/**/build/
+            !**/src/test/**/build/
+
+            ### VS Code ###
+            .vscode/
+",
+HELP.md:"# Getting Started
+
+         ### Reference Documentation
+         For further reference, please consider the following sections:
+
+         * [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
+         * [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/3.5.6/maven-plugin)
+         * [Create an OCI image](https://docs.spring.io/spring-boot/3.5.6/maven-plugin/build-image.html)
+         * [Spring Web](https://docs.spring.io/spring-boot/3.5.6/reference/web/servlet.html)
+
+         ### Guides
+         The following guides illustrate how to use some features concretely:
+
+         * [Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
+         * [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
+         * [Building REST services with Spring](https://spring.io/guides/tutorials/rest/)
+
+         ### Maven Parent overrides
+
+         Due to Maven's design, elements are inherited from the parent POM to the project POM.
+         While most of the inheritance is fine, it also inherits unwanted elements like `<license>` and `<developers>` from the parent.
+         To prevent this, the project POM contains empty overrides for these elements.
+         If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
+
+",
+mvnw:"#!/bin/sh
+      # ----------------------------------------------------------------------------
+      # Licensed to the Apache Software Foundation (ASF) under one
+      # or more contributor license agreements.  See the NOTICE file
+      # distributed with this work for additional information
+      # regarding copyright ownership.  The ASF licenses this file
+      # to you under the Apache License, Version 2.0 (the
+      # "License"); you may not use this file except in compliance
+      # with the License.  You may obtain a copy of the License at
+      #
+      #    http://www.apache.org/licenses/LICENSE-2.0
+      #
+      # Unless required by applicable law or agreed to in writing,
+      # software distributed under the License is distributed on an
+      # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+      # KIND, either express or implied.  See the License for the
+      # specific language governing permissions and limitations
+      # under the License.
+      # ----------------------------------------------------------------------------
+
+      # ----------------------------------------------------------------------------
+      # Apache Maven Wrapper startup batch script, version 3.3.4
+      #
+      # Optional ENV vars
+      # -----------------
+      #   JAVA_HOME - location of a JDK home dir, required when download maven via java source
+      #   MVNW_REPOURL - repo url base for downloading maven distribution
+      #   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
+      #   MVNW_VERBOSE - true: enable verbose log; debug: trace the mvnw script; others: silence the output
+      # ----------------------------------------------------------------------------
+
+      set -euf
+      [ "${MVNW_VERBOSE-}" != debug ] || set -x
+
+      # OS specific support.
+      native_path() { printf %s\\n "$1"; }
+      case "$(uname)" in
+      CYGWIN* | MINGW*)
+        [ -z "${JAVA_HOME-}" ] || JAVA_HOME="$(cygpath --unix "$JAVA_HOME")"
+        native_path() { cygpath --path --windows "$1"; }
+        ;;
+      esac
+
+      # set JAVACMD and JAVACCMD
+      set_java_home() {
+        # For Cygwin and MinGW, ensure paths are in Unix format before anything is touched
+        if [ -n "${JAVA_HOME-}" ]; then
+          if [ -x "$JAVA_HOME/jre/sh/java" ]; then
+            # IBM's JDK on AIX uses strange locations for the executables
+            JAVACMD="$JAVA_HOME/jre/sh/java"
+            JAVACCMD="$JAVA_HOME/jre/sh/javac"
+          else
+            JAVACMD="$JAVA_HOME/bin/java"
+            JAVACCMD="$JAVA_HOME/bin/javac"
+
+            if [ ! -x "$JAVACMD" ] || [ ! -x "$JAVACCMD" ]; then
+              echo "The JAVA_HOME environment variable is not defined correctly, so mvnw cannot run." >&2
+              echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"\$JAVA_HOME/bin/java\" or \"\$JAVA_HOME/bin/javac\" does not exist." >&2
+              return 1
+            fi
+          fi
+        else
+          JAVACMD="$(
+            'set' +e
+            'unset' -f command 2>/dev/null
+            'command' -v java
+          )" || :
+          JAVACCMD="$(
+            'set' +e
+            'unset' -f command 2>/dev/null
+            'command' -v javac
+          )" || :
+
+          if [ ! -x "${JAVACMD-}" ] || [ ! -x "${JAVACCMD-}" ]; then
+            echo "The java/javac command does not exist in PATH nor is JAVA_HOME set, so mvnw cannot run." >&2
+            return 1
+          fi
+        fi
+      }
+
+      # hash string like Java String::hashCode
+      hash_string() {
+        str="${1:-}" h=0
+        while [ -n "$str" ]; do
+          char="${str%"${str#?}"}"
+          h=$(((h * 31 + $(LC_CTYPE=C printf %d "'$char")) % 4294967296))
+          str="${str#?}"
+        done
+        printf %x\\n $h
+      }
+
+      verbose() { :; }
+      [ "${MVNW_VERBOSE-}" != true ] || verbose() { printf %s\\n "${1-}"; }
+
+      die() {
+        printf %s\\n "$1" >&2
+        exit 1
+      }
+
+      trim() {
+        # MWRAPPER-139:
+        #   Trims trailing and leading whitespace, carriage returns, tabs, and linefeeds.
+        #   Needed for removing poorly interpreted newline sequences when running in more
+        #   exotic environments such as mingw bash on Windows.
+        printf "%s" "${1}" | tr -d '[:space:]'
+      }
+
+      scriptDir="$(dirname "$0")"
+      scriptName="$(basename "$0")"
+
+      # parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
+      while IFS="=" read -r key value; do
+        case "${key-}" in
+        distributionUrl) distributionUrl=$(trim "${value-}") ;;
+        distributionSha256Sum) distributionSha256Sum=$(trim "${value-}") ;;
+        esac
+      done <"$scriptDir/.mvn/wrapper/maven-wrapper.properties"
+      [ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
+
+      case "${distributionUrl##*/}" in
+      maven-mvnd-*bin.*)
+        MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/
+        case "${PROCESSOR_ARCHITECTURE-}${PROCESSOR_ARCHITEW6432-}:$(uname -a)" in
+        *AMD64:CYGWIN* | *AMD64:MINGW*) distributionPlatform=windows-amd64 ;;
+        :Darwin*x86_64) distributionPlatform=darwin-amd64 ;;
+        :Darwin*arm64) distributionPlatform=darwin-aarch64 ;;
+        :Linux*x86_64*) distributionPlatform=linux-amd64 ;;
+        *)
+          echo "Cannot detect native platform for mvnd on $(uname)-$(uname -m), use pure java version" >&2
+          distributionPlatform=linux-amd64
+          ;;
+        esac
+        distributionUrl="${distributionUrl%-bin.*}-$distributionPlatform.zip"
+        ;;
+      maven-mvnd-*) MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/ ;;
+      *) MVN_CMD="mvn${scriptName#mvnw}" _MVNW_REPO_PATTERN=/org/apache/maven/ ;;
+      esac
+
+      # apply MVNW_REPOURL and calculate MAVEN_HOME
+      # maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
+      [ -z "${MVNW_REPOURL-}" ] || distributionUrl="$MVNW_REPOURL$_MVNW_REPO_PATTERN${distributionUrl#*"$_MVNW_REPO_PATTERN"}"
+      distributionUrlName="${distributionUrl##*/}"
+      distributionUrlNameMain="${distributionUrlName%.*}"
+      distributionUrlNameMain="${distributionUrlNameMain%-bin}"
+      MAVEN_USER_HOME="${MAVEN_USER_HOME:-${HOME}/.m2}"
+      MAVEN_HOME="${MAVEN_USER_HOME}/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
+
+      exec_maven() {
+        unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
+        exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
+      }
+
+      if [ -d "$MAVEN_HOME" ]; then
+        verbose "found existing MAVEN_HOME at $MAVEN_HOME"
+        exec_maven "$@"
+      fi
+
+      case "${distributionUrl-}" in
+      *?-bin.zip | *?maven-mvnd-?*-?*.zip) ;;
+      *) die "distributionUrl is not valid, must match *-bin.zip or maven-mvnd-*.zip, but found '${distributionUrl-}'" ;;
+      esac
+
+      # prepare tmp dir
+      if TMP_DOWNLOAD_DIR="$(mktemp -d)" && [ -d "$TMP_DOWNLOAD_DIR" ]; then
+        clean() { rm -rf -- "$TMP_DOWNLOAD_DIR"; }
+        trap clean HUP INT TERM EXIT
+      else
+        die "cannot create temp dir"
+      fi
+
+      mkdir -p -- "${MAVEN_HOME%/*}"
+
+      # Download and Install Apache Maven
+      verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
+      verbose "Downloading from: $distributionUrl"
+      verbose "Downloading to: $TMP_DOWNLOAD_DIR/$distributionUrlName"
+
+      # select .zip or .tar.gz
+      if ! command -v unzip >/dev/null; then
+        distributionUrl="${distributionUrl%.zip}.tar.gz"
+        distributionUrlName="${distributionUrl##*/}"
+      fi
+
+      # verbose opt
+      __MVNW_QUIET_WGET=--quiet __MVNW_QUIET_CURL=--silent __MVNW_QUIET_UNZIP=-q __MVNW_QUIET_TAR=''
+      [ "${MVNW_VERBOSE-}" != true ] || __MVNW_QUIET_WGET='' __MVNW_QUIET_CURL='' __MVNW_QUIET_UNZIP='' __MVNW_QUIET_TAR=v
+
+      # normalize http auth
+      case "${MVNW_PASSWORD:+has-password}" in
+      '') MVNW_USERNAME='' MVNW_PASSWORD='' ;;
+      has-password) [ -n "${MVNW_USERNAME-}" ] || MVNW_USERNAME='' MVNW_PASSWORD='' ;;
+      esac
+
+      if [ -z "${MVNW_USERNAME-}" ] && command -v wget >/dev/null; then
+        verbose "Found wget ... using wget"
+        wget ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} "$distributionUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName" || die "wget: Failed to fetch $distributionUrl"
+      elif [ -z "${MVNW_USERNAME-}" ] && command -v curl >/dev/null; then
+        verbose "Found curl ... using curl"
+        curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} -f -L -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl" || die "curl: Failed to fetch $distributionUrl"
+      elif set_java_home; then
+        verbose "Falling back to use Java to download"
+        javaSource="$TMP_DOWNLOAD_DIR/Downloader.java"
+        targetZip="$TMP_DOWNLOAD_DIR/$distributionUrlName"
+        cat >"$javaSource" <<-END
+      	public class Downloader extends java.net.Authenticator
+      	{
+      	  protected java.net.PasswordAuthentication getPasswordAuthentication()
+      	  {
+      	    return new java.net.PasswordAuthentication( System.getenv( "MVNW_USERNAME" ), System.getenv( "MVNW_PASSWORD" ).toCharArray() );
+      	  }
+      	  public static void main( String[] args ) throws Exception
+      	  {
+      	    setDefault( new Downloader() );
+      	    java.nio.file.Files.copy( java.net.URI.create( args[0] ).toURL().openStream(), java.nio.file.Paths.get( args[1] ).toAbsolutePath().normalize() );
+      	  }
+      	}
+      	END
+        # For Cygwin/MinGW, switch paths to Windows format before running javac and java
+        verbose " - Compiling Downloader.java ..."
+        "$(native_path "$JAVACCMD")" "$(native_path "$javaSource")" || die "Failed to compile Downloader.java"
+        verbose " - Running Downloader.java ..."
+        "$(native_path "$JAVACMD")" -cp "$(native_path "$TMP_DOWNLOAD_DIR")" Downloader "$distributionUrl" "$(native_path "$targetZip")"
+      fi
+
+      # If specified, validate the SHA-256 sum of the Maven distribution zip file
+      if [ -n "${distributionSha256Sum-}" ]; then
+        distributionSha256Result=false
+        if [ "$MVN_CMD" = mvnd.sh ]; then
+          echo "Checksum validation is not supported for maven-mvnd." >&2
+          echo "Please disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
+          exit 1
+        elif command -v sha256sum >/dev/null; then
+          if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | sha256sum -c - >/dev/null 2>&1; then
+            distributionSha256Result=true
+          fi
+        elif command -v shasum >/dev/null; then
+          if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | shasum -a 256 -c >/dev/null 2>&1; then
+            distributionSha256Result=true
+          fi
+        else
+          echo "Checksum validation was requested but neither 'sha256sum' or 'shasum' are available." >&2
+          echo "Please install either command, or disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
+          exit 1
+        fi
+        if [ $distributionSha256Result = false ]; then
+          echo "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised." >&2
+          echo "If you updated your Maven version, you need to update the specified distributionSha256Sum property." >&2
+          exit 1
+        fi
+      fi
+
+      # unzip and move
+      if command -v unzip >/dev/null; then
+        unzip ${__MVNW_QUIET_UNZIP:+"$__MVNW_QUIET_UNZIP"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -d "$TMP_DOWNLOAD_DIR" || die "failed to unzip"
+      else
+        tar xzf${__MVNW_QUIET_TAR:+"$__MVNW_QUIET_TAR"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -C "$TMP_DOWNLOAD_DIR" || die "failed to untar"
+      fi
+
+      # Find the actual extracted directory name (handles snapshots where filename != directory name)
+      actualDistributionDir=""
+
+      # First try the expected directory name (for regular distributions)
+      if [ -d "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain" ]; then
+        if [ -f "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain/bin/$MVN_CMD" ]; then
+          actualDistributionDir="$distributionUrlNameMain"
+        fi
+      fi
+
+      # If not found, search for any directory with the Maven executable (for snapshots)
+      if [ -z "$actualDistributionDir" ]; then
+        # enable globbing to iterate over items
+        set +f
+        for dir in "$TMP_DOWNLOAD_DIR"/*; do
+          if [ -d "$dir" ]; then
+            if [ -f "$dir/bin/$MVN_CMD" ]; then
+              actualDistributionDir="$(basename "$dir")"
+              break
+            fi
+          fi
+        done
+        set -f
+      fi
+
+      if [ -z "$actualDistributionDir" ]; then
+        verbose "Contents of $TMP_DOWNLOAD_DIR:"
+        verbose "$(ls -la "$TMP_DOWNLOAD_DIR")"
+        die "Could not find Maven distribution directory in extracted archive"
+      fi
+
+      verbose "Found extracted Maven distribution directory: $actualDistributionDir"
+      printf %s\\n "$distributionUrl" >"$TMP_DOWNLOAD_DIR/$actualDistributionDir/mvnw.url"
+      mv -- "$TMP_DOWNLOAD_DIR/$actualDistributionDir" "$MAVEN_HOME" || [ -d "$MAVEN_HOME" ] || die "fail to move MAVEN_HOME"
+
+      clean || :
+      exec_maven "$@"
+",
+mvnw.cmd:"<# : batch portion
+          @REM ----------------------------------------------------------------------------
+          @REM Licensed to the Apache Software Foundation (ASF) under one
+          @REM or more contributor license agreements.  See the NOTICE file
+          @REM distributed with this work for additional information
+          @REM regarding copyright ownership.  The ASF licenses this file
+          @REM to you under the Apache License, Version 2.0 (the
+          @REM "License"); you may not use this file except in compliance
+          @REM with the License.  You may obtain a copy of the License at
+          @REM
+          @REM    http://www.apache.org/licenses/LICENSE-2.0
+          @REM
+          @REM Unless required by applicable law or agreed to in writing,
+          @REM software distributed under the License is distributed on an
+          @REM "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          @REM KIND, either express or implied.  See the License for the
+          @REM specific language governing permissions and limitations
+          @REM under the License.
+          @REM ----------------------------------------------------------------------------
+
+          @REM ----------------------------------------------------------------------------
+          @REM Apache Maven Wrapper startup batch script, version 3.3.4
+          @REM
+          @REM Optional ENV vars
+          @REM   MVNW_REPOURL - repo url base for downloading maven distribution
+          @REM   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
+          @REM   MVNW_VERBOSE - true: enable verbose log; others: silence the output
+          @REM ----------------------------------------------------------------------------
+
+          @IF "%__MVNW_ARG0_NAME__%"=="" (SET __MVNW_ARG0_NAME__=%~nx0)
+          @SET __MVNW_CMD__=
+          @SET __MVNW_ERROR__=
+          @SET __MVNW_PSMODULEP_SAVE=%PSModulePath%
+          @SET PSModulePath=
+          @FOR /F "usebackq tokens=1* delims==" %%A IN (`powershell -noprofile "& {$scriptDir='%~dp0'; $script='%__MVNW_ARG0_NAME__%'; icm -ScriptBlock ([Scriptblock]::Create((Get-Content -Raw '%~f0'))) -NoNewScope}"`) DO @(
+            IF "%%A"=="MVN_CMD" (set __MVNW_CMD__=%%B) ELSE IF "%%B"=="" (echo %%A) ELSE (echo %%A=%%B)
+          )
+          @SET PSModulePath=%__MVNW_PSMODULEP_SAVE%
+          @SET __MVNW_PSMODULEP_SAVE=
+          @SET __MVNW_ARG0_NAME__=
+          @SET MVNW_USERNAME=
+          @SET MVNW_PASSWORD=
+          @IF NOT "%__MVNW_CMD__%"=="" ("%__MVNW_CMD__%" %*)
+          @echo Cannot start maven from wrapper >&2 && exit /b 1
+          @GOTO :EOF
+          : end batch / begin powershell #>
+
+          $ErrorActionPreference = "Stop"
+          if ($env:MVNW_VERBOSE -eq "true") {
+            $VerbosePreference = "Continue"
+          }
+
+          # calculate distributionUrl, requires .mvn/wrapper/maven-wrapper.properties
+          $distributionUrl = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionUrl
+          if (!$distributionUrl) {
+            Write-Error "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
+          }
+
+          switch -wildcard -casesensitive ( $($distributionUrl -replace '^.*/','') ) {
+            "maven-mvnd-*" {
+              $USE_MVND = $true
+              $distributionUrl = $distributionUrl -replace '-bin\.[^.]*$',"-windows-amd64.zip"
+              $MVN_CMD = "mvnd.cmd"
+              break
+            }
+            default {
+              $USE_MVND = $false
+              $MVN_CMD = $script -replace '^mvnw','mvn'
+              break
+            }
+          }
+
+          # apply MVNW_REPOURL and calculate MAVEN_HOME
+          # maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
+          if ($env:MVNW_REPOURL) {
+            $MVNW_REPO_PATTERN = if ($USE_MVND -eq $False) { "/org/apache/maven/" } else { "/maven/mvnd/" }
+            $distributionUrl = "$env:MVNW_REPOURL$MVNW_REPO_PATTERN$($distributionUrl -replace "^.*$MVNW_REPO_PATTERN",'')"
+          }
+          $distributionUrlName = $distributionUrl -replace '^.*/',''
+          $distributionUrlNameMain = $distributionUrlName -replace '\.[^.]*$','' -replace '-bin$',''
+
+          $MAVEN_M2_PATH = "$HOME/.m2"
+          if ($env:MAVEN_USER_HOME) {
+            $MAVEN_M2_PATH = "$env:MAVEN_USER_HOME"
+          }
+
+          if (-not (Test-Path -Path $MAVEN_M2_PATH)) {
+              New-Item -Path $MAVEN_M2_PATH -ItemType Directory | Out-Null
+          }
+
+          $MAVEN_WRAPPER_DISTS = $null
+          if ((Get-Item $MAVEN_M2_PATH).Target[0] -eq $null) {
+            $MAVEN_WRAPPER_DISTS = "$MAVEN_M2_PATH/wrapper/dists"
+          } else {
+            $MAVEN_WRAPPER_DISTS = (Get-Item $MAVEN_M2_PATH).Target[0] + "/wrapper/dists"
+          }
+
+          $MAVEN_HOME_PARENT = "$MAVEN_WRAPPER_DISTS/$distributionUrlNameMain"
+          $MAVEN_HOME_NAME = ([System.Security.Cryptography.SHA256]::Create().ComputeHash([byte[]][char[]]$distributionUrl) | ForEach-Object {$_.ToString("x2")}) -join ''
+          $MAVEN_HOME = "$MAVEN_HOME_PARENT/$MAVEN_HOME_NAME"
+
+          if (Test-Path -Path "$MAVEN_HOME" -PathType Container) {
+            Write-Verbose "found existing MAVEN_HOME at $MAVEN_HOME"
+            Write-Output "MVN_CMD=$MAVEN_HOME/bin/$MVN_CMD"
+            exit $?
+          }
+
+          if (! $distributionUrlNameMain -or ($distributionUrlName -eq $distributionUrlNameMain)) {
+            Write-Error "distributionUrl is not valid, must end with *-bin.zip, but found $distributionUrl"
+          }
+
+          # prepare tmp dir
+          $TMP_DOWNLOAD_DIR_HOLDER = New-TemporaryFile
+          $TMP_DOWNLOAD_DIR = New-Item -Itemtype Directory -Path "$TMP_DOWNLOAD_DIR_HOLDER.dir"
+          $TMP_DOWNLOAD_DIR_HOLDER.Delete() | Out-Null
+          trap {
+            if ($TMP_DOWNLOAD_DIR.Exists) {
+              try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force | Out-Null }
+              catch { Write-Warning "Cannot remove $TMP_DOWNLOAD_DIR" }
+            }
+          }
+
+          New-Item -Itemtype Directory -Path "$MAVEN_HOME_PARENT" -Force | Out-Null
+
+          # Download and Install Apache Maven
+          Write-Verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
+          Write-Verbose "Downloading from: $distributionUrl"
+          Write-Verbose "Downloading to: $TMP_DOWNLOAD_DIR/$distributionUrlName"
+
+          $webclient = New-Object System.Net.WebClient
+          if ($env:MVNW_USERNAME -and $env:MVNW_PASSWORD) {
+            $webclient.Credentials = New-Object System.Net.NetworkCredential($env:MVNW_USERNAME, $env:MVNW_PASSWORD)
+          }
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          $webclient.DownloadFile($distributionUrl, "$TMP_DOWNLOAD_DIR/$distributionUrlName") | Out-Null
+
+          # If specified, validate the SHA-256 sum of the Maven distribution zip file
+          $distributionSha256Sum = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionSha256Sum
+          if ($distributionSha256Sum) {
+            if ($USE_MVND) {
+              Write-Error "Checksum validation is not supported for maven-mvnd. `nPlease disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties."
+            }
+            Import-Module $PSHOME\Modules\Microsoft.PowerShell.Utility -Function Get-FileHash
+            if ((Get-FileHash "$TMP_DOWNLOAD_DIR/$distributionUrlName" -Algorithm SHA256).Hash.ToLower() -ne $distributionSha256Sum) {
+              Write-Error "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised. If you updated your Maven version, you need to update the specified distributionSha256Sum property."
+            }
+          }
+
+          # unzip and move
+          Expand-Archive "$TMP_DOWNLOAD_DIR/$distributionUrlName" -DestinationPath "$TMP_DOWNLOAD_DIR" | Out-Null
+
+          # Find the actual extracted directory name (handles snapshots where filename != directory name)
+          $actualDistributionDir = ""
+
+          # First try the expected directory name (for regular distributions)
+          $expectedPath = Join-Path "$TMP_DOWNLOAD_DIR" "$distributionUrlNameMain"
+          $expectedMvnPath = Join-Path "$expectedPath" "bin/$MVN_CMD"
+          if ((Test-Path -Path $expectedPath -PathType Container) -and (Test-Path -Path $expectedMvnPath -PathType Leaf)) {
+            $actualDistributionDir = $distributionUrlNameMain
+          }
+
+          # If not found, search for any directory with the Maven executable (for snapshots)
+          if (!$actualDistributionDir) {
+            Get-ChildItem -Path "$TMP_DOWNLOAD_DIR" -Directory | ForEach-Object {
+              $testPath = Join-Path $_.FullName "bin/$MVN_CMD"
+              if (Test-Path -Path $testPath -PathType Leaf) {
+                $actualDistributionDir = $_.Name
+              }
+            }
+          }
+
+          if (!$actualDistributionDir) {
+            Write-Error "Could not find Maven distribution directory in extracted archive"
+          }
+
+          Write-Verbose "Found extracted Maven distribution directory: $actualDistributionDir"
+          Rename-Item -Path "$TMP_DOWNLOAD_DIR/$actualDistributionDir" -NewName $MAVEN_HOME_NAME | Out-Null
+          try {
+            Move-Item -Path "$TMP_DOWNLOAD_DIR/$MAVEN_HOME_NAME" -Destination $MAVEN_HOME_PARENT | Out-Null
+          } catch {
+            if (! (Test-Path -Path "$MAVEN_HOME" -PathType Container)) {
+              Write-Error "fail to move MAVEN_HOME"
+            }
+          } finally {
+            try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force | Out-Null }
+            catch { Write-Warning "Cannot remove $TMP_DOWNLOAD_DIR" }
+          }
+
+          Write-Output "MVN_CMD=$MAVEN_HOME/bin/$MVN_CMD"
+",
+pom.xml:"<?xml version="1.0" encoding="UTF-8"?>
+         <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         	<modelVersion>4.0.0</modelVersion>
+         	<parent>
+         		<groupId>org.springframework.boot</groupId>
+         		<artifactId>spring-boot-starter-parent</artifactId>
+         		<version>3.5.6</version>
+         		<relativePath/> <!-- lookup parent from repository -->
+         	</parent>
+         	<groupId>com.facturacion</groupId>
+         	<artifactId>servicio-facturacion</artifactId>
+         	<version>0.0.1-SNAPSHOT</version>
+         	<name>servicio-facturacion</name>
+         	<description>Microservicio para gestionar la creación de facturas.</description>
+         	<url/>
+         	<licenses>
+         		<license/>
+         	</licenses>
+         	<developers>
+         		<developer/>
+         	</developers>
+         	<scm>
+         		<connection/>
+         		<developerConnection/>
+         		<tag/>
+         		<url/>
+         	</scm>
+         	<properties>
+         		<java.version>21</java.version>
+         	</properties>
+         	<dependencies>
+         		<dependency>
+         			<groupId>org.springframework.boot</groupId>
+         			<artifactId>spring-boot-starter-web</artifactId>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>org.springframework.boot</groupId>
+         			<artifactId>spring-boot-starter-test</artifactId>
+         			<scope>test</scope>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>org.springframework.boot</groupId>
+         			<artifactId>spring-boot-starter-data-jpa</artifactId>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>com.github.librepdf</groupId>
+         			<artifactId>openpdf</artifactId>
+         			<version>3.0.0</version>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>com.google.zxing</groupId>
+         			<artifactId>core</artifactId>
+         			<version>3.5.3</version>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>com.google.zxing</groupId>
+         			<artifactId>javase</artifactId>
+         			<version>3.5.3</version>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>org.flywaydb</groupId>
+         			<artifactId>flyway-core</artifactId>
+         			<version>11.14.0</version>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>org.flywaydb</groupId>
+         			<artifactId>flyway-database-postgresql</artifactId>
+         			<version>11.14.0</version>
+         			<scope>runtime</scope>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>com.h2database</groupId>
+         			<artifactId>h2</artifactId>
+         			<version>2.4.240</version>
+         			<scope>runtime</scope>
+         		</dependency>
+
+         		<dependency>
+         			<groupId>org.postgresql</groupId>
+         			<artifactId>postgresql</artifactId>
+         			<version>42.7.8</version>
+         			<scope>runtime</scope>
+         		</dependency>
+         	</dependencies>
+
+         	<build>
+         		<plugins>
+         			<plugin>
+         				<groupId>org.springframework.boot</groupId>
+         				<artifactId>spring-boot-maven-plugin</artifactId>
+         			</plugin>
+         		</plugins>
+         	</build>
+
+         </project>
+",
+test.http:"### Crear una nueva factura
+           POST http://localhost:8081/api/facturas/crear
+           Content-Type: application/json
+
+           {
+             "rucCliente": "20601261031",
+             "items": [
+               {
+                 "producto": "Laptop Gamer",
+                 "cantidad": 1,
+                 "precioUnitario": 5500.50
+               },
+               {
+                 "producto": "Mouse Inalámbrico",
+                 "cantidad": 2,
+                 "precioUnitario": 120.00
+               }
+             ]
+           }",

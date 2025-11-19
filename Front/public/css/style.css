@@ -86,10 +86,12 @@ ul { list-style: none; }
     display: flex;
     align-items: center;
     text-align: center;
-    background-image: linear-gradient(rgba(18, 18, 18, 0.8), rgba(18, 18, 18, 1)), url('https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
+    background-image: linear-gradient(rgba(18, 18, 18, 0.8), rgba(18, 18, 18, 1)),
+        url('https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
     background-size: cover;
     background-position: center;
 }
+
 .hero-content { max-width: 800px; margin: 0 auto; }
 .hero-content p { font-size: 1.25rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 2.5rem; }
 .hero-content .btn i { margin-left: 0.5rem; }
@@ -136,9 +138,23 @@ section { padding: 6rem 0; }
 .showcase-text ul li i { color: var(--accent-green); }
 .showcase-image img { width: 100%; border-radius: 1rem; border: 1px solid var(--border-color); }
 
-/* --- 8. Precios (ACTUALIZADO PARA 3 PLANES) --- */
-.pricing-section { background-color: var(--dark-bg); }
-.pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 3rem; }
+/* =====================================================================================
+   8. PRECIOS (DISEÑO MEJORADO COMPLETO)
+===================================================================================== */
+
+.pricing-section {
+    background-color: var(--dark-bg);
+}
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+    align-items: stretch;
+}
+
+/* ===== TARJETA GENERAL ===== */
 .pricing-card {
     background-color: var(--dark-card);
     padding: 2.5rem;
@@ -147,16 +163,93 @@ section { padding: 6rem 0; }
     text-align: center;
     display: flex;
     flex-direction: column;
+    height: 100%;
+    transition: all .2s ease;
 }
-.pricing-card.popular { border: 2px solid var(--accent-green); position: relative; transform: scale(1.05); }
-.pricing-card.popular .badge { position: absolute; top: -1.2rem; left: 50%; transform: translateX(-50%); }
-.pricing-card h3 { font-size: 1.25rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
-.pricing-card .price { font-size: 3rem; font-weight: 900; margin: 1rem 0 2rem; }
-.pricing-card .price span { font-size: 1rem; font-weight: 500; color: var(--text-secondary); }
-.pricing-card .features-list { text-align: left; margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1rem; flex-grow: 1; }
-.pricing-card .features-list li { display: flex; align-items: center; gap: 0.5rem; }
-.pricing-card .features-list li i.bi-check { color: var(--accent-green); }
-.pricing-card .btn { width: 100%; margin-top: auto; }
+
+.pricing-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--accent-green);
+}
+
+/* ===== TÍTULO ===== */
+.pricing-card h3 {
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+/* ===== PRECIO EN UNA LÍNEA ===== */
+.pricing-card .price {
+    margin: 0 auto 2rem;
+    font-size: 2rem;
+    font-weight: 900;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: .3rem;
+}
+
+.pricing-card .price span {
+    font-size: 2.4rem;
+    color: #fff;
+}
+
+.pricing-card .price small {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/* ===== FEATURES ===== */
+.pricing-card .features-list {
+    text-align: left;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: .8rem;
+    flex-grow: 1;
+}
+
+.pricing-card .features-list li {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: 1rem;
+}
+
+.pricing-card .features-list li i {
+    color: var(--accent-green);
+}
+
+/* ===== BOTÓN ===== */
+.pricing-card .btn {
+    width: 100%;
+    margin-top: auto;
+}
+
+/* ===== POPULAR ===== */
+.pricing-card.popular {
+    border: 2px solid var(--accent-green);
+    position: relative;
+}
+
+/* Badge centrado sin romper el diseño */
+.pricing-card.popular .badge {
+    background: var(--accent-green);
+    color: #000;
+    font-weight: 700;
+    padding: .4rem 1rem;
+    border-radius: 1rem;
+    font-size: .75rem;
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: none;
+}
 
 /* --- 9. Otros Servicios --- */
 .other-services-section { background-color: var(--dark-card); }
@@ -195,8 +288,8 @@ section { padding: 6rem 0; }
         border-bottom: 1px solid var(--border-color); gap: 1.5rem;
     }
     .showcase-container { grid-template-columns: 1fr; }
-    .showcase-container .showcase-image { order: -1; } /* Imagen arriba en móvil */
-    .pricing-card.popular { transform: scale(1); }
+    .showcase-container .showcase-image { order: -1; }
+    .pricing-card.popular { transform: none; }
 }
 
 @media (max-width: 768px) {

@@ -19,7 +19,7 @@ public class PeruDevsAdapter {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public PeruDevsAdapter() {
-        this.API_KEY = "";
+        this.API_KEY = "cGVydWRldnMucHJvZHVjdGlvbi5maXRjb2RlcnMuNjkxY2Q1ZTRiMzRiYmQ0MjA5ZmZlNzkx";
     }
 
     /**

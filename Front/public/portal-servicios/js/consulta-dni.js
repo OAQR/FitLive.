@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Flujo 1: Intentar buscar RUC asociado
-            const rucResponse = await fetch(`http://localhost:8080/api/v1/clientes/dni/${dni}/ruc-asociado`);
+            const rucResponse = await fetch(`/api/v1/clientes/dni/${dni}/ruc-asociado`);
             if (rucResponse.ok) {
                 const dataRuc = await rucResponse.json();
                 mostrarResultado(dataRuc, 'RUC');
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Flujo 2: Si no hay RUC (el status no fue 'ok'), buscar DNI simple
-            const dniResponse = await fetch(`http://localhost:8080/api/v1/clientes/dni/${dni}`);
+            const dniResponse = await fetch(`/api/v1/clientes/dni/${dni}`);
             if (dniResponse.ok) {
                 const dataDni = await dniResponse.json();
                 mostrarResultado(dataDni, 'DNI');

@@ -1,0 +1,30 @@
+# docker-compose.yml
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: soa_postgres_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: mi_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    restart: always
+
+volumes:
+  postgres-data:

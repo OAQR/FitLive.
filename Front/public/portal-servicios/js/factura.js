@@ -6,8 +6,8 @@
 
 (() => {
   // --- CORRECCIÓN NECESARIA: Definir las URLs base para ambos microservicios ---
-  const API_CLIENTES_URL = 'http://localhost:8080';
-  const API_FACTURACION_URL = 'http://localhost:8081';
+  const API_CLIENTES_URL = '';
+  const API_FACTURACION_URL = '';
 
   /**
    * Construye la URL completa de la API a partir de un servicio y un path.

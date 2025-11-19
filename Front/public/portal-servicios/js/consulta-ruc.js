@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Llamamos al endpoint específico para RUC
-            const response = await fetch(`http://localhost:8080/api/v1/clientes/ruc/${ruc}`);
+            const response = await fetch(`/api/v1/clientes/ruc/${ruc}`);
 
             if (response.status === 404) {
                 throw new Error("No se encontró información para el RUC ingresado.");

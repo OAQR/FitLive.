@@ -14,18 +14,7 @@ public class WebConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        /*.allowedOrigins(
-                                "https://sdutp.xyz",
-                                "https://app.sdutp.xyz",
-                                "http://localhost:8080",
-                                "http://192.168.1.43:8080",
-                                "http://192.168.1.43:8081",
-                                "http://192.168.1.43:8082",
-                                "http://127.0.0.1:8080",
-                                "http://127.0.0.1:8081",
-                                "http://127.0.0.1:8082"
-                        )*/
-                        .allowedOrigins("*")
+                        .allowedOrigins("https://app.sdutp.xyz")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*");
                         //.allowCredentials(true);

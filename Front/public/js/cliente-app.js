@@ -132,9 +132,20 @@ let gyms = [];
 let selectedGym = null;
 let lastUserPos = null; // {lat,lng}
 
-function gmSrcFromLatLng(lat,lng){
-  return `https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+function gmSrcFromLatLng(lat, lng, name = '', address = ''){
+  let query;
+
+  if (name && name.length > 2) {
+      const cleanName = name.trim();
+      const searchTerm = address ? `${cleanName}, ${address}` : cleanName;
+      query = encodeURIComponent(searchTerm);
+  } else {
+      query = `${lat},${lng}`;
+  }
+
+  return `https://maps.google.com/maps?q=${query}&z=15&output=embed`;
 }
+
 function toRad(d){ return d*Math.PI/180 }
 function haversine(lat1,lon1,lat2,lon2){
   const R=6371; // km
@@ -152,14 +163,19 @@ function renderGymsList(){
   gyms.forEach(g=>{
     const free = Math.max(0,(g.totalMachines||0)-(g.busyMachines||0));
     const dist = (lastUserPos? fmtDist(haversine(lastUserPos.lat,lastUserPos.lng,g.lat,g.lng)) : null);
-    const simBadge = g.simulated ? `<span class="badge">Simulado</span>` : '';
+
+    const brandDisplay = g.brand ? `<span class="badge" style="background:#42d392;color:#000">${g.brand}</span>` : '';
+
     const distText = dist? ` • ${dist}` : '';
     const item=document.createElement('div'); item.className='gym-item';
+
     item.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <div>
-          <div style="font-weight:700">${g.name} ${simBadge}</div>
+          <div style="font-weight:700; display:flex; align-items:center; gap:6px;">
+             ${g.name} ${brandDisplay}
+          </div>
           <div class="muted" style="font-size:12px">${g.address||''}${distText}</div>
-          <div class="muted" style="font-size:12px">Clientes: ${g.currentClients??'—'} • Libres: ${free} / Total: ${g.totalMachines??'—'}</div>
+          <div class="muted" style="font-size:12px">Libres: ${free} / Total: ${g.totalMachines??'—'}</div>
         </div>
       </div>`;
     item.addEventListener('click', ()=> selectGym(g));
@@ -176,7 +192,7 @@ function updateGymKPIs(){
 }
 function selectGym(g){
   selectedGym = g;
-  qs('#map').src = gmSrcFromLatLng(g.lat,g.lng);
+  qs('#map').src = gmSrcFromLatLng(g.lat, g.lng, g.name, g.address);
   updateGymKPIs();
 }
 

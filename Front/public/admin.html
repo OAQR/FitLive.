@@ -23,6 +23,7 @@
             <button class="tab" data-view="routines">Rutinas</button>
             <button class="tab" data-view="users">Usuarios</button>
             <button class="tab" data-view="coaches">Entrenadores</button>
+            <button class="tab" data-view="gyms">Sedes</button>
             <button class="tab" data-view="security">Seguridad</button>
         </div>
     </header>
@@ -292,6 +293,87 @@
                 </div>
             </div>
             <p class="muted" id="com-note" style="margin-top:10px;display:none"></p>
+        </div>
+    </div>
+
+    <!-- SEDES / GYMS -->
+    <section id="view-gyms" class="view hide">
+        <div class="cards">
+            <div class="card">
+                <h2>Sedes (Gimnasios)</h2>
+                <div class="row" style="margin-bottom:10px">
+                    <button id="gym-new" class="btn ghost">Nueva Sede</button>
+                </div>
+                <table>
+                    <thead><tr>
+                        <th>Nombre</th><th>Dirección</th><th>Coords</th><th>Máquinas</th><th>Clientes</th>
+                        <th class="actions">Acciones</th>
+                    </tr></thead>
+                    <tbody id="gym-table"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Sede -->
+    <div class="modal" id="gym-modal">
+        <div class="box" style="max-width: 700px;">
+            <div class="row" style="justify-content:space-between;align-items:center">
+                <h3 id="gymm-title" style="margin:0">Sede</h3>
+                <div class="row">
+                    <button id="gymm-cancel" class="btn ghost">Cancelar</button>
+                    <button id="gymm-save" class="btn">Guardar</button>
+                </div>
+            </div>
+
+            <div style="background: #1e293b; padding: 12px; border-radius: 8px; margin: 15px 0; font-size: 0.9rem; border-left: 4px solid #42d392;">
+                <p style="margin: 0 0 5px 0;"><strong>ℹ️ ¿Cómo obtener la ubicación?</strong></p>
+                <ol style="margin: 0; padding-left: 20px; color: #94a3b8;">
+                    <li>Ve a <strong>Google Maps</strong> y busca el gimnasio.</li>
+                    <li>Haz <strong>clic derecho</strong> exacto en el lugar.</li>
+                    <li>Haz clic en los números que aparecen primero (ej: <code>-12.122, -77.030</code>) para copiarlos.</li>
+                    <li>Pégalos abajo en Latitud y Longitud.</li>
+                </ol>
+            </div>
+
+            <div class="form-grid" style="margin-top:15px">
+                <div class="field f-6">
+                    <label class="label">Nombre de Sede</label>
+                    <input id="gymm-name" class="input" placeholder="Ej. Sede Larco">
+                </div>
+                <div class="field f-6">
+                    <label class="label">Marca / Cadena</label>
+                    <input id="gymm-brand" class="input" placeholder="Ej. SmartFit, Gold's (Opcional)">
+                    <small class="muted">Si es independiente, puedes repetir el nombre.</small>
+                </div>
+
+                <div class="field f-12">
+                    <label class="label">Dirección</label>
+                    <input id="gymm-addr" class="input" placeholder="Av. Principal 123, Distrito">
+                </div>
+
+                <div class="field f-6">
+                    <label class="label">Latitud (Ej: -12.xxxx)</label>
+                    <input id="gymm-lat" class="input" type="number" step="any">
+                </div>
+                <div class="field f-6">
+                    <label class="label">Longitud (Ej: -77.xxxx)</label>
+                    <input id="gymm-lng" class="input" type="number" step="any">
+                </div>
+
+                <div class="field f-4">
+                    <label class="label">Aforo / Máquinas</label>
+                    <input id="gymm-total" class="input" type="number">
+                </div>
+                <div class="field f-4">
+                    <label class="label">Ocupadas</label>
+                    <input id="gymm-busy" class="input" type="number">
+                </div>
+                <div class="field f-4">
+                    <label class="label">Clientes hoy</label>
+                    <input id="gymm-clients" class="input" type="number">
+                </div>
+            </div>
         </div>
     </div>
 

@@ -451,12 +451,96 @@ qs('#sec-probe').addEventListener('click', async()=>{
   catch(e){ out.textContent='Error: '+e.message }
 });
 
+/* ===== Gyms (Sedes) ===== */
+let gymEditingId = null; const gymDlg = modal('#gym-modal');
+
+async function loadGymsAdmin(){
+  const tb = qs('#gym-table'); tb.innerHTML = '';
+  const data = await api('/api/gyms').catch(()=>[]);
+
+  data.forEach(g => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${g.name}</td>
+      <td>
+        <strong>${g.name}</strong><br>
+        <small class="muted">${g.brand || 'Independiente'}</small>
+      </td>
+      <td>${g.address}</td>
+      <td>${g.lat?.toFixed(4)}, ${g.lng?.toFixed(4)}</td>
+      <td>${g.totalMachines} (Oc: ${g.busyMachines})</td>
+      <td>${g.currentClients}</td>
+      <td class="actions">
+        <button class="btn ghost" data-act="edit">Editar</button>
+        <button class="btn danger" data-act="del">Borrar</button>
+      </td>`;
+
+    tr.querySelector('[data-act="edit"]').addEventListener('click', () => {
+      gymEditingId = g.id;
+      qs('#gymm-title').textContent = 'Editar Sede';
+      qs('#gymm-name').value = g.name;
+      qs('#gymm-brand').value = g.brand || '';
+      qs('#gymm-addr').value = g.address;
+      qs('#gymm-lat').value = g.lat;
+      qs('#gymm-lng').value = g.lng;
+      qs('#gymm-total').value = g.totalMachines;
+      qs('#gymm-busy').value = g.busyMachines;
+      qs('#gymm-clients').value = g.currentClients;
+      gymDlg.open();
+    });
+
+    tr.querySelector('[data-act="del"]').addEventListener('click', async () => {
+       if(confirm('¿Borrar sede?')) {
+         await api(`/api/gyms/${g.id}`, {method:'DELETE'});
+         loadGymsAdmin();
+       }
+    });
+
+    tb.appendChild(tr);
+  });
+}
+
+qs('#gym-new').addEventListener('click', () => {
+  gymEditingId = null;
+  qs('#gymm-title').textContent = 'Nueva Sede';
+  ['#gymm-name','#gymm-brand','#gymm-addr','#gymm-lat','#gymm-lng','#gymm-total','#gymm-busy','#gymm-clients']
+    .forEach(s => qs(s).value = '');
+  gymDlg.open();
+});
+
+qs('#gymm-cancel').addEventListener('click', () => gymDlg.close());
+
+qs('#gymm-save').addEventListener('click', async () => {
+  const payload = {
+    name: qs('#gymm-name').value,
+    brand: qs('#gymm-brand').value,
+    address: qs('#gymm-addr').value,
+    lat: parseFloat(qs('#gymm-lat').value),
+    lng: parseFloat(qs('#gymm-lng').value),
+    totalMachines: parseInt(qs('#gymm-total').value) || 0,
+    busyMachines: parseInt(qs('#gymm-busy').value) || 0,
+    currentClients: parseInt(qs('#gymm-clients').value) || 0
+  };
+
+  if (gymEditingId) {
+    await api(`/api/gyms/${gymEditingId}`, { method: 'PUT', body: JSON.stringify(payload) });
+  } else {
+    await api('/api/gyms', { method: 'POST', body: JSON.stringify(payload) });
+  }
+  gymDlg.close();
+  loadGymsAdmin();
+});
+
 /* ===== Tabs + Init ===== */
 qs('#tabs').addEventListener('click', e=>{
   if(e.target.classList.contains('tab')) setView(e.target.dataset.view);
 });
 (async function init(){
-  await Promise.all([ loadKPIs(), loadExercises(), loadRoutines(), loadUsers().catch(()=>{}), loadCoaches().catch(()=>{}) ]);
+  await Promise.all([
+      loadKPIs(), loadExercises(), loadRoutines(),
+      loadUsers().catch(()=>{}), loadCoaches().catch(()=>{}),
+      loadGymsAdmin().catch(()=>{})
+  ]);
   updateSecurityUI();
 })();
 document.getElementById('year').textContent = new Date().getFullYear();

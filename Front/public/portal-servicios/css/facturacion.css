@@ -1,6 +1,9 @@
-/* --- Reseteo y Fuentes Globales --- */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+/* =================================================================
+   FACTURACIÓN – ESTILO CONSISTENTE CON FITLIVE
+   ================================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+/* --- Reseteo global --- */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -8,154 +11,249 @@
 }
 
 body {
-    font-family: 'Roboto', sans-serif;
-    background-color: #1a1a2e; /* Fondo principal oscuro */
-    color: #e0e0e0; /* Color de texto principal claro */
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #050816;   /* Fondo principal oscuro */
+    color: #F9FAFB;               /* Texto principal */
     font-size: 16px;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* --- Header Superior --- */
+/* =================================================================
+   HEADER SUPERIOR (similar barra FitLive)
+   ================================================================= */
 .main-header {
     width: 100%;
-    padding: 1rem 5%;
+    padding: 1rem 7%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #161625;
-    border-bottom: 1px solid #2c2c44;
+    background-color: #020617;
+    border-bottom: 1px solid #111827;
+    position: sticky;
+    top: 0;
+    z-index: 30;
 }
 
 .logo {
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #F9FAFB;
+    letter-spacing: -0.04em;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Si quieres un icono tipo pulso */
+.logo span.icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    border: 2px solid #22C55E;
 }
 
 .main-nav a {
-    color: #b0b0d0;
+    color: #9CA3AF;
     text-decoration: none;
     margin-left: 1.5rem;
-    transition: color 0.3s;
+    font-size: 0.94rem;
+    font-weight: 500;
+    transition: color 0.18s, opacity 0.18s;
 }
 
 .main-nav a:hover {
-    color: #ffffff;
+    color: #F9FAFB;
+    opacity: 1;
 }
 
-
-/* --- Contenedor Principal --- */
+/* =================================================================
+   CONTENEDOR PRINCIPAL
+   ================================================================= */
 .container {
-    width: 90%;
-    max-width: 900px;
-    margin: 2rem auto;
-    padding: 2rem;
+    width: 100%;
+    max-width: 1100px;
+    margin: 2.5rem auto 3rem;
+    padding: 2.4rem 2.2rem;
+    background: radial-gradient(circle at top, #020617 0, #050816 55%, #020617 100%);
+    border-radius: 22px;
+    border: 1px solid #111827;
+    box-shadow: 0 22px 55px rgba(15, 23, 42, 0.85);
 }
 
 h1 {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     font-weight: 700;
     text-align: left;
-    margin-bottom: 2.5rem;
-    border-bottom: 1px solid #2c2c44;
+    margin-bottom: 2rem;
     padding-bottom: 1rem;
+    border-bottom: 1px solid #111827;
+    letter-spacing: -0.04em;
 }
 
 .seccion {
-    margin-bottom: 2.5rem;
+    margin-bottom: 2.4rem;
 }
 
 h2 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1.3rem;
+    letter-spacing: -0.03em;
 }
 
-/* --- Formularios y Botones --- */
+/* =================================================================
+   FORMULARIOS Y CONTROLES
+   ================================================================= */
 .form-group {
     margin-bottom: 1rem;
 }
 
 label {
     display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-    color: #b0b0d0;
+    margin-bottom: 0.45rem;
+    font-size: 0.88rem;
+    color: #9CA3AF;
+    font-weight: 500;
 }
 
 input[type="text"],
-input[type="number"] {
-    background-color: #ffffff;
-    border: 1px solid #333;
-    color: #1a1a2e;
-    padding: 0.8rem;
-    border-radius: 4px;
+input[type="number"],
+select {
+    background-color: #020617;
+    border: 1px solid #334155;
+    color: #F9FAFB;
+    padding: 0.8rem 0.9rem;
+    border-radius: 10px;
     width: 100%;
-    font-size: 1rem;
-    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
 }
 
 input::placeholder {
-    color: #999;
+    color: #6B7280;
 }
 
+input:focus,
+select:focus {
+    border-color: #22C55E;
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.18);
+}
+
+/* Distribución en línea para filas de ítems */
 .form-group-inline {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr auto;
-    gap: 1rem;
+    grid-template-columns: 2.1fr 1fr 1fr auto;
+    gap: 0.9rem;
     align-items: flex-end;
 }
 
-.form-group-inline input {
+.form-group-inline input,
+.form-group-inline select {
     margin-bottom: 0;
 }
 
+/* =================================================================
+   BOTONES
+   ================================================================= */
 button {
-    background-color: #4a69bd; /* Azul de los botones */
-    color: #ffffff;
+    background-color: #22C55E;         /* Verde FitLive */
+    color: #022c16;
     border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: bold;
+    padding: 0.8rem 1.6rem;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+    box-shadow: 0 16px 36px rgba(34, 197, 94, 0.35);
 }
 
 button:hover:not(:disabled) {
-    background-color: #5d5fef; /* Un azul más brillante al pasar el mouse */
+    filter: brightness(1.03);
+    transform: translateY(-1px);
+    box-shadow: 0 20px 42px rgba(34, 197, 94, 0.42);
 }
 
 button:disabled {
-    background-color: #444;
-    color: #888;
+    background-color: #4B5563;
+    color: #9CA3AF;
     cursor: not-allowed;
+    box-shadow: none;
 }
 
-/* --- Tabla de Items --- */
+/* Variante secundaria (por si la necesitas) */
+.btn-secondary {
+    background-color: #111827;
+    color: #E5E7EB;
+    border: 1px solid #374151;
+    box-shadow: none;
+}
+.btn-secondary:hover:not(:disabled) {
+    background-color: #1F2937;
+}
+
+/* =================================================================
+   TABLA DE ITEMS
+   ================================================================= */
 #tablaItems {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1.5rem;
+    margin-top: 1.4rem;
+    border-radius: 16px;
+    overflow: hidden;
+    background-color: #020617;
 }
 
 #tablaItems th,
 #tablaItems td {
-    border: 1px solid #2c2c44;
-    padding: 0.8rem;
+    border-bottom: 1px solid #111827;
+    padding: 0.85rem 0.9rem;
     text-align: left;
+    font-size: 0.9rem;
 }
 
 #tablaItems th {
-    background-color: #161625;
-    font-weight: bold;
-    color: #ffffff;
+    background-color: #020617;
+    font-weight: 600;
+    color: #9CA3AF;
 }
 
-/* --- Cajas de Información --- */
+#tablaItems tbody tr:nth-child(even) {
+    background-color: #020617;
+}
+
+#tablaItems tbody tr:hover {
+    background-color: #111827;
+}
+
+/* =================================================================
+   CAJAS DE INFORMACIÓN
+   ================================================================= */
 .info-box {
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid #2c2c44;
-    padding: 1rem;
+    background-color: rgba(15, 23, 42, 0.8);
+    border: 1px solid #111827;
+    padding: 1rem 1.1rem;
     margin-top: 1rem;
-    border-radius: 4px;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    color: #E5E7EB;
+}
+
+/* Totales / resumen (si los usas) */
+.resumen-totales {
+    margin-top: 1.6rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.resumen-totales span.label {
+    color: #9CA3AF;
+}
+
+.resumen-totales span.valor {
+    font-weight: 600;
 }

@@ -1,0 +1,370 @@
+---
+title: "FitlifeAPI: Gestión de Fitness"
+description: "Este documento presenta el sistema FitlifeAPI, una aplicación Spring Boot para gestionar ejercicios de fitness, rutinas de entrenamiento y sus asociaciones. FitlifeAPI es un sistema secundario dentro del repositorio FitLive."
+---
+
+import SourceBtn from '@docs_components/SourceBtn.astro';
+import SourceReference from '@docs_components/SourceReference.astro';
+import ImageViewer from '@docs_components/ImageViewer.astro';
+import TableWrapper from '@docs_components/TableWrapper.astro';
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# FitlifeAPI: Gestión de Fitness
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/FitlifeAPI/pom.xml" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/FitlifeApiApplication.java" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento presenta el sistema <strong>FitlifeAPI</strong>, una aplicación Spring Boot para gestionar ejercicios de fitness, rutinas de entrenamiento y sus asociaciones. FitlifeAPI es un sistema secundario dentro del repositorio FitLive, que opera de forma independiente de los microservicios de facturación principales. Esta página proporciona una visión general del propósito, la arquitectura, el modelo de dominio y el stack tecnológico del sistema.</p>
+
+<p>Para información detallada sobre subsistemas específicos, consulte:</p>
+<ul>
+    <li><a href="/docs/fitlife-api/arquitectura-aplicacion" class="content-link">Arquitectura de la Aplicación</a> - Arquitectura en capas, controladores, servicios y repositorios.</li>
+    <li><a href="/docs/fitlife-api/gestion-ejercicios" class="content-link">Gestión de Ejercicios</a> - Operaciones CRUD de ejercicios individuales.</li>
+    <li><a href="/docs/fitlife-api/gestion-rutinas" class="content-link">Gestión de Rutinas</a> - Creación y gestión de rutinas de entrenamiento.</li>
+    <li><a href="/docs/fitlife-api/asociacion-rutina-ejercicio" class="content-link">Asociación Rutina-Ejercicio</a> - Relaciones muchos a muchos entre rutinas y ejercicios.</li>
+    <li><a href="/docs/fitlife-api/configuracion-seguridad" class="content-link">Configuración de Seguridad</a> - Soporte JWT y configuración de autenticación.</li>
+    <li><a href="/docs/fitlife-api/configuracion-y-dependencias" class="content-link">Configuración y Dependencias</a> - Dependencias de Maven y propiedades de la aplicación.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="1-112" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/FitlifeApiApplication.java" lines="1-14" />
+</SourceReference>
+
+## Visión General del Sistema
+
+<p>FitlifeAPI es una <strong>aplicación monolítica de Spring Boot</strong> que proporciona endpoints de API REST para la gestión de fitness. A diferencia de los microservicios de facturación, FitlifeAPI opera como una única unidad desplegable sin dependencias de servicios externos. El sistema gestiona tres conceptos de dominio principales:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Concepto de Dominio</th>
+                <th scope="col">Propósito</th>
+                <th scope="col">Características Clave</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Ejercicios</strong></td>
+                <td>Actividades de entrenamiento individuales (ej. flexiones, sentadillas)</td>
+                <td>Nombre, descripción, grupos musculares</td>
+            </tr>
+            <tr>
+                <td><strong>Rutinas</strong></td>
+                <td>Planes de entrenamiento completos (ej. "Cuerpo Completo para Principiantes")</td>
+                <td>Título, descripción, nivel de dificultad</td>
+            </tr>
+            <tr>
+                <td><strong>RoutineExercises</strong></td>
+                <td>Asociación entre rutinas y ejercicios</td>
+                <td>Orden, series, repeticiones, parámetros de duración</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>El sistema sigue patrones estándar de Spring Boot con Spring Data JPA para la persistencia y PostgreSQL como base de datos principal. La infraestructura de seguridad está presente (Spring Security + JWT) pero actualmente está configurada en un modo permisivo.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="32-96" />
+</SourceReference>
+
+## Visión General de la Arquitectura
+
+### Estructura de Componentes de FitlifeAPI
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-estructura-componentes.svg"
+    alt="Diagrama de la estructura de componentes de FitlifeAPI, mostrando una arquitectura de tres capas tradicional con capas de Presentación (Controladores), Servicio (Lógica de negocio) y Acceso a Datos (Repositorios), junto con capas transversales como Seguridad y el Modelo de Dominio que interactúa con una base de datos PostgreSQL."
+/>
+
+<p>La aplicación sigue una <strong>arquitectura tradicional de tres capas</strong> con una clara separación de responsabilidades:</p>
+<ol>
+    <li><strong>Capa de Presentación</strong>: Controladores REST que exponen endpoints HTTP.</li>
+    <li><strong>Capa de Servicio</strong>: Lógica de negocio y gestión de transacciones.</li>
+    <li><strong>Capa de Acceso a Datos</strong>: Repositorios JPA que abstraen las operaciones de la base de datos.</li>
+</ol>
+<p>La clase <code class="artifact-id">FitlifeApiApplication</code> sirve como punto de entrada de Spring Boot, iniciando el contexto de la aplicación y el escaneo de componentes.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/FitlifeApiApplication.java" lines="1-14" />
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="33-48" />
+</SourceReference>
+
+## Modelo de Dominio Principal
+
+### Diagrama de Entidad-Relación
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-modelo-entidad-relacion.svg"
+    alt="Diagrama de Entidad-Relación que muestra la relación muchos a muchos entre las entidades de Ejercicio (ExerciseEntity) y Rutina (RoutineEntity), unida por la entidad de asociación RoutineExerciseEntity, la cual contiene atributos adicionales como orden, series y repeticiones."
+/>
+
+<p>El modelo de dominio se centra en una <strong>relación muchos a muchos</strong> entre ejercicios y rutinas, implementada a través de la tabla de unión <code class="artifact-id">RoutineExerciseEntity</code>. Este diseño permite:</p>
+<ul>
+    <li><strong>Reutilización</strong>: Un solo ejercicio (ej. "Flexiones") puede aparecer en múltiples rutinas.</li>
+    <li><strong>Personalización</strong>: Cada asociación rutina-ejercicio puede especificar parámetros únicos (series, repeticiones, duración).</li>
+    <li><strong>Ordenación</strong>: El campo <code class="artifact-id">orderIndex</code> define la secuencia de ejercicios dentro de una rutina.</li>
+    <li><strong>Flexibilidad</strong>: Se pueden almacenar metadatos adicionales (notas, periodos de descanso) por asociación.</li>
+</ul>
+
+### Niveles de Dificultad
+<p><code class="artifact-id">RoutineEntity</code> admite tres niveles de dificultad (típicamente implementados como un enum):</p>
+<ul>
+    <li><code class="artifact-id">BEGINNER</code> - Rutinas de entrenamiento de nivel de entrada.</li>
+    <li><code class="artifact-id">INTERMEDIATE</code> - Rutinas de dificultad moderada.</li>
+    <li><code class="artifact-id">ADVANCED</code> - Rutinas complejas de alta intensidad.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="33-36" textAfter="(dependencia de Spring Data JPA)"/>
+</SourceReference>
+
+## Stack Tecnológico
+
+### Dependencias Principales
+
+<p>La siguiente tabla lista las dependencias principales configuradas en <code class="artifact-id">pom.xml</code>:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th scope="col">Dependencia</th>
+                <th scope="col">Versión</th>
+                <th scope="col">Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">spring-boot-starter-parent</code></td>
+                <td>3.5.5</td>
+                <td>POM padre de Spring Boot, define versiones de dependencias.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">spring-boot-starter-web</code></td>
+                <td>(heredada)</td>
+                <td>Soporte de API REST, Tomcat embebido.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">spring-boot-starter-data-jpa</code></td>
+                <td>(heredada)</td>
+                <td>ORM JPA/Hibernate, abstracción de base de datos.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">spring-boot-starter-security</code></td>
+                <td>(heredada)</td>
+                <td>Framework de Spring Security.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">spring-boot-starter-validation</code></td>
+                <td>(heredada)</td>
+                <td>Validación de beans (JSR-380).</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">postgresql</code></td>
+                <td>(runtime)</td>
+                <td>Driver JDBC de PostgreSQL.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">flyway-core</code></td>
+                <td>(heredada)</td>
+                <td>Herramienta de migración de base de datos.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">flyway-database-postgresql</code></td>
+                <td>(heredada)</td>
+                <td>Soporte de Flyway específico para PostgreSQL.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">springdoc-openapi-starter-webmvc-ui</code></td>
+                <td>2.5.0</td>
+                <td>Documentación OpenAPI 3.0, Swagger UI.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">jjwt-api</code></td>
+                <td>0.11.5</td>
+                <td>API para creación y validación de tokens JWT.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">jjwt-impl</code></td>
+                <td>0.11.5</td>
+                <td>Implementación de JWT (runtime).</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">jjwt-jackson</code></td>
+                <td>0.11.5</td>
+                <td>Serialización JSON para JWT vía Jackson.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">spring-boot-starter-test</code></td>
+                <td>(test)</td>
+                <td>Frameworks de prueba JUnit 5, Mockito, AssertJ.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">spring-security-test</code></td>
+                <td>(test)</td>
+                <td>Utilidades de prueba para Spring Security.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Configuración de Runtime
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-configuracion-runtime.svg"
+    alt="Diagrama que muestra la configuración del entorno de ejecución de FitlifeAPI. Maven, como herramienta de compilación, se dirige a Java 21. El framework de la aplicación es Spring Boot 3.5.5, que se conecta a una base de datos PostgreSQL en producción y opcionalmente a H2 en desarrollo."
+/>
+
+<p>La aplicación se dirige a <strong>Java 21</strong>, como se especifica en la línea 30 de <code class="artifact-id">pom.xml</code>. Maven es la herramienta de compilación, con el plugin <code class="artifact-id">spring-boot-maven-plugin</code> que proporciona capacidades de empaquetado y ejecución. El sistema admite una configuración de base de datos dual: PostgreSQL para producción y H2 en memoria para desarrollo local.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="29-31" />
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="32-96" />
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="99-110" />
+</SourceReference>
+
+## Punto de Entrada de la Aplicación
+
+### Clase FitlifeApiApplication
+
+<p>La clase <code class="artifact-id">FitlifeApiApplication</code> sirve como la clase de arranque de Spring Boot:</p>
+
+<CodeBlock language="text" code={`package: com.fitlife.fitlifeAPI
+class: FitlifeApiApplication
+annotation: @SpringBootApplication`} />
+
+<p>La anotación <code class="artifact-id">@SpringBootApplication</code> es una meta-anotación que combina:</p>
+<ol>
+    <li><code class="artifact-id">@Configuration</code> - Marca la clase como una fuente de definiciones de beans.</li>
+    <li><code class="artifact-id">@EnableAutoConfiguration</code> - Habilita el mecanismo de auto-configuración de Spring Boot.</li>
+    <li><code class="artifact-id">@ComponentScan</code> - Escanea en busca de componentes de Spring en el paquete <code class="artifact-id">com.fitlife.fitlifeAPI</code> y sus subpaquetes.</li>
+</ol>
+<p>El método <code class="artifact-id">main</code> invoca a <code class="artifact-id">SpringApplication.run()</code>, que:</p>
+<ul>
+    <li>Crea el contexto de la aplicación Spring.</li>
+    <li>Registra todos los beans auto-configurados.</li>
+    <li>Inicia el servidor Tomcat embebido.</li>
+    <li>Escanea y registra controladores REST, servicios y repositorios.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/FitlifeApiApplication.java" lines="1-14" />
+</SourceReference>
+
+## Características Clave
+
+### Endpoints de API REST
+<p>El sistema expone tres grupos de recursos principales:</p>
+<TableWrapper>
+    <table>
+        <thead><tr><th>Recurso</th><th>Ruta Base</th><th>Operaciones</th></tr></thead>
+        <tbody>
+            <tr><td>Ejercicios</td><td><code class="artifact-id">/api/exercises</code></td><td>Crear, leer, actualizar y eliminar ejercicios individuales.</td></tr>
+            <tr><td>Rutinas</td><td><code class="artifact-id">/api/routines</code></td><td>Gestionar rutinas de entrenamiento, filtrar por nivel de dificultad.</td></tr>
+            <tr><td>Rutina-Ejercicios</td><td><code class="artifact-id">/api/routine-exercises</code></td><td>Asociar ejercicios con rutinas, definir la estructura del entrenamiento.</td></tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Documentación de API
+<p>La dependencia <code class="artifact-id">springdoc-openapi-starter-webmvc-ui</code> proporciona:</p>
+<ul>
+    <li><strong>Especificación OpenAPI 3.0</strong> - Definición de API legible por máquina.</li>
+    <li><strong>Swagger UI</strong> - Navegador interactivo para la documentación de la API.</li>
+    <li><strong>Descubrimiento automático de endpoints</strong> - Escanea controladores y genera la documentación.</li>
+</ul>
+
+### Soporte para Migración de Base de Datos
+<p>Las dependencias de Flyway permiten:</p>
+<ul>
+    <li><strong>Cambios de esquema controlados por versión</strong> - Scripts de migración SQL rastreados en el control de versiones.</li>
+    <li><strong>Ejecución automática de migraciones</strong> - Se ejecuta al iniciar la aplicación.</li>
+    <li><strong>Características específicas de PostgreSQL</strong> - Soporte para tipos de datos y restricciones de PostgreSQL.</li>
+</ul>
+
+### Infraestructura de Seguridad
+<p>Aunque actualmente está configurada en modo permisivo, la aplicación incluye:</p>
+<ul>
+    <li><strong>Framework Spring Security</strong></li>
+    <li><strong>Soporte para tokens JWT</strong></li>
+    <li><strong>Puntos de enganche (hooks) de autenticación</strong> - Listos para la implementación cuando se finalicen los requisitos de seguridad.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="32-96" />
+</SourceReference>
+
+## Relación con el Sistema de Facturación
+
+### Independencia del Sistema
+<p>FitlifeAPI opera de forma <strong>completamente independiente</strong> de los microservicios de facturación (<code class="artifact-id">servicio-clientes</code> y <code class="artifact-id">servicio-facturacion</code>). Las diferencias clave son:</p>
+
+<TableWrapper>
+    <table>
+        <thead><tr><th>Aspecto</th><th>FitlifeAPI</th><th>Servicios de Facturación</th></tr></thead>
+        <tbody>
+            <tr><td>Arquitectura</td><td>Monolítica</td><td>Microservicios</td></tr>
+            <tr><td>Versión de Spring Boot</td><td>3.5.5</td><td>3.5.6</td></tr>
+            <tr><td>Dominio de Negocio</td><td>Fitness/bienestar</td><td>Facturación comercial</td></tr>
+            <tr><td>Dependencias Externas</td><td>Ninguna</td><td>API de PeruDevs</td></tr>
+            <tr><td>Comunicación entre Servicios</td><td>N/A</td><td>HTTP REST entre servicios</td></tr>
+            <tr><td>Librerías Especializadas</td><td>Ninguna</td><td>OpenPDF, ZXing (códigos QR)</td></tr>
+            <tr><td>Estado de Seguridad</td><td>Permisivo (desarrollo)</td><td>No especificado</td></tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Implicaciones de Despliegue
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-independencia-sistemas.svg"
+    alt="Diagrama que ilustra la independencia entre el sistema de facturación y el sistema de fitness. Muestra que FitlifeAPI se conecta a su propia base de datos y no tiene conexiones directas de código, API o base de datos con los microservicios de facturación, que a su vez se comunican entre sí y comparten su propia base de datos."
+/>
+
+<p>Los sistemas comparten:</p>
+<ul>
+    <li><strong>Ubicación del repositorio</strong> - Ambos residen en el repositorio de GitHub de FitLive.</li>
+    <li><strong>Elecciones tecnológicas</strong> - Spring Boot 3.5.x, Java 21, PostgreSQL.</li>
+    <li><strong>Herramientas de compilación</strong> - Maven para la gestión de dependencias y empaquetado.</li>
+</ul>
+<p>Los sistemas no comparten:</p>
+<ul>
+    <li><strong>Bases de datos</strong> - Instancias o esquemas de PostgreSQL separados.</li>
+    <li><strong>Procesos en tiempo de ejecución</strong> - Se despliegan como aplicaciones independientes.</li>
+    <li><strong>Lógica de negocio</strong> - No hay dependencias de código entre los sistemas.</li>
+    <li><strong>APIs</strong> - No hay llamadas HTTP entre sistemas.</li>
+</ul>
+<p>Esta separación sugiere que FitlifeAPI puede ser un prototipo, una oferta de producto separada o desarrollada por un equipo diferente utilizando el mismo repositorio por conveniencia.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="1-112" />
+</SourceReference>
+
+## Próximos Pasos
+
+<p>Para información detallada sobre la implementación de FitlifeAPI, continúe con:</p>
+<ul>
+    <li><a href="/docs/fitlife-api/arquitectura-aplicacion" class="content-link"><strong>Arquitectura de la Aplicación</strong></a> - Inmersión profunda en controladores, servicios, repositorios y clases de entidad.</li>
+    <li><a href="/docs/fitlife-api/gestion-ejercicios" class="content-link"><strong>Gestión de Ejercicios</strong></a> - Endpoints de <code class="artifact-id">ExerciseController</code>, validación y modelo de datos.</li>
+    <li><a href="/docs/fitlife-api/gestion-rutinas" class="content-link"><strong>Gestión de Rutinas</strong></a> - Endpoints de <code class="artifact-id">RoutineController</code>, niveles de dificultad y lógica de negocio.</li>
+    <li><a href="/docs/fitlife-api/asociacion-rutina-ejercicio" class="content-link"><strong>Asociación Rutina-Ejercicio</strong></a> - Implementación de la relación muchos a muchos, ordenación y parámetros de entrenamiento.</li>
+    <li><a href="/docs/fitlife-api/configuracion-seguridad" class="content-link"><strong>Configuración de Seguridad</strong></a> - Clase <code class="artifact-id">SecurityConfig</code>, configuración de JWT y estrategia de autenticación.</li>
+    <li><a href="/docs/fitlife-api/configuracion-y-dependencias" class="content-link"><strong>Configuración y Dependencias</strong></a> - Archivo <code class="artifact-id">application.properties</code>, perfiles de Maven e integración con IDE.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="1-112" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/FitlifeApiApplication.java" lines="1-14" />
+</SourceReference>

@@ -1,3 +1,6 @@
+/**
+ * app.js - versión corregida para arquitectura de 2 microservicios.
+ */
 
 'use strict';
 

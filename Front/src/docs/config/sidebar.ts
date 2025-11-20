@@ -30,17 +30,5 @@ export const SIDEBAR_LINKS: NavItem[] = [
       { text: 'Configuración y Ajuste', href: '/docs/servicio-facturacion/configuracion-y-ajuste' },
     ],
   },
-    {
-      text: 'FitlifeAPI: Gestión de Fitness',
-      href: '/docs/fitlife-api',
-      children: [
-        { text: 'Arquitectura de la Aplicación', href: '/docs/fitlife-api/arquitectura-aplicacion' },
-        { text: 'Gestión de Ejercicios', href: '/docs/fitlife-api/gestion-ejercicios' },
-        { text: 'Gestión de Rutinas', href: '/docs/fitlife-api/gestion-rutinas' },
-        { text: 'Asociación Rutina-Ejercicio', href: '/docs/fitlife-api/asociacion-rutina-ejercicio' },
-        { text: 'Configuración de Seguridad', href: '/docs/fitlife-api/configuracion-seguridad' },
-        { text: 'Configuración y Dependencias', href: '/docs/fitlife-api/configuracion-y-dependencias' },
-      ],
-    },
   { text: 'Configuración del Entorno de Desarrollo', href: '/docs/configuracion-del-entorno-de-desarrollo' },
 ];

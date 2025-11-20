@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitLife - Rutinas y Localizador de Gyms</title>
+
+    <!-- CSS principal -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Iconos y fuente -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ======= NAVBAR ======= -->
+<header class="navbar">
+    <div class="container">
+        <a href="#" class="logo">
+            <i class="bi bi-activity"></i> FitLife
+        </a>
+
+        <nav class="nav-links">
+            <a href="#pricing">Precios</a>
+            <a href="#other-services">Otros Servicios</a>
+            <a href="admin.html">Admin</a>
+            <a href="cliente.html">Cliente</a>
+            <a href="docs/index">Documentacion</a>
+        </nav>
+
+        <div class="nav-buttons">
+            <a href="auth.html" class="btn btn-secondary">Iniciar Sesión</a>
+            <a href="auth.html" class="btn btn-green">Empezar Gratis</a>
+        </div>
+
+        <button class="nav-toggle" id="nav-toggle">
+            <i class="bi bi-list"></i>
+        </button>
+    </div>
+</header>
+
+<main>
+
+    <!-- ======= HERO ======= -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <span class="badge">NUEVO: Rutinas & Localizador de Gyms</span>
+                <h1>Tu Entrenador Personal en Línea, Siempre Contigo.</h1>
+                <p>
+                    Crea rutinas de entrenamiento a tu medida, encuentra el mejor gym cerca de ti
+                    y revisa en tiempo real cuántas máquinas hay, cuántas personas están entrenando
+                    y cuántas máquinas están libres.
+                </p>
+                <a href="auth.html" class="btn btn-green btn-large">
+                    Únete a FitLife Ahora <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= FEATURES ======= -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <h2>Todo lo que necesitas para entrenar mejor</h2>
+
+            <div class="features-grid">
+                <!-- 1: Asistente de Rutinas -->
+                <div class="feature-card">
+                    <div class="feature-icon icon-blue">
+                        <i class="bi bi-clipboard-check"></i>
+                    </div>
+                    <h3>Asistente de Rutinas</h3>
+                    <p>
+                        Diseña rutinas personalizadas según tu nivel, tiempo disponible y objetivo
+                        (fuerza, hipertrofia, pérdida de grasa, etc.). Actualiza tus ejercicios
+                        sin perder el seguimiento de tu progreso.
+                    </p>
+                </div>
+
+                <!-- 2: Biblioteca de Ejercicios -->
+                <div class="feature-card">
+                    <div class="feature-icon icon-green">
+                        <i class="bi bi-barbell"></i>
+                    </div>
+                    <h3>Biblioteca de Ejercicios</h3>
+                    <p>
+                        Accede a cientos de ejercicios con explicación de técnica, músculos
+                        involucrados y recomendaciones para evitar lesiones, tanto para gym
+                        como para casa.
+                    </p>
+                </div>
+
+                <!-- 3: Planes por Objetivo -->
+                <div class="feature-card">
+                    <div class="feature-icon icon-blue">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <h3>Planes por Objetivo</h3>
+                    <p>
+                        Elige planes prearmados (principiante, intermedio, avanzado) o crea el
+                        tuyo combinando días de fuerza, cardio y movilidad. Ajusta el plan a tu
+                        horario y al tipo de gimnasio donde entrenas.
+                    </p>
+                </div>
+
+                <!-- 4: Estado del Gym en Tiempo Real -->
+                <div class="feature-card">
+                    <div class="feature-icon icon-green">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <h3>Estado del Gym en Tiempo Real</h3>
+                    <p>
+                        Consulta el estado de cada gym: número total de máquinas, personas
+                        entrenando y máquinas libres. Evita las horas más llenas y elige
+                        la sede con mejor disponibilidad antes de salir de casa.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= SHOWCASE: PROGRESO & GYM ======= -->
+    <section class="showcase-section">
+        <div class="container showcase-container">
+            <div class="showcase-text">
+                <h2>Visualiza tu Progreso y la Ocupación del Gym</h2>
+                <p>
+                    No entrenes a ciegas. Revisa tu progreso y el estado de cada gimnasio en un
+                    solo lugar. Monitorea tus series, pesos y récords personales, junto con el
+                    número de máquinas disponibles para que entrenes sin esperas innecesarias.
+                </p>
+                <ul>
+                    <li><i class="bi bi-check-circle-fill"></i> Gráficas de volumen y peso levantado</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Seguimiento de récords por ejercicio</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Número de máquinas, personas y máquinas libres por gym</li>
+                </ul>
+                <a href="#" class="btn btn-blue">Ver mis estadísticas</a>
+            </div>
+
+            <div class="showcase-image">
+                <img src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=870&q=80"
+                     alt="Dashboard con gráficas de progreso y ocupación de gimnasios">
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= PRICING ======= -->
+    <section id="pricing" class="pricing-section">
+        <div class="container">
+            <h2>Planes para Cada Tipo de Entrenamiento</h2>
+            <p class="section-subtitle">
+                Elige el plan que mejor se adapte a cómo entrenas y a cuántos gyms quieres monitorear.
+            </p>
+
+            <div class="pricing-grid">
+
+                <!-- Plan Básico -->
+                <div class="pricing-card">
+                    <h3>Rutinas Básicas</h3>
+
+                    <div class="price">
+                        <span>$9.90</span> <small>/ mes</small>
+                    </div>
+
+                    <ul class="features-list">
+                        <li><i class="bi bi-check"></i> Crea rutinas guiadas para entrenar en casa o en un solo gym.</li>
+                        <li><i class="bi bi-check"></i> Hasta 3 rutinas activas al mismo tiempo según tu objetivo.</li>
+                        <li><i class="bi bi-check"></i> Vista rápida del estado de tu gym favorito: máquinas disponibles y ocupación general.</li>
+                    </ul>
+
+                    <a href="#" class="btn btn-secondary">Elegir Plan</a>
+                </div>
+
+                <!-- Plan Popular -->
+                <div class="pricing-card popular">
+                    <span class="badge">Más Popular</span>
+                    <h3>Gym Finder Plus</h3>
+
+                    <div class="price">
+                        <span>$19.90</span> <small>/ mes</small>
+                    </div>
+
+                    <ul class="features-list">
+                        <li><i class="bi bi-check"></i> Rutinas personalizadas según tu nivel, objetivo y frecuencia de entrenamiento.</li>
+                        <li><i class="bi bi-check"></i> Encuentra los mejores gyms cerca de ti y compáralos en segundos.</li>
+                        <li><i class="bi bi-check"></i> Ve en tiempo real cuántas máquinas hay, cuántas se están usando y cuántas personas hay en cada gym.</li>
+                    </ul>
+
+                    <a href="#" class="btn btn-green">Elegir Plan</a>
+                </div>
+
+                <!-- Plan Pro -->
+                <div class="pricing-card">
+                    <h3>Multi-Gym Pro</h3>
+
+                    <div class="price">
+                        <span>$29.90</span> <small>/ mes</small>
+                    </div>
+
+                    <ul class="features-list">
+                        <li><i class="bi bi-check"></i> Todo lo de Gym Finder Plus para varias personas (familia o equipo de entrenamiento).</li>
+                        <li><i class="bi bi-check"></i> Historial detallado de tus rutinas, gyms visitados y momentos de mayor ocupación.</li>
+                        <li><i class="bi bi-check"></i> Soporte prioritario y acceso anticipado a nuevas funciones y mejoras de la plataforma.</li>
+                    </ul>
+
+                    <a href="#" class="btn btn-secondary">Elegir Plan</a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ======= OTROS SERVICIOS ======= -->
+    <section id="other-services" class="other-services-section">
+        <div class="container">
+            <h2>Servicios Adicionales para Profesionales</h2>
+            <p class="section-subtitle">
+                Soluciones de consulta y facturación rápidas y seguras para tus necesidades de información.
+            </p>
+
+            <div class="other-services-grid">
+                <div class="service-card">
+                    <div class="service-icon"><i class="bi bi-person-badge-fill"></i></div>
+                    <h3>Consulta DNI</h3>
+                    <p>
+                        Verifica y obtén datos actualizados a partir de un número de Documento
+                        Nacional de Identidad de forma instantánea.
+                    </p>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon"><i class="bi bi-building"></i></div>
+                    <h3>Consulta RUC</h3>
+                    <p>
+                        Accede a información comercial y fiscal de empresas a través de su
+                        Registro Único de Contribuyentes.
+                    </p>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon"><i class="bi bi-receipt"></i></div>
+                    <h3>Boletas Electrónicas</h3>
+                    <p>
+                        Emite boletas de venta electrónicas de manera sencilla para tus
+                        consumidores finales, cumpliendo con la normativa fiscal.
+                    </p>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-icon"><i class="bi bi-receipt-cutoff"></i></div>
+                    <h3>Facturas Electrónicas</h3>
+                    <p>
+                        Genera y emite comprobantes de pago electrónicos válidos para tus
+                        transacciones comerciales entre empresas.
+                    </p>
+                </div>
+            </div>
+
+            <div class="cta-container">
+                <a href="portal-servicios/index.html" class="btn btn-blue">Consultar Servicios</a>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ======= FOOTER ======= -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-content">
+            <a href="#" class="logo">
+                <i class="bi bi-activity"></i> FitLife
+            </a>
+            <p>&copy; 2024 FitLife. Todos los derechos reservados.</p>
+            <div class="social-links">
+                <a href="#"><i class="bi bi-twitter"></i></a>
+                <a href="#"><i class="bi bi-instagram"></i></a>
+                <a href="#"><i class="bi bi-facebook"></i></a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- JS -->
+<script src="js/script.js"></script>
+</body>
+</html>

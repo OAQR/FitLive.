@@ -227,3 +227,48 @@ ul.feats{margin:6px 0 0 18px;color:#d4e0f4}
 .sf-bottom{border-top:1px solid var(--line);padding:8px 18px;display:flex;flex-direction:column;gap:0;align-items:center;text-align:center;color:#c6d2e6}
 .sf-bottom p{margin:2px 0;font-size:12px;line-height:1.3}
 .sf-mini{font-size:10px;margin:0}
+
+/* Arreglo para mapas Leaflet */
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+#map {
+    z-index: 1; /* Asegura que el mapa esté en su capa correcta */
+}
+
+/* Estilo para cuando el mapa de Google se expande */
+.google-card.fullscreen {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999; /* Por encima de todo */
+    border-radius: 0 !important;
+    border: none !important;
+}
+
+/* Ajuste para móviles: que la lista y mapas se apilen */
+@media (max-width: 768px) {
+    .gym-wrap {
+        grid-template-columns: 1fr !important;
+        height: auto !important;
+    }
+    .gym-left {
+        height: 300px;
+    }
+    .gym-right {
+        height: 500px;
+    }
+}

@@ -1,4 +1,4 @@
-const API_BASE = ''; // ajusta si tu backend está en otro host/puerto
+const API_BASE = ''; // Asegúrate que este es el puerto de tu backend
 const qs = (s,el=document)=>el.querySelector(s);
 const qsa = (s,el=document)=>[...el.querySelectorAll(s)];
 const modal = id => ({open(){qs(id).classList.add('show')}, close(){qs(id).classList.remove('show')}});
@@ -8,8 +8,22 @@ function setView(name){
   qsa('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===name));
   qsa('.view').forEach(v=>v.classList.toggle('hide', v.id!==`view-${name}`));
 }
-qs('#tabs').addEventListener('click', e=>{
-  if(e.target.classList.contains('tab')) setView(e.target.dataset.view);
+
+qs('#tabs').addEventListener('click', e => {
+  if(e.target.classList.contains('tab')) {
+    const view = e.target.dataset.view;
+    setView(view);
+
+    if (view === 'gyms') {
+        setTimeout(() => {
+            if (typeof mapInstance !== 'undefined' && mapInstance) {
+                mapInstance.invalidateSize();
+            } else {
+                loadGyms();
+            }
+        }, 100);
+    }
+  } // <--- ¡ESTA LLAVE FALTABA!
 });
 document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -127,158 +141,303 @@ async function loadCoaches(){
   });
 }
 
-/* ---------- GYMS (oficiales + cercanos con simulación) ---------- */
+/* ---------- GYMS (Mapa Interactivo con Leaflet + Google Híbrido) ---------- */
 let gyms = [];
-let selectedGym = null;
-let lastUserPos = null; // {lat,lng}
+let mapInstance = null;
+let markersGroup = null;
+let lastUserPos = null;
 
-function gmSrcFromLatLng(lat, lng, name = '', address = ''){
-  let query;
+function initMap() {
+  mapInstance = L.map('map').setView([-12.0464, -77.0428], 12);
 
-  if (name && name.length > 2) {
-      const cleanName = name.trim();
-      const searchTerm = address ? `${cleanName}, ${address}` : cleanName;
-      query = encodeURIComponent(searchTerm);
-  } else {
-      query = `${lat},${lng}`;
-  }
+  // Capa Base: CartoDB Voyager (Limpio y bonito)
+  const streetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    subdomains: 'abcd',
+    maxZoom: 20
+  });
 
-  return `https://maps.google.com/maps?q=${query}&z=15&output=embed`;
+  // Capa Satélite (Esri)
+  const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri'
+  });
+
+  streetLayer.addTo(mapInstance);
+
+  L.control.layers({
+    "Mapa": streetLayer,
+    "Satélite": satelliteLayer
+  }).addTo(mapInstance);
+
+  markersGroup = L.layerGroup().addTo(mapInstance);
 }
 
 function toRad(d){ return d*Math.PI/180 }
 function haversine(lat1,lon1,lat2,lon2){
-  const R=6371; // km
+  const R=6371;
   const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
   const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
   const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  return R*c; // km
+  return R*c;
 }
 function fmtDist(km){
   return km<1 ? `${Math.round(km*1000)} m` : `${km.toFixed(1)} km`;
 }
 
-function renderGymsList(){
-  const list=qs('#gym-list'); list.innerHTML='';
-  gyms.forEach(g=>{
-    const free = Math.max(0,(g.totalMachines||0)-(g.busyMachines||0));
-    const dist = (lastUserPos? fmtDist(haversine(lastUserPos.lat,lastUserPos.lng,g.lat,g.lng)) : null);
+function renderGymsList(dataToRender){
+  const list = qs('#gym-list');
+  list.innerHTML = '';
 
-    const brandDisplay = g.brand ? `<span class="badge" style="background:#42d392;color:#000">${g.brand}</span>` : '';
+  dataToRender.forEach(g => {
+    const free = Math.max(0, (g.totalMachines || 0) - (g.busyMachines || 0));
+    const dist = (lastUserPos && g.lat && g.lng)
+      ? fmtDist(haversine(lastUserPos.lat, lastUserPos.lng, g.lat, g.lng))
+      : null;
 
-    const distText = dist? ` • ${dist}` : '';
-    const item=document.createElement('div'); item.className='gym-item';
+    const brandDisplay = g.brand
+      ? `<span class="badge" style="background:#42d392;color:#000;padding:2px 6px;font-size:10px">${g.brand}</span>`
+      : '';
+    const distText = dist ? ` • 📍 ${dist}` : '';
 
-    item.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <div>
-          <div style="font-weight:700; display:flex; align-items:center; gap:6px;">
-             ${g.name} ${brandDisplay}
-          </div>
-          <div class="muted" style="font-size:12px">${g.address||''}${distText}</div>
-          <div class="muted" style="font-size:12px">Libres: ${free} / Total: ${g.totalMachines??'—'}</div>
+    const item = document.createElement('div');
+    item.className = 'gym-item';
+    item.innerHTML = `
+      <div style="cursor:pointer">
+        <div style="font-weight:700; display:flex; align-items:center; gap:6px; margin-bottom:4px">
+          ${g.name} ${brandDisplay}
         </div>
-      </div>`;
-    item.addEventListener('click', ()=> selectGym(g));
+        <div class="muted" style="font-size:12px; margin-bottom:2px">
+          ${g.address || ''}${distText}
+        </div>
+        <div class="muted" style="font-size:12px">
+          Libres: ${free} / Total: ${(g.totalMachines != null ? g.totalMachines : '—')}
+        </div>
+      </div>
+    `;
+    item.addEventListener('click', () => focusOnGym(g));
     list.appendChild(item);
   });
 }
 
-function updateGymKPIs(){
-  if(!selectedGym){ qs('#kpi-clients').textContent='–'; qs('#kpi-free').textContent='–'; qs('#kpi-total').textContent='–'; return; }
-  const free = Math.max(0,(selectedGym.totalMachines||0)-(selectedGym.busyMachines||0));
-  qs('#kpi-clients').textContent = selectedGym.currentClients ?? '—';
-  qs('#kpi-free').textContent    = free;
-  qs('#kpi-total').textContent   = selectedGym.totalMachines ?? '—';
+function updateMapMarkers(dataToRender) {
+  if(!mapInstance) return;
+  markersGroup.clearLayers();
+  const bounds = L.latLngBounds();
+  let validPoints = 0;
+
+  dataToRender.forEach(g => {
+    if(g.lat && g.lng) {
+      // ... (código del popup y googleLink igual que antes) ...
+      // No hace falta cambiar el contenido del popup, solo el evento click abajo:
+
+      const marker = L.marker([g.lat, g.lng])
+        .bindPopup(`<b>${g.name}</b><br>${g.address}`); // Popup simple
+
+      // --- AQUÍ ESTÁ EL CAMBIO ---
+      // Antes decía: selectGymKPIs(g)
+      // Ahora dice: focusOnGym(g)
+      // Esto hace que al tocar el pin, se actualice el mapa de abajo también.
+      marker.on('click', () => {
+          focusOnGym(g);
+      });
+
+      markersGroup.addLayer(marker);
+      bounds.extend([g.lat, g.lng]);
+      validPoints++;
+    }
+  });
+
+  if(validPoints > 0) {
+    mapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+  }
 }
-function selectGym(g){
-  selectedGym = g;
-  qs('#map').src = gmSrcFromLatLng(g.lat, g.lng, g.name, g.address);
-  updateGymKPIs();
+
+function focusOnGym(g){
+  // 1. Centrar Leaflet
+  if(g.lat && g.lng) {
+    mapInstance.flyTo([g.lat, g.lng], 17);
+    markersGroup.eachLayer(layer => {
+        const latLng = layer.getLatLng();
+        if(Math.abs(latLng.lat - g.lat) < 0.0001 && Math.abs(latLng.lng - g.lng) < 0.0001){
+            layer.openPopup();
+        }
+    });
+  }
+
+  selectGymKPIs(g);
+
+  // 2. Actualizar Google Maps
+  const query = g.name ? encodeURIComponent(`${g.name}, ${g.address||''}`) : `${g.lat},${g.lng}`;
+  const googleUrl = `https://maps.google.com/maps?q=${query}&z=18&output=embed`; // z=18 para ver detalle edificio
+  const iframe = qs('#google-frame');
+  iframe.src = googleUrl;
+
+  // 3. NUEVO: Scroll suave hacia el mapa de Google para llamar la atención
+  // (Solo si no estamos ya viendo el mapa de abajo)
+  const bottomRow = qs('.gym-bottom-row');
+  if(bottomRow) {
+      bottomRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function selectGymKPIs(g){
+  const free = Math.max(0,(g.totalMachines||0)-(g.busyMachines||0));
+  qs('#kpi-clients').textContent = g.currentClients ?? '—';
+  qs('#kpi-free').textContent    = free;
+  qs('#kpi-total').textContent   = g.totalMachines ?? '—';
+}
+
+function populateDistricts(){
+    const sel = qs('#district-filter');
+    // Limpiar opciones excepto la primera
+    while(sel.options.length > 1) { sel.remove(1); }
+
+    // Extraer "posibles distritos" de las direcciones o usar una lista fija
+    // Para hacerlo fácil y robusto, usaremos una lista de distritos comunes de Lima/Perú
+    // y verificaremos si hay gimnasios ahí.
+    const commonDistricts = ['Miraflores', 'San Isidro', 'Surco', 'Lima', 'San Borja', 'La Molina', 'San Miguel', 'Los Olivos', 'Callao'];
+
+    const available = new Set();
+
+    gyms.forEach(g => {
+        const addr = (g.address || '').toLowerCase();
+        commonDistricts.forEach(d => {
+            if(addr.includes(d.toLowerCase())) available.add(d);
+        });
+    });
+
+    available.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.toLowerCase();
+        opt.textContent = d;
+        sel.appendChild(opt);
+    });
+
+    // Evento de cambio
+    sel.addEventListener('change', filterGymsCombined);
+}
+
+// Función de filtrado unificada
+function filterGymsCombined(){
+    const distSelect = qs('#district-filter');
+    const dist = distSelect.value; // Valor tal cual (ej: "Miraflores")
+    const distLower = dist.toLowerCase();
+    const query = qs('#gym-query').value.toLowerCase().trim();
+
+    // 1. Filtrar Leaflet (Arriba)
+    const filtered = gyms.filter(g => {
+        const addr = (g.address||'').toLowerCase();
+        const name = (g.name||'').toLowerCase();
+        const matchDist = distLower === '' || addr.includes(distLower);
+        const matchQuery = query === '' || name.includes(query) || addr.includes(query);
+        return matchDist && matchQuery;
+    });
+
+    renderGymsList(filtered);
+    updateMapMarkers(filtered);
+
+    // 2. Actualizar Google Maps (Abajo) - LÓGICA INTELIGENTE
+    const googleFrame = qs('#google-frame');
+
+    if (dist !== '') {
+        // CASO A: Usuario seleccionó un Distrito (ej: "Miraflores")
+        // Mostramos el mapa de Google centrado en ese distrito.
+        // Google suele marcar el borde del distrito en rojo.
+        const search = encodeURIComponent(`Distrito de ${dist}, Lima, Peru`);
+        googleFrame.src = `https://maps.google.com/maps?q=${search}&z=13&output=embed`;
+
+    } else if (query !== '' && filtered.length > 0) {
+        // CASO B: Usuario escribió texto y hay resultados
+        // Intentamos mostrar la zona de los resultados (o el primero si es específico)
+        // Pero para no marear, si es búsqueda general, mejor mantenemos Lima o el primer resultado.
+
+        // Si es un resultado único, lo mostramos directo
+        if(filtered.length === 1) {
+             const g = filtered[0];
+             const search = g.name ? encodeURIComponent(`${g.name}, ${g.address||''}`) : `${g.lat},${g.lng}`;
+             googleFrame.src = `https://maps.google.com/maps?q=${search}&z=17&output=embed`;
+        } else {
+             // Si hay varios, volvemos a vista general de Lima para no privilegiar a uno solo
+             // O podríamos no hacer nada y dejar el último estado.
+             // Yo prefiero mantener la vista general:
+             googleFrame.src = `https://maps.google.com/maps?q=Lima,Peru&z=11&output=embed`;
+        }
+
+    } else if (dist === '' && query === '') {
+        // CASO C: Limpió todo ("Ver todos")
+        // Volvemos a la vista general de Lima
+        googleFrame.src = `https://maps.google.com/maps?q=Lima,Peru&z=11&output=embed`;
+    }
 }
 
 async function loadGyms(){
-  gyms = await api('/api/gyms').catch(()=>null);
-  if(!Array.isArray(gyms) || gyms.length===0){
-    // Fallback local (borra si tienes API real)
-    gyms = [
-      {id:1,name:'FitLife Centro',lat:-12.0464,lng:-77.0428,address:'Av. Principal 123',totalMachines:60,busyMachines:25,currentClients:80},
-      {id:2,name:'FitLife Norte', lat:-12.0010,lng:-77.0590,address:'Calle Norte 456', totalMachines:40,busyMachines:10,currentClients:35},
-      {id:3,name:'FitLife Sur',   lat:-12.1200,lng:-77.0300,address:'Av. Sur 789',      totalMachines:55,busyMachines:32,currentClients:60},
-    ];
-  }
-  gyms.forEach(g=> g.simulated = false);
-  renderGymsList();
-  selectGym(gyms[0]);
-}
+  gyms = await api('/api/gyms').catch(()=>[]);
 
-/* Genera gyms simulados alrededor de una coordenada */
-function simulateGymsAround(lat,lng, area='tu zona'){
-  const templates = [
-    name => `FitLife ${name} · Express`,
-    name => `Powerhouse ${name}`,
-    name => `Box ${name} Cross`,
-    name => `${name} Fitness Lab`,
-    name => `Core & Cardio ${name}`
-  ];
-  const sim = [];
-  for(let i=0;i<5;i++){
-    const dlat = (Math.random()-0.5) * 0.02; // ~1–2 km
-    const dlng = (Math.random()-0.5) * 0.02;
-    const total = 30 + Math.floor(Math.random()*50); // 30–79
-    const busy = Math.floor(Math.random()*total);
-    const clients = 20 + Math.floor(Math.random()*120);
-    const name = templates[i%templates.length](area);
-    sim.push({
-      id: 'sim-'+i, simulated:true,
-      name, address: `${area} · Simulado`,
-      lat: lat + dlat, lng: lng + dlng,
-      totalMachines: total, busyMachines: busy, currentClients: clients
-    });
-  }
-  return sim;
-}
+  if(!mapInstance && qs('#map')) initMap();
 
-/* Buscar cercanos (simulación con geolocalización si es posible) */
-async function findNearby(){
-  const area = (qs('#gym-query').value || 'tu zona').trim();
-  const fallback = selectedGym || gyms[0] || {lat:-12.0464,lng:-77.0428};
-  const doSim = (lat,lng)=>{
-    gyms = simulateGymsAround(lat,lng, area);
-    renderGymsList();
-    selectGym(gyms[0]);
-  };
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(pos=>{
-      lastUserPos = {lat:pos.coords.latitude, lng:pos.coords.longitude};
-      doSim(lastUserPos.lat, lastUserPos.lng);
-    }, _err=>{
-      // sin GPS: usar fallback
-      doSim(fallback.lat, fallback.lng);
-      alert('No se pudo obtener tu ubicación. Mostrando cercanos simulados alrededor de '+(area||'tu zona')+'.');
-    });
-  }else{
-    doSim(fallback.lat, fallback.lng);
+  populateDistricts();
+
+  renderGymsList(gyms);
+  updateMapMarkers(gyms);
+
+  // --- CAMBIO AQUÍ ---
+  // En lugar de seleccionar el primero, mostramos una vista general de la ciudad principal.
+  // Esto invita al usuario a buscar.
+  const googleFrame = qs('#google-frame');
+  if(googleFrame) {
+      // "Lima, Peru" o la ciudad donde operes. z=11 es vista de toda la ciudad.
+      googleFrame.src = `https://maps.google.com/maps?q=Lima,Peru&z=11&output=embed`;
   }
 }
 
-/* Cerca de mí: seleccionar el más cercano de la lista actual */
+/* --- BUSCADOR --- */
+qs('#find-nearby').addEventListener('click', ()=>{
+    const query = qs('#gym-query').value.toLowerCase().trim();
+    if(!query) {
+        renderGymsList(gyms);
+        updateMapMarkers(gyms);
+        return;
+    }
+    const filtered = gyms.filter(g =>
+        (g.name||'').toLowerCase().includes(query) ||
+        (g.address||'').toLowerCase().includes(query) ||
+        (g.brand||'').toLowerCase().includes(query)
+    );
+    if(filtered.length === 0) {
+        alert('No se encontraron gimnasios con esa búsqueda.');
+    } else {
+        renderGymsList(filtered);
+        updateMapMarkers(filtered);
+    }
+});
+qs('#find-nearby').addEventListener('click', filterGymsCombined); // Usar la nueva función unificada
+qs('#gym-query').addEventListener('keyup', filterGymsCombined); // Búsqueda en tiempo real al escribir
+/* --- GPS --- */
 qs('#near-me').addEventListener('click', ()=>{
   if(!navigator.geolocation) return alert('Tu navegador no soporta geolocalización.');
   navigator.geolocation.getCurrentPosition(pos=>{
     lastUserPos = {lat:pos.coords.latitude, lng:pos.coords.longitude};
-    let best=null, bestD=Infinity;
-    gyms.forEach(g=>{
-      const d = haversine(lastUserPos.lat,lastUserPos.lng,g.lat,g.lng);
-      if(d<bestD){bestD=d;best=g;}
+
+    L.marker([lastUserPos.lat, lastUserPos.lng], {
+       // Icono simple para el usuario
+       title: "Tu ubicación"
+    }).addTo(mapInstance).bindPopup("<b>Estás aquí</b>").openPopup();
+
+    gyms.sort((a,b) => {
+        const dA = haversine(lastUserPos.lat, lastUserPos.lng, a.lat, a.lng);
+        const dB = haversine(lastUserPos.lat, lastUserPos.lng, b.lat, b.lng);
+        return dA - dB;
     });
-    if(best) selectGym(best);
-    renderGymsList(); // para que muestre distancias
-  }, err=> alert('No fue posible obtener tu ubicación.'));
+    renderGymsList(gyms);
+    mapInstance.setView([lastUserPos.lat, lastUserPos.lng], 14);
+  }, ()=> alert('No fue posible obtener tu ubicación.'));
 });
-qs('#find-nearby').addEventListener('click', findNearby);
+
 qs('#show-official').addEventListener('click', ()=>{
-  loadGyms();
+    qs('#gym-query').value = '';
+    loadGyms();
 });
+
 
 /* ---------- PAGOS ---------- */
 const PLANS = [
@@ -350,6 +509,29 @@ qs('#pay-now').addEventListener('click', ()=>{
   qs('#pay-card').value=''; qs('#pay-exp').value=''; qs('#pay-cvv').value='';
 });
 
+/* --- Lógica para Ampliar Google Maps --- */
+const btnExpand = qs('#btn-expand-google');
+const googleCard = qs('#google-card');
+
+if(btnExpand && googleCard){
+    btnExpand.addEventListener('click', () => {
+        // Alternar clase fullscreen
+        googleCard.classList.toggle('fullscreen');
+
+        // Cambiar el ícono y texto del botón
+        const isFull = googleCard.classList.contains('fullscreen');
+        if(isFull){
+            btnExpand.innerHTML = '<i class="bi bi-fullscreen-exit"></i> Cerrar';
+            btnExpand.style.background = '#ea4335'; // Rojo para salir
+            btnExpand.style.color = 'white';
+        } else {
+            btnExpand.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Ampliar';
+            btnExpand.style.background = 'transparent';
+            btnExpand.style.color = 'var(--text)';
+        }
+    });
+}
+
 /* ---------- Init ---------- */
 (async function init(){
   await Promise.all([
@@ -360,3 +542,6 @@ qs('#pay-now').addEventListener('click', ()=>{
   ]);
   renderPlans();
 })();
+
+
+

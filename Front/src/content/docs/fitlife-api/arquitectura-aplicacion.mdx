@@ -1,0 +1,516 @@
+---
+title: "Arquitectura de la Aplicación"
+description: "Este documento describe el diseño arquitectónico de FitlifeAPI, el servicio de gestión de fitness dentro del repositorio FitLive. Cubre la arquitectura en capas de Spring Boot, incluyendo la capa de presentación, la capa de servicio, la capa de acceso a datos y el modelo de dominio."
+---
+
+import SourceBtn from '@docs_components/SourceBtn.astro';
+import SourceReference from '@docs_components/SourceReference.astro';
+import ImageViewer from '@docs_components/ImageViewer.astro';
+import TableWrapper from '@docs_components/TableWrapper.astro';
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Arquitectura de la Aplicación
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/FitlifeAPI/pom.xml" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/FitlifeApiApplication.java" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento describe el diseño arquitectónico de <strong>FitlifeAPI</strong>, el servicio de gestión de fitness dentro del repositorio FitLive. Cubre la arquitectura en capas de Spring Boot, incluyendo la capa de presentación (controladores), la capa de servicio (lógica de negocio), la capa de acceso a datos (repositorios) y el modelo de dominio (entidades).</p>
+<p>Para información sobre las características específicas del dominio (ejercicios, rutinas, asociaciones), consulte <a href="/docs/fitlife-api/gestion-ejercicios" class="content-link">Gestión de Ejercicios</a>, <a href="/docs/fitlife-api/gestion-rutinas" class="content-link">Gestión de Rutinas</a> y <a href="/docs/fitlife-api/asociacion-rutina-ejercicio" class="content-link">Asociación Rutina-Ejercicio</a>. Para detalles de la configuración de seguridad, consulte <a href="/docs/fitlife-api/configuracion-seguridad" class="content-link">Configuración de Seguridad</a>. Para información completa sobre dependencias y propiedades de configuración, consulte <a href="/docs/fitlife-api/configuracion-y-dependencias" class="content-link">Configuración y Dependencias</a>.</p>
+
+## Patrón Arquitectónico
+
+<p>FitlifeAPI sigue un <strong>patrón de arquitectura en capas clásico</strong>, comúnmente utilizado en aplicaciones Spring Boot. Este diseño separa las responsabilidades en capas distintas, cada una con responsabilidades bien definidas:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Capa</th>
+                <th>Responsabilidad</th>
+                <th>Componentes Clave</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Presentación</strong></td>
+                <td>Manejar peticiones/respuestas HTTP, enrutar a los servicios</td>
+                <td>Controladores</td>
+            </tr>
+            <tr>
+                <td><strong>Servicio</strong></td>
+                <td>Implementar lógica de negocio, orquestar operaciones</td>
+                <td>Clases de Servicio</td>
+            </tr>
+            <tr>
+                <td><strong>Acceso a Datos</strong></td>
+                <td>Interactuar con la base de datos, ejecutar consultas</td>
+                <td>Repositorios</td>
+            </tr>
+            <tr>
+                <td><strong>Dominio</strong></td>
+                <td>Definir estructuras de datos y relaciones de entidades</td>
+                <td>Clases de Entidad</td>
+            </tr>
+            <tr>
+                <td><strong>Transversal</strong></td>
+                <td>Seguridad, validación, documentación de API</td>
+                <td>SecurityConfig, OpenAPI</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Esta separación permite:</p>
+<ul>
+    <li><strong>Testabilidad</strong>: Cada capa puede ser probada de forma independiente.</li>
+    <li><strong>Mantenibilidad</strong>: Los cambios en una capa minimizan el impacto en las demás.</li>
+    <li><strong>Escalabilidad</strong>: Las capas pueden ser optimizadas o reemplazadas de forma independiente.</li>
+    <li><strong>Claridad</strong>: Límites de responsabilidad claros para los desarrolladores.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="1-112" />
+</SourceReference>
+
+## Diagrama General de Capas
+
+<p><strong>Arquitectura en Capas de FitlifeAPI</strong></p>
+<ImageViewer
+    src="/src/assets/fitlifeapi-arquitectura-capas.svg"
+    alt="Diagrama de la arquitectura en capas de FitlifeAPI. Muestra cómo los clientes externos interactúan con la capa de presentación (controladores), que a su vez se comunica con la capa de servicio para la lógica de negocio. La capa de servicio utiliza la capa de acceso a datos (repositorios) para interactuar con el modelo de dominio y persistir los datos en la base de datos PostgreSQL. Las capas transversales como seguridad y documentación de API se aplican a lo largo del flujo."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="33-96"/>
+</SourceReference>
+
+## Capa de Presentación
+
+<p>La capa de presentación consiste en <strong>controladores REST</strong> que manejan las peticiones y respuestas HTTP. Cada controlador es responsable de un concepto de dominio específico y expone endpoints RESTful.</p>
+
+### Controladores Clave
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Controlador</th>
+                <th>Prefijo de Ruta</th>
+                <th>Responsabilidades</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">ExerciseController</code></td>
+                <td><code class="artifact-id">/api/exercises</code></td>
+                <td>Operaciones CRUD para ejercicios</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">RoutineController</code></td>
+                <td><code class="artifact-id">/api/routines</code></td>
+                <td>Operaciones CRUD para rutinas de entrenamiento</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">RoutineExerciseController</code></td>
+                <td><code class="artifact-id">/api/routine-exercises</code></td>
+                <td>Gestionar asociaciones de ejercicio a rutina</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Responsabilidades
+<ul>
+    <li><strong>Validación de peticiones</strong>: Validar parámetros y cuerpos de petición entrantes.</li>
+    <li><strong>Formateo de respuestas</strong>: Convertir DTOs de la capa de servicio a respuestas JSON.</li>
+    <li><strong>Semántica HTTP</strong>: Implementar códigos de estado apropiados (200, 201, 404, 400).</li>
+    <li><strong>Documentación de API</strong>: Exponer endpoints a través de OpenAPI/Swagger UI.</li>
+</ul>
+<p>Los controladores siguen el <strong>patrón de controlador delgado (thin controller)</strong>, delegando la lógica de negocio a la capa de servicio. Se centran únicamente en las preocupaciones de HTTP.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="64-68"/>
+</SourceReference>
+
+## Capa de Servicio
+
+<p>La capa de servicio implementa la <strong>lógica de negocio</strong> y orquesta las operaciones a través de los repositorios. Cada servicio corresponde a una entidad de dominio y encapsula las reglas que gobiernan ese dominio.</p>
+
+### Servicios Clave
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Servicio</th>
+                <th>Repositorio Principal</th>
+                <th>Lógica de Negocio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">ExerciseService</code></td>
+                <td><code class="artifact-id">ExerciseRepository</code></td>
+                <td>Validación de ejercicios, gestión del ciclo de vida.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">RoutineService</code></td>
+                <td><code class="artifact-id">RoutineRepository</code></td>
+                <td>Validación de rutinas (niveles: BEGINNER/INTERMEDIATE/ADVANCED).</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">RoutineExerciseService</code></td>
+                <td><code class="artifact-id">RoutineExerciseRepository</code></td>
+                <td>Lógica de asociación, gestión de orden, validación de series/repeticiones.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Operaciones entre Repositorios
+<p><code class="artifact-id">RoutineExerciseService</code> demuestra la <strong>coordinación entre múltiples repositorios</strong>, interactuando con:</p>
+<ul>
+    <li><code class="artifact-id">RoutineExerciseRepository</code> (primario) - Gestiona las asociaciones.</li>
+    <li><code class="artifact-id">RoutineRepository</code> - Valida la existencia de la rutina.</li>
+    <li><code class="artifact-id">ExerciseRepository</code> - Valida la existencia del ejercicio.</li>
+</ul>
+<p>Este patrón asegura la integridad referencial a nivel de aplicación antes de que se verifiquen las restricciones de la base de datos.</p>
+
+### Gestión de Transacciones
+<p>Los servicios están anotados con <code class="artifact-id">@Transactional</code>, asegurando:</p>
+<ul>
+    <li><strong>Propiedades ACID</strong>: Operaciones de base de datos de todo o nada.</li>
+    <li><strong>Rollback en caso de fallo</strong>: Rollback automático en excepciones no capturadas.</li>
+    <li><strong>Aislamiento</strong>: Las peticiones concurrentes no interfieren entre sí.</li>
+</ul>
+
+## Capa de Acceso a Datos
+
+<p>La capa de acceso a datos utiliza <strong>Spring Data JPA</strong> para proporcionar una abstracción de repositorio sobre la base de datos. Los repositorios extienden <code class="artifact-id">JpaRepository&lt;Entity, ID&gt;</code>, proporcionando automáticamente operaciones CRUD sin código repetitivo.</p>
+
+### Repositorios Clave
+<ImageViewer
+    src="/src/assets/fitlifeapi-repositorios-clave.svg"
+    alt="Diagrama que muestra las tres interfaces de repositorio: ExerciseRepository, RoutineRepository y RoutineExerciseRepository. Todas extienden la interfaz genérica JpaRepository y cada una gestiona su entidad correspondiente (ExerciseEntity, RoutineEntity, y RoutineExerciseEntity)."
+/>
+
+### Beneficios del Patrón de Repositorio
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Característica</th>
+                <th>Beneficio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>CRUD Automático</strong></td>
+                <td><code class="artifact-id">findById()</code>, <code class="artifact-id">save()</code>, <code class="artifact-id">delete()</code> se generan automáticamente.</td>
+            </tr>
+            <tr>
+                <td><strong>Derivación de consultas</strong></td>
+                <td>Nombres de métodos como <code class="artifact-id">findByName()</code> generan consultas automáticamente.</td>
+            </tr>
+            <tr>
+                <td><strong>Consultas personalizadas</strong></td>
+                <td>Anotación <code class="artifact-id">@Query</code> para JPQL/SQL complejo.</td>
+            </tr>
+            <tr>
+                <td><strong>Seguridad de tipos</strong></td>
+                <td>Comprobación en tiempo de compilación de los tipos de entidad.</td>
+            </tr>
+            <tr>
+                <td><strong>Abstracción</strong></td>
+                <td>Permite cambiar implementaciones de base de datos sin cambiar el código.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Configuración de la Base de Datos
+<p>La aplicación utiliza <strong>soporte dual de bases de datos</strong>:</p>
+<ul>
+    <li><strong>Producción</strong>: PostgreSQL (configurado vía <code class="artifact-id">application.properties</code>).</li>
+    <li><strong>Desarrollo</strong>: H2 en memoria (perfil opcional para pruebas rápidas).</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="33-36" />
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="59-62" />
+</SourceReference>
+
+## Modelo de Dominio
+
+<p>El modelo de dominio define las <strong>entidades de negocio principales</strong> como clases anotadas con JPA. Estas entidades se mapean directamente a las tablas de la base de datos y representan los conceptos fundamentales en el dominio del fitness.</p>
+
+### Estructura de Entidades
+<ImageViewer
+    src="/src/assets/fitlifeapi-estructura-entidades.svg"
+    alt="Diagrama de Entidad-Relación que muestra la relación muchos a muchos entre ExerciseEntity y RoutineEntity, unida por la entidad de asociación RoutineExerciseEntity. ExerciseEntity tiene atributos como nombre y grupo muscular. RoutineEntity tiene atributos como nombre y nivel de dificultad. RoutineExerciseEntity contiene atributos de la relación como orden, series y repeticiones."
+/>
+
+### Relaciones entre Entidades
+<ul>
+    <li><strong>ExerciseEntity</strong>: Entidad independiente que representa actividades de entrenamiento.</li>
+    <li><strong>RoutineEntity</strong>: Entidad independiente que representa planes de entrenamiento.</li>
+    <li><strong>RoutineExerciseEntity</strong>: <strong>Tabla de unión</strong> que implementa la relación muchos a muchos con atributos adicionales (series, repeticiones, orden).</li>
+</ul>
+<p>El <code class="artifact-id">RoutineExerciseEntity</code> demuestra un patrón de <strong>tabla de unión enriquecida (rich join table)</strong>, almacenando más que solo claves foráneas; incluye parámetros de entrenamiento específicos para la pareja ejercicio-rutina.</p>
+
+## Capa de Seguridad
+
+<p>La capa de seguridad está configurada a través de <code class="artifact-id">SecurityConfig</code>, una clase de configuración de Spring Security. La configuración actual es <strong>permisiva</strong>, permitiendo todas las peticiones sin autenticación.</p>
+
+### Postura de Seguridad Actual
+<ImageViewer
+    src="/src/assets/fitlifeapi-postura-seguridad.svg"
+    alt="Diagrama de flujo de seguridad que muestra cómo una petición HTTP pasa a través de la configuración de seguridad. La protección CSRF está deshabilitada y la autenticación no se aplica (permitAll), por lo que la petición siempre es reenviada a los controladores sin ninguna verificación."
+/>
+
+### Infraestructura JWT (Configurada pero Inactiva)
+<p>A pesar del acceso permisivo, la aplicación incluye soporte para JWT a través de las librerías JJWT:</p>
+<ul>
+    <li><code class="artifact-id">jjwt-api</code> (v0.11.5) - Definiciones de la API de JWT.</li>
+    <li><code class="artifact-id">jjwt-impl</code> (v0.11.5) - Clases de implementación.</li>
+    <li><code class="artifact-id">jjwt-jackson</code> (v0.11.5) - Serialización JSON.</li>
+</ul>
+<p>Esto sugiere que <strong>la seguridad está planeada pero aún no se ha aplicado</strong>. La infraestructura está en su lugar para una futura implementación de autenticación sin requerir cambios de dependencia.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="39-40" />
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="70-86" />
+</SourceReference>
+
+## Diagrama de Flujo de Peticiones
+
+<p><strong>Ciclo de Vida Típico de una Petición HTTP</strong></p>
+<ImageViewer
+    src="/src/assets/fitlifeapi-flujo-peticion.svg"
+    alt="Diagrama de secuencia que ilustra el ciclo de vida completo de una petición HTTP en FitlifeAPI. La petición del cliente pasa primero por la configuración de seguridad (que actualmente permite todo), luego llega al controlador para validación, es procesada por el servicio y el repositorio, interactúa con la base de datos a través de la entidad, y finalmente la respuesta JSON es formateada y devuelta al cliente."
+/>
+
+### Características del Flujo
+<ol>
+    <li><strong>Paso a través de la seguridad</strong>: Todas las peticiones actualmente omiten la autenticación.</li>
+    <li><strong>Validación en el controlador</strong>: Spring Validation verifica los cuerpos de las peticiones.</li>
+    <li><strong>Lógica de negocio en el servicio</strong>: Aplicación de reglas, operaciones de varios pasos.</li>
+    <li><strong>Abstracción del repositorio</strong>: La capa de servicio no escribe SQL directamente.</li>
+    <li><strong>Mapeo ORM</strong>: Hibernate/JPA convierte entre objetos y la base de datos.</li>
+</ol>
+
+## Punto de Entrada de la Aplicación Spring Boot
+
+<p>La aplicación arranca a través de la clase principal estándar de Spring Boot:</p>
+
+<p><strong>Clase Principal de la Aplicación</strong></p>
+<CodeBlock language="text" code={`FitlifeApiApplication
+├── Anotación @SpringBootApplication
+│   ├── Habilita la auto-configuración
+│   ├── Escanea componentes en el paquete com.fitlife.fitlifeAPI
+│   └── Configura el contexto de Spring
+└── método main()
+    └── SpringApplication.run()
+`} />
+
+### Anotaciones Clave
+<ul>
+    <li><code class="artifact-id">@SpringBootApplication</code>: Meta-anotación que combina:
+        <ul>
+            <li><code class="artifact-id">@Configuration</code>: Declara beans de configuración.</li>
+            <li><code class="artifact-id">@EnableAutoConfiguration</code>: Auto-configura basado en el classpath.</li>
+            <li><code class="artifact-id">@ComponentScan</code>: Descubre controladores, servicios, repositorios.</li>
+        </ul>
+    </li>
+</ul>
+
+### Disparadores de Auto-configuración
+<p>Basado en las dependencias en <code class="artifact-id">pom.xml</code>, Spring Boot auto-configura:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Dependencia</th>
+                <th>Resultado de la Auto-configuración</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">spring-boot-starter-data-jpa</code></td>
+                <td>Repositorios JPA, Hibernate, gestión de transacciones.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">spring-boot-starter-web</code></td>
+                <td>Tomcat embebido, Spring MVC, soporte REST.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">spring-boot-starter-security</code></td>
+                <td>SecurityFilterChain, framework de autenticación.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">springdoc-openapi-starter-webmvc-ui</code></td>
+                <td>Swagger UI en <code class="artifact-id">/swagger-ui.html</code>.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">flyway-core</code></td>
+                <td>Migraciones de base de datos al inicio.</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">postgresql</code></td>
+                <td>Driver JDBC de PostgreSQL, pool de conexiones.</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/FitlifeApiApplication.java" lines="1-13" />
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="32-96" />
+</SourceReference>
+
+## Estructura de Paquetes
+
+<p>La aplicación sigue la convención de <strong>paquete por capa</strong> de Spring Boot:</p>
+
+<CodeBlock language="text" code={`com.fitlife.fitlifeAPI/
+├── FitlifeApiApplication.java       (Punto de entrada)
+├── controller/                      (Capa de Presentación)
+│   ├── ExerciseController.java
+│   ├── RoutineController.java
+│   └── RoutineExerciseController.java
+├── service/                         (Capa de Servicio)
+│   ├── ExerciseService.java
+│   ├── RoutineService.java
+│   └── RoutineExerciseService.java
+├── repository/                      (Capa de Acceso a Datos)
+│   ├── ExerciseRepository.java
+│   ├── RoutineRepository.java
+│   └── RoutineExerciseRepository.java
+├── entity/                          (Modelo de Dominio)
+│   ├── ExerciseEntity.java
+│   ├── RoutineEntity.java
+│   └── RoutineExerciseEntity.java
+├── dto/                             (Objetos de Transferencia de Datos)
+│   └── [DTOs de Petición/Respuesta]
+├── config/                          (Configuración)
+│   └── SecurityConfig.java
+└── exception/                       (Manejo de Errores)
+    └── [Excepciones personalizadas]
+`} />
+<p>Esta estructura facilita la localización de componentes por su rol arquitectónico.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/FitlifeApiApplication.java" lines="1" />
+</SourceReference>
+
+## Resumen del Stack Tecnológico
+
+<p><strong>Framework Principal</strong></p>
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Componente</th>
+                <th>Versión</th>
+                <th>Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Spring Boot</td>
+                <td>3.5.5</td>
+                <td>Framework de aplicación</td>
+            </tr>
+            <tr>
+                <td>Java</td>
+                <td>21</td>
+                <td>Lenguaje de programación</td>
+            </tr>
+            <tr>
+                <td>Maven</td>
+                <td>(vía wrapper)</td>
+                <td>Herramienta de compilación</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p><strong>Dependencias Clave</strong></p>
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Librería</th>
+                <th>Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Spring Data JPA</td>
+                <td>ORM y abstracción de repositorio.</td>
+            </tr>
+            <tr>
+                <td>Spring Web MVC</td>
+                <td>Framework de API REST.</td>
+            </tr>
+            <tr>
+                <td>Spring Security</td>
+                <td>Framework de autenticación/autorización.</td>
+            </tr>
+            <tr>
+                <td>Spring Validation</td>
+                <td>Validación de peticiones.</td>
+            </tr>
+            <tr>
+                <td>Flyway</td>
+                <td>Migraciones de esquema de base de datos.</td>
+            </tr>
+            <tr>
+                <td>Driver PostgreSQL</td>
+                <td>Conectividad con la base de datos.</td>
+            </tr>
+            <tr>
+                <td>JJWT</td>
+                <td>Manejo de tokens JWT.</td>
+            </tr>
+            <tr>
+                <td>Springdoc OpenAPI</td>
+                <td>Documentación de API (Swagger UI).</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="1-112" />
+</SourceReference>
+
+## Principios Arquitectónicos Aplicados
+
+### Separación de Responsabilidades
+<p>Cada capa tiene una única y bien definida responsabilidad. Los controladores no ejecutan lógica de negocio; los servicios no manejan preocupaciones de HTTP; los repositorios no implementan reglas de validación.</p>
+
+### Inversión de Dependencias
+<p>Las capas superiores dependen de abstracciones (interfaces) en lugar de implementaciones concretas. Por ejemplo, los servicios dependen de las interfaces de <code class="artifact-id">Repository</code>, no de implementaciones específicas de la base de datos.</p>
+
+### Convención sobre Configuración
+<p>La auto-configuración de Spring Boot elimina el código repetitivo. No hay archivos de configuración XML; la mayoría de los ajustes se infieren de las dependencias y anotaciones.</p>
+
+### Validación Temprana (Fail-Fast)
+<p>La validación ocurre lo antes posible (en la capa de controlador) para proporcionar retroalimentación rápida y evitar que datos inválidos lleguen a la capa de servicio.</p>
+
+### Diseño Orientado a la API (API-First)
+<p>La integración de OpenAPI/Swagger documenta los endpoints automáticamente, permitiendo un desarrollo basado en contratos y la generación de clientes.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="1-112" />
+</SourceReference>

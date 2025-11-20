@@ -1,0 +1,446 @@
+---
+title: "Gestión de Ejercicios"
+description: "Este documento describe el subsistema de gestión de ejercicios dentro de la aplicación FitlifeAPI. Cubre los endpoints de la API REST para crear y listar ejercicios, la lógica de la capa de servicio, el modelo de datos, las reglas de validación y el mecanismo de persistencia."
+---
+
+import SourceBtn from '@docs_components/SourceBtn.astro';
+import SourceReference from '@docs_components/SourceReference.astro';
+import ImageViewer from '@docs_components/ImageViewer.astro';
+import TableWrapper from '@docs_components/TableWrapper.astro';
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Gestión de Ejercicios
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/ExerciseController.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/ExerciseRequest.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/ExerciseResponse.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/entidad/ExerciseEntity.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/repositorio/ExerciseRepository.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento describe el subsistema de gestión de ejercicios dentro de la aplicación FitlifeAPI. Cubre los endpoints de la API REST para crear y listar ejercicios, la lógica de la capa de servicio, el modelo de datos, las reglas de validación y el mecanismo de persistencia. Los ejercicios representan actividades de entrenamiento individuales (ej. "Flexiones", "Correr", "Burpees") que pueden ser categorizadas por tipo y asociadas con rutinas de entrenamiento.</p>
+<p>Para información sobre cómo los ejercicios se vinculan a las rutinas, consulte <a href="/docs/fitlife-api/asociacion-rutina-ejercicio" class="content-link">Asociación Rutina-Ejercicio</a>. Para información sobre la gestión de las rutinas de entrenamiento en sí, consulte <a href="/docs/fitlife-api/gestion-rutinas" class="content-link">Gestión de Rutinas</a>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/ExerciseController.java" lines="1-32" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java" lines="1-41" />
+</SourceReference>
+
+## Visión General de la Arquitectura
+
+<p>El subsistema de gestión de ejercicios sigue una arquitectura en capas estándar de Spring Boot con una clara separación de responsabilidades entre las capas de presentación, lógica de negocio y acceso a datos.</p>
+
+### Diagrama de Capas de Componentes
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-gestion-ejercicios-arquitectura.svg"
+    alt="Diagrama que muestra la arquitectura en capas para la gestión de ejercicios. Un cliente HTTP interactúa con el ExerciseController, que utiliza el ExerciseService para la lógica de negocio. El servicio, a su vez, se comunica con el ExerciseRepository para persistir y recuperar ExerciseEntity en la base de datos PostgreSQL. Los DTOs ExerciseRequest y ExerciseResponse se utilizan para la comunicación de la API."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/ExerciseController.java" lines="12-31" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java" lines="13-41" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/repositorio/ExerciseRepository.java" lines="1-7" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/entidad/ExerciseEntity.java" lines="1-76" />
+</SourceReference>
+
+## Endpoints de la API REST
+
+<p>El <code class="artifact-id">ExerciseController</code> expone dos endpoints bajo la ruta base <code class="artifact-id">/api/exercises</code>.</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Método</th>
+                <th>Ruta</th>
+                <th>Descripción</th>
+                <th>Cuerpo de Petición</th>
+                <th>Respuesta</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">POST</code></td>
+                <td><code class="artifact-id">/api/exercises</code></td>
+                <td>Crea un nuevo ejercicio</td>
+                <td><code class="artifact-id">ExerciseRequest</code></td>
+                <td><code class="artifact-id">ExerciseResponse</code> (HTTP 201)</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">GET</code></td>
+                <td><code class="artifact-id">/api/exercises</code></td>
+                <td>Lista todos los ejercicios</td>
+                <td>Ninguno</td>
+                <td><code class="artifact-id">List&lt;ExerciseResponse&gt;</code> (HTTP 200)</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Detalles de los Endpoints
+
+#### Crear Ejercicio: `POST /api/exercises`
+
+<p>Crea un nuevo ejercicio y lo persiste en la base de datos. El cuerpo de la petición es validado usando las anotaciones de Jakarta Bean Validation.</p>
+
+<p><strong>Cuerpo de Petición:</strong> <code class="artifact-id">ExerciseRequest</code></p>
+<CodeBlock language="json" code={`{
+  "name": "Flexiones",
+  "description": "Ejercicio estándar de flexiones",
+  "type": "STRENGTH",
+  "estCalories": 50
+}`} />
+
+<p><strong>Respuesta:</strong> <code class="artifact-id">ExerciseResponse</code> (HTTP 201 Created)</p>
+<CodeBlock language="json" code={`{
+  "id": 1,
+  "name": "Flexiones",
+  "description": "Ejercicio estándar de flexiones",
+  "type": "STRENGTH",
+  "estCalories": 50
+}`} />
+
+<p>El método del controlador utiliza la anotación <code class="artifact-id">@Valid</code> para activar la validación y devuelve el estado HTTP 201 en caso de creación exitosa.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/ExerciseController.java" lines="23-26" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/ExerciseRequest.java" lines="1-14" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/ExerciseResponse.java" lines="1-9" />
+</SourceReference>
+
+#### Listar Ejercicios: `GET /api/exercises`
+
+<p>Recupera todos los ejercicios de la base de datos.</p>
+
+<p><strong>Respuesta:</strong> <code class="artifact-id">List&lt;ExerciseResponse&gt;</code> (HTTP 200 OK)</p>
+<CodeBlock language="json" code={`[
+  {
+    "id": 1,
+    "name": "Flexiones",
+    "description": "Ejercicio estándar de flexiones",
+    "type": "STRENGTH",
+    "estCalories": 50
+  },
+  {
+    "id": 2,
+    "name": "Correr",
+    "description": "Correr al aire libre",
+    "type": "CARDIO",
+    "estCalories": 100
+  }
+]`} />
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/ExerciseController.java" lines="28-31" />
+</SourceReference>
+
+## Modelo de Datos
+
+### ExerciseEntity
+
+<p>La clase <code class="artifact-id">ExerciseEntity</code> es la entidad JPA que representa los ejercicios en la base de datos. Se mapea a la tabla <code class="artifact-id">exercises</code>.</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Columna en BD</th>
+                <th>Restricciones</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">id</code></td>
+                <td><code class="artifact-id">Integer</code></td>
+                <td><code class="artifact-id">id</code></td>
+                <td>Clave Primaria, Autoincremental</td>
+                <td>Identificador único</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">name</code></td>
+                <td><code class="artifact-id">String</code></td>
+                <td><code class="artifact-id">name</code></td>
+                <td>NOT NULL</td>
+                <td>Nombre del ejercicio</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">description</code></td>
+                <td><code class="artifact-id">String</code></td>
+                <td><code class="artifact-id">description</code></td>
+                <td>Nulable</td>
+                <td>Descripción detallada</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">type</code></td>
+                <td><code class="artifact-id">String</code></td>
+                <td><code class="artifact-id">type</code></td>
+                <td>NOT NULL</td>
+                <td>Categoría del ejercicio (ver abajo)</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">estCalories</code></td>
+                <td><code class="artifact-id">Integer</code></td>
+                <td><code class="artifact-id">est_calories</code></td>
+                <td>Nulable</td>
+                <td>Calorías estimadas quemadas</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Tipos de Ejercicio
+<p>El campo <code class="artifact-id">type</code> está restringido a uno de cuatro valores que representan categorías de ejercicio:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">STRENGTH</code></td>
+                <td>Ejercicios de entrenamiento de resistencia (ej. flexiones, sentadillas, levantamiento de pesas)</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">CARDIO</code></td>
+                <td>Ejercicios cardiovasculares (ej. correr, ciclismo, natación)</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">HIIT</code></td>
+                <td>Ejercicios de Entrenamiento Interválico de Alta Intensidad (ej. burpees, mountain climbers)</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">MOBILITY</code></td>
+                <td>Ejercicios de flexibilidad y movilidad (ej. estiramientos, yoga)</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Diagrama de Estructura de Entidad
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-gestion-ejercicios-entidad-dto.svg"
+    alt="Diagrama que muestra la relación de mapeo entre la entidad ExerciseEntity y los DTOs. El DTO ExerciseRequest se mapea a ExerciseEntity para la creación, y la ExerciseEntity se mapea al DTO ExerciseResponse para la salida de la API."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/entidad/ExerciseEntity.java" lines="5-76" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/ExerciseRequest.java" lines="6-12" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/ExerciseResponse.java" lines="3-9" />
+</SourceReference>
+
+## Reglas de Validación
+
+<p>El DTO <code class="artifact-id">ExerciseRequest</code> utiliza anotaciones de Jakarta Bean Validation para asegurar la integridad de los datos en el límite de la API.</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Validación</th>
+                <th>Anotación</th>
+                <th>Condición de Error</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">name</code></td>
+                <td>Requerido, no vacío</td>
+                <td><code class="artifact-id">@NotBlank</code></td>
+                <td>Ausente o contiene solo espacios en blanco</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">description</code></td>
+                <td>Opcional</td>
+                <td>Ninguna</td>
+                <td>Puede ser nulo o vacío</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">type</code></td>
+                <td>Coincidencia de patrón</td>
+                <td><code class="artifact-id">@Pattern(regexp = "STRENGTH|CARDIO|HIIT|MOBILITY")</code></td>
+                <td>El valor no está en el conjunto permitido</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">estCalories</code></td>
+                <td>Valor mínimo</td>
+                <td><code class="artifact-id">@Min(0)</code></td>
+                <td>No se permiten valores negativos</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Flujo de Validación
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-flujo-validacion.svg"
+    alt="Diagrama de secuencia que muestra el flujo de validación. Una petición del cliente llega al controlador, que utiliza el Validador de Jakarta. Si la validación es exitosa, la petición pasa al servicio; si falla, se devuelve una respuesta 400 Bad Request."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/ExerciseRequest.java" lines="4-12" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/ExerciseController.java" lines="24" />
+</SourceReference>
+
+## Lógica de la Capa de Servicio
+
+<p>La clase <code class="artifact-id">ExerciseService</code> implementa la lógica de negocio para la gestión de ejercicios. Está anotada con <code class="artifact-id">@Service</code> y utiliza inyección por constructor para obtener el <code class="artifact-id">ExerciseRepository</code>.</p>
+
+### Operación de Creación
+<p>El método <code class="artifact-id">create</code> maneja la creación de nuevos ejercicios:</p>
+<ol>
+    <li>Instancia una nueva <code class="artifact-id">ExerciseEntity</code>.</li>
+    <li>Mapea los campos de <code class="artifact-id">ExerciseRequest</code> a la entidad.</li>
+    <li>Aplica un valor por defecto: si <code class="artifact-id">estCalories</code> es nulo, lo establece en <code class="artifact-id">0</code>.</li>
+    <li>Persiste la entidad usando <code class="artifact-id">repo.save()</code>.</li>
+    <li>Convierte la entidad guardada a <code class="artifact-id">ExerciseResponse</code>.</li>
+</ol>
+<p><strong>Implementación:</strong> <a class="content-link" href="https://github.com/OAQR/FitLive./blob/b2d6d9d9/Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java#L23-L32">Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java#L23-L32</a></p>
+
+<CodeBlock language="java" code={`public ExerciseResponse create(ExerciseRequest r){
+    ExerciseEntity e = new ExerciseEntity();
+    e.setName(r.name());
+    e.setDescription(r.description());
+    e.setType(r.type());
+    e.setEstCalories(r.estCalories() == null ? 0 : r.estCalories());
+
+    repo.save(e);
+    return toRes(e);
+}`} />
+
+### Operación de Listado
+<p>El método <code class="artifact-id">list</code> recupera todos los ejercicios:</p>
+<ol>
+    <li>Llama a <code class="artifact-id">repo.findAll()</code> para recuperar todas las entidades.</li>
+    <li>Convierte el stream de resultados a <code class="artifact-id">ExerciseResponse</code> usando el mapeador <code class="artifact-id">toRes</code>.</li>
+    <li>Recolecta en una <code class="artifact-id">List&lt;ExerciseResponse&gt;</code>.</li>
+</ol>
+<p><strong>Implementación:</strong> <a class="content-link" href="https://github.com/OAQR/FitLive./blob/b2d6d9d9/Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java#L34-L36">Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java#L34-L36</a></p>
+
+### Mapeo de Entidad a DTO
+<p>El método privado <code class="artifact-id">toRes</code> mapea <code class="artifact-id">ExerciseEntity</code> a <code class="artifact-id">ExerciseResponse</code>:</p>
+<p><strong>Implementación:</strong> <a class="content-link" href="https://github.com/OAQR/FitLive./blob/b2d6d9d9/Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java#L38-L40">Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java#L38-L40</a></p>
+<CodeBlock language="java" code={`private ExerciseResponse toRes(ExerciseEntity e){
+    return new ExerciseResponse(
+        e.getId(),
+        e.getName(),
+        e.getDescription(),
+        e.getType(),
+        e.getEstCalories()
+    );
+}`} />
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java" lines="14-41" />
+</SourceReference>
+
+## Capa de Repositorio
+
+<p>La interfaz <code class="artifact-id">ExerciseRepository</code> extiende <code class="artifact-id">JpaRepository</code> de Spring Data JPA, proporcionando operaciones CRUD estándar sin necesidad de implementación explícita.</p>
+<CodeBlock language="java" code={`public interface ExerciseRepository extends JpaRepository<ExerciseEntity, Integer> {}`} />
+
+### Métodos Heredados
+<p>Al extender <code class="artifact-id">JpaRepository&lt;ExerciseEntity, Integer&gt;</code>, el repositorio proporciona automáticamente:</p>
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Método</th>
+                <th>Descripción</th>
+                <th>Usado Por</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">save(ExerciseEntity)</code></td>
+                <td>Persiste o actualiza un ejercicio</td>
+                <td><code class="artifact-id">ExerciseService.create()</code></td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">findAll()</code></td>
+                <td>Recupera todos los ejercicios</td>
+                <td><code class="artifact-id">ExerciseService.list()</code></td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">findById(Integer)</code></td>
+                <td>Busca un ejercicio por ID</td>
+                <td>No usado actualmente</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">deleteById(Integer)</code></td>
+                <td>Elimina un ejercicio por ID</td>
+                <td>No usado actualmente</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/repositorio/ExerciseRepository.java" lines="1-7" />
+</SourceReference>
+
+## Flujo de Datos Completo
+
+<p>El siguiente diagrama ilustra el flujo completo de petición-respuesta para las operaciones de creación y listado de ejercicios.</p>
+
+### Flujo de Creación de Ejercicio
+<ImageViewer
+    src="/src/assets/fitlifeapi-flujo-creacion-ejercicio.svg"
+    alt="Diagrama de secuencia que muestra el flujo de creación de un ejercicio. Un cliente envía una petición POST al ExerciseController, que valida la petición y llama al ExerciseService. El servicio mapea el DTO a una entidad, la guarda en la base de datos a través del repositorio y devuelve un DTO de respuesta, resultando en una respuesta 201 Created."
+/>
+
+### Flujo de Listado de Ejercicios
+<ImageViewer
+    src="/src/assets/fitlifeapi-flujo-listado-ejercicios.svg"
+    alt="Diagrama de secuencia que muestra el flujo de listado de ejercicios. Un cliente envía una petición GET al ExerciseController, que llama al ExerciseService. El servicio recupera todas las entidades de la base de datos a través del repositorio, las mapea a DTOs de respuesta y las devuelve en una respuesta 200 OK."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/ExerciseController.java" lines="23-31" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java" lines="23-36" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/repositorio/ExerciseRepository.java" lines="1-7" />
+</SourceReference>
+
+## Notas Clave de Implementación
+
+### Manejo de Valores por Defecto
+<p>La capa de servicio aplica un valor por defecto para <code class="artifact-id">estCalories</code> cuando se proporciona un nulo. Esto asegura que la columna de la base de datos siempre contenga un valor entero válido:</p>
+
+<CodeBlock language="java" code={`e.setEstCalories(r.estCalories() == null ? 0 : r.estCalories());`} />
+<p><strong>Fuente:</strong> <a class="content-link" href="https://github.com/OAQR/FitLive./blob/b2d6d9d9/Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java#L28">Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java#L28</a></p>
+
+### DTOs Basados en Records
+<p>Tanto <code class="artifact-id">ExerciseRequest</code> como <code class="artifact-id">ExerciseResponse</code> están implementados como records de Java, proporcionando estructuras de datos inmutables con constructores, getters, <code class="artifact-id">equals()</code>, <code class="artifact-id">hashCode()</code> y <code class="artifact-id">toString()</code> generados automáticamente.</p>
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/ExerciseRequest.java" lines="6-12" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/ExerciseResponse.java" lines="3-9" />
+</SourceReference>
+
+### Inyección por Constructor
+<p>Las clases de controlador y servicio utilizan inyección de dependencias basada en constructor (anotada con <code class="artifact-id">@Autowired</code>), que es el enfoque recomendado para dependencias obligatorias en aplicaciones Spring.</p>
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/ExerciseController.java" lines="18-21" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/ExerciseService.java" lines="18-21" />
+</SourceReference>
+
+### Sin Operaciones de Actualización o Eliminación
+<p>La implementación actual solo admite la creación y el listado de ejercicios. Las operaciones de actualización y eliminación no están expuestas a través de la API REST, aunque la capa de repositorio hereda estos métodos de <code class="artifact-id">JpaRepository</code>.</p>

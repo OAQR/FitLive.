@@ -1,0 +1,468 @@
+---
+title: "Asociación Rutina-Ejercicio"
+description: "Este documento describe la relación muchos a muchos entre las rutinas y los ejercicios en el sistema FitlifeAPI. La entidad RoutineExerciseEntity sirve como una tabla de unión que asocia los ejercicios con las rutinas."
+---
+
+import SourceBtn from '@docs_components/SourceBtn.astro';
+import SourceReference from '@docs_components/SourceReference.astro';
+import ImageViewer from '@docs_components/ImageViewer.astro';
+import TableWrapper from '@docs_components/TableWrapper.astro';
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Asociación Rutina-Ejercicio
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/RoutineExerciseController.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/RoutineExerciseRequest.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/RoutineExerciseResponse.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/entidad/RoutineExerciseEntity.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/repositorio/RoutineExerciseRepository.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/RoutineExerciseService.java" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento describe la relación muchos a muchos entre las rutinas y los ejercicios en el sistema FitlifeAPI. La entidad <code class="artifact-id">RoutineExerciseEntity</code> sirve como una tabla de unión que asocia los ejercicios con las rutinas, al tiempo que captura parámetros de entrenamiento adicionales como el orden, las series, las repeticiones y la duración.</p>
+<p>Para obtener información sobre el modelo de dominio de los ejercicios, consulte <a href="/docs/fitlife-api/gestion-ejercicios" class="content-link">Gestión de Ejercicios</a>. Para obtener información sobre el modelo de dominio de las rutinas, consulte <a href="/docs/fitlife-api/gestion-rutinas" class="content-link">Gestión de Rutinas</a>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/entidad/RoutineExerciseEntity.java" lines="1-56" />
+</SourceReference>
+
+## Visión General del Sistema
+
+<p>El sistema de asociación rutina-ejercicio implementa un patrón de relación muchos a muchos donde:</p>
+<ul>
+    <li>Una sola <strong>rutina</strong> puede contener múltiples <strong>ejercicios</strong>.</li>
+    <li>Un solo <strong>ejercicio</strong> puede aparecer en múltiples <strong>rutinas</strong>.</li>
+    <li>Cada asociación almacena parámetros específicos del entrenamiento: <code class="artifact-id">ord</code> (orden), <code class="artifact-id">sets</code> (series), <code class="artifact-id">reps</code> (repeticiones) y <code class="artifact-id">seconds</code> (segundos).</li>
+</ul>
+<p>Este diseño permite una composición de entrenamiento flexible, donde el mismo ejercicio (ej. "Flexiones") puede ser reutilizado en diferentes rutinas con diferentes parámetros (ej. 3 series de 10 repeticiones en una rutina para principiantes, 5 series de 20 repeticiones en una rutina avanzada).</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/entidad/RoutineExerciseEntity.java" lines="1-56" />
+</SourceReference>
+
+## Modelo de Dominio
+
+### RoutineExerciseEntity
+<p>La clase <code class="artifact-id">RoutineExerciseEntity</code> representa la tabla de unión en la base de datos y contiene las siguientes propiedades:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Propiedad</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Nulable</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">id</code></td>
+                <td><code class="artifact-id">Integer</code></td>
+                <td>Clave primaria autogenerada</td>
+                <td>No</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">routine</code></td>
+                <td><code class="artifact-id">RoutineEntity</code></td>
+                <td>Relación muchos a uno con la rutina</td>
+                <td>No</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">exercise</code></td>
+                <td><code class="artifact-id">ExerciseEntity</code></td>
+                <td>Relación muchos a uno con el ejercicio</td>
+                <td>No</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">ord</code></td>
+                <td><code class="artifact-id">Integer</code></td>
+                <td>Orden/secuencia del ejercicio dentro de la rutina</td>
+                <td>Sí</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">sets</code></td>
+                <td><code class="artifact-id">Integer</code></td>
+                <td>Número de series a realizar</td>
+                <td>Sí</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">reps</code></td>
+                <td><code class="artifact-id">Integer</code></td>
+                <td>Repeticiones por serie</td>
+                <td>Sí</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">seconds</code></td>
+                <td><code class="artifact-id">Integer</code></td>
+                <td>Duración en segundos (para ejercicios basados en tiempo)</td>
+                <td>Sí</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/entidad/RoutineExerciseEntity.java" lines="8-56" />
+</SourceReference>
+
+### Esquema de la Base de Datos
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-asociacion-rutina-ejercicio-er.svg"
+    alt="Diagrama de Entidad-Relación de la base de datos que muestra la tabla 'routines' y la tabla 'exercises', ambas conectadas a la tabla de unión 'routine_exercises'. Esta tabla de unión tiene claves foráneas a 'routines' y 'exercises', junto con sus propios atributos como 'ord', 'sets', 'reps' y 'seconds'."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/entidad/RoutineExerciseEntity.java" lines="6-24" />
+</SourceReference>
+
+## Endpoints de la API REST
+
+<p>El <code class="artifact-id">RoutineExerciseController</code> expone dos endpoints para gestionar las asociaciones rutina-ejercicio.</p>
+
+### Resumen de Endpoints de la API
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Método</th>
+                <th>Endpoint</th>
+                <th>Descripción</th>
+                <th>Cuerpo de Petición</th>
+                <th>Respuesta</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">POST</code></td>
+                <td><code class="artifact-id">/api/routine-exercises</code></td>
+                <td>Crear una nueva asociación</td>
+                <td><code class="artifact-id">RoutineExerciseRequest</code></td>
+                <td><code class="artifact-id">RoutineExerciseResponse</code></td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">GET</code></td>
+                <td><code class="artifact-id">/api/routine-exercises</code></td>
+                <td>Listar todas las asociaciones</td>
+                <td>Ninguno</td>
+                <td><code class="artifact-id">List&lt;RoutineExerciseResponse&gt;</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/RoutineExerciseController.java" lines="1-32" />
+</SourceReference>
+
+### POST /api/routine-exercises
+<p>Crea una nueva asociación entre una rutina y un ejercicio.</p>
+
+<p><strong>DTO de Petición (<code class="artifact-id">RoutineExerciseRequest</code>):</strong></p>
+<CodeBlock language="json" code={`{
+  "routineId": 1,
+  "exerciseId": 5,
+  "ord": 1,
+  "sets": 3,
+  "reps": 12,
+  "seconds": null
+}`} />
+
+<p><strong>DTO de Respuesta (<code class="artifact-id">RoutineExerciseResponse</code>):</strong></p>
+<CodeBlock language="json" code={`{
+  "id": 101,
+  "routineId": 1,
+  "exerciseId": 5,
+  "exerciseName": "Press de Banca",
+  "ord": 1,
+  "sets": 3,
+  "reps": 12,
+  "seconds": null
+}`} />
+<p>La respuesta incluye el campo <code class="artifact-id">exerciseName</code>, que se obtiene de la entidad <code class="artifact-id">ExerciseEntity</code> asociada para mayor comodidad del cliente.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/RoutineExerciseController.java" lines="23-26" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/RoutineExerciseRequest.java" lines="1-13" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/RoutineExerciseResponse.java" lines="1-12" />
+</SourceReference>
+
+### GET /api/routine-exercises
+<p>Devuelve una lista de todas las asociaciones rutina-ejercicio en el sistema.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/RoutineExerciseController.java" lines="28-31" />
+</SourceReference>
+
+## Capa de Servicio
+
+### RoutineExerciseService
+<p>La clase <code class="artifact-id">RoutineExerciseService</code> proporciona la lógica de negocio para gestionar las asociaciones rutina-ejercicio.</p>
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-asociacion-rutina-ejercicio-servicio.svg"
+    alt="Diagrama de interacción de componentes de la capa de servicio. Muestra que el RoutineExerciseService depende de tres repositorios: RoutineExerciseRepository (para guardar la asociación), RoutineRepository (para validar la rutina) y ExerciseRepository (para validar el ejercicio)."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/RoutineExerciseService.java" lines="1-65" />
+</SourceReference>
+
+### Método `create()`
+<p>El método <code class="artifact-id">create()</code> implementa el siguiente flujo de trabajo:</p>
+<ol>
+    <li><strong>Validar que la Rutina Existe</strong>: Consulta <code class="artifact-id">RoutineRepository.findById(routineId)</code>.
+        <ul>
+            <li>Lanza <code class="artifact-id">RuntimeException("Routine not found")</code> si no se encuentra.</li>
+        </ul>
+    </li>
+    <li><strong>Validar que el Ejercicio Existe</strong>: Consulta <code class="artifact-id">ExerciseRepository.findById(exerciseId)</code>.
+        <ul>
+            <li>Lanza <code class="artifact-id">RuntimeException("Exercise not found")</code> si no se encuentra.</li>
+        </ul>
+    </li>
+    <li><strong>Crear Asociación</strong>: Instancia una nueva <code class="artifact-id">RoutineExerciseEntity</code> y establece todas sus propiedades.</li>
+    <li><strong>Persistir</strong>: Guarda la entidad a través de <code class="artifact-id">RoutineExerciseRepository.save()</code>.</li>
+    <li><strong>Transformar</strong>: Convierte la entidad a <code class="artifact-id">RoutineExerciseResponse</code> usando el método de ayuda <code class="artifact-id">toRes()</code>.</li>
+</ol>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/RoutineExerciseService.java" lines="31-47" />
+</SourceReference>
+
+### Método de Ayuda `toRes()`
+<p>El método privado <code class="artifact-id">toRes()</code> transforma <code class="artifact-id">RoutineExerciseEntity</code> en <code class="artifact-id">RoutineExerciseResponse</code>, extrayendo el nombre del ejercicio a través de <code class="artifact-id">exercise.getName()</code> para la comodidad del cliente:</p>
+<CodeBlock language="java" code={`e.getExercise().getName() // Incluido en la respuesta`} />
+<p>Esto evita que los clientes tengan que hacer una solicitud secundaria para obtener los detalles del ejercicio.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/RoutineExerciseService.java" lines="53-64" />
+</SourceReference>
+
+## Flujo de Datos
+
+### Flujo de Creación de la Asociación
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-asociacion-rutina-ejercicio-flujo.svg"
+    alt="Diagrama de secuencia del flujo de creación de la asociación. Muestra al cliente enviando una petición POST, el controlador llamando al servicio, el servicio validando la existencia de la rutina y el ejercicio en sus respectivos repositorios, y luego guardando la nueva asociación en el RoutineExerciseRepository antes de devolver la respuesta."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/RoutineExerciseService.java" lines="31-47" />
+</SourceReference>
+
+## Relaciones entre Componentes
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-asociacion-rutina-ejercicio-componentes.svg"
+    alt="Diagrama de arquitectura de componentes que muestra la relación entre el RoutineExerciseController, los DTOs (Request/Response), el RoutineExerciseService y los tres repositorios (RoutineExercise, Routine, y Exercise) de los que depende, así como las entidades del dominio."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/RoutineExerciseController.java" lines="1-32" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/RoutineExerciseService.java" lines="1-65" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/entidad/RoutineExerciseEntity.java" lines="1-56" />
+</SourceReference>
+
+## Capa de Repositorio
+
+<p>La interfaz <code class="artifact-id">RoutineExerciseRepository</code> es mínima y extiende <code class="artifact-id">JpaRepository</code> de Spring Data JPA:</p>
+<CodeBlock language="java" code={`public interface RoutineExerciseRepository extends JpaRepository<RoutineExerciseEntity, Integer> {}`} />
+<p>Esto proporciona operaciones CRUD estándar, incluyendo:</p>
+<ul>
+    <li><code class="artifact-id">save(entity)</code> - Usado en <a class="content-link" href="https://github.com/OAQR/FitLive./blob/b2d6d9d9/RoutineExerciseService.java#L45-L45">RoutineExerciseService.java#L45</a>.</li>
+    <li><code class="artifact-id">findAll()</code> - Usado en <a class="content-link" href="https://github.com/OAQR/FitLive./blob/b2d6d9d9/RoutineExerciseService.java#L50-L50">RoutineExerciseService.java#L50</a>.</li>
+    <li><code class="artifact-id">findById(id)</code> - Heredado pero no utilizado actualmente.</li>
+</ul>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/repositorio/RoutineExerciseRepository.java" lines="1-6" />
+</SourceReference>
+
+## Anotaciones JPA
+
+<p>La entidad <code class="artifact-id">RoutineExerciseEntity</code> utiliza las siguientes anotaciones JPA para definir el mapeo de la base de datos:</p>
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Anotación</th>
+                <th>Objetivo</th>
+                <th>Configuración</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">@Entity</code></td>
+                <td>Clase</td>
+                <td>La marca como una entidad JPA</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">@Table(name = "routine_exercises")</code></td>
+                <td>Clase</td>
+                <td>Mapea a la tabla <code class="artifact-id">routine_exercises</code></td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">@Id</code></td>
+                <td>Campo <code class="artifact-id">id</code></td>
+                <td>La marca como clave primaria</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">@GeneratedValue(strategy = IDENTITY)</code></td>
+                <td>Campo <code class="artifact-id">id</code></td>
+                <td>Autoincremento a través de la base de datos</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">@ManyToOne</code></td>
+                <td>Campo <code class="artifact-id">routine</code></td>
+                <td>Muchos routine_exercises a una rutina</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">@JoinColumn(name = "routine_id", nullable = false)</code></td>
+                <td>Campo <code class="artifact-id">routine</code></td>
+                <td>Nombre de la columna de clave foránea y restricción</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">@ManyToOne</code></td>
+                <td>Campo <code class="artifact-id">exercise</code></td>
+                <td>Muchos routine_exercises a un ejercicio</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">@JoinColumn(name = "exercise_id", nullable = false)</code></td>
+                <td>Campo <code class="artifact-id">exercise</code></td>
+                <td>Nombre de la columna de clave foránea y restricción</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/entidad/RoutineExerciseEntity.java" lines="5-24" />
+</SourceReference>
+
+## Validación de Peticiones
+
+<p>El DTO <code class="artifact-id">RoutineExerciseRequest</code> impone reglas de validación usando Jakarta Bean Validation:</p>
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Validación</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">routineId</code></td>
+                <td><code class="artifact-id">@NotNull</code></td>
+                <td>Debe ser proporcionado; validado para existir en la base de datos</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">exerciseId</code></td>
+                <td><code class="artifact-id">@NotNull</code></td>
+                <td>Debe ser proporcionado; validado para existir en la base de datos</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">ord</code></td>
+                <td>Ninguna</td>
+                <td>Opcional; controla el orden de los ejercicios en la rutina</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">sets</code></td>
+                <td>Ninguna</td>
+                <td>Opcional; número de series a realizar</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">reps</code></td>
+                <td>Ninguna</td>
+                <td>Opcional; repeticiones por serie</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">seconds</code></td>
+                <td>Ninguna</td>
+                <td>Opcional; duración para ejercicios basados en tiempo</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+<p>La anotación <code class="artifact-id">@Valid</code> en el método del controlador <a class="content-link" href="https://github.com/OAQR/FitLive./blob/b2d6d9d9/RoutineExerciseController.java#L24-L24">RoutineExerciseController.java#L24</a> activa la validación antes de que se invoque la capa de servicio.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/RoutineExerciseRequest.java" lines="1-13" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/RoutineExerciseController.java" lines="23-26" />
+</SourceReference>
+
+## Manejo de Errores
+
+<p>La capa de servicio lanza excepciones <code class="artifact-id">RuntimeException</code> no verificadas para fallos de validación:</p>
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Condición</th>
+                <th>Mensaje de Excepción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>ID de Rutina no encontrado</td>
+                <td><code class="artifact-id">"Routine not found"</code></td>
+            </tr>
+            <tr>
+                <td>ID de Ejercicio no encontrado</td>
+                <td><code class="artifact-id">"Exercise not found"</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+<p>Estas excepciones se lanzan en <a class="content-link" href="https://github.com/OAQR/FitLive./blob/b2d6d9d9/RoutineExerciseService.java#L33-L33">RoutineExerciseService.java#L33</a> y <a class="content-link" href="https://github.com/OAQR/FitLive./blob/b2d6d9d9/RoutineExerciseService.java#L35-L35">RoutineExerciseService.java#L35</a> respectivamente. Actualmente, la aplicación no implementa un manejo de excepciones global, por lo que estas se propagan como errores HTTP 500.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/RoutineExerciseService.java" lines="31-47" />
+</SourceReference>
+
+## Ejemplo de Uso
+
+<p>Para asociar un ejercicio con una rutina:</p>
+
+<p><strong>Petición HTTP:</strong></p>
+<CodeBlock language="bash" code={`POST /api/routine-exercises
+Content-Type: application/json
+
+{
+  "routineId": 1,
+  "exerciseId": 5,
+  "ord": 2,
+  "sets": 3,
+  "reps": 12,
+  "seconds": null
+}`} />
+
+<p><strong>Respuesta HTTP (201 Created):</strong></p>
+<CodeBlock language="json" code={`{
+  "id": 42,
+  "routineId": 1,
+  "exerciseId": 5,
+  "exerciseName": "Press de Banca",
+  "ord": 2,
+  "sets": 3,
+  "reps": 12,
+  "seconds": null
+}`} />
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/RoutineExerciseRequest.java" lines="1-13" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/RoutineExerciseResponse.java" lines="1-12" />
+</SourceReference>

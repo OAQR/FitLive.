@@ -1,0 +1,571 @@
+---
+title: "Configuración y Dependencias"
+description: "Esta página documenta la configuración de Maven, las dependencias y la configuración del entorno de desarrollo para FitlifeAPI. Cubre la estructura del proyecto definida en `pom.xml`, el árbol de dependencias completo, los plugins de compilación y los patrones de configuración específicos de IDE."
+---
+
+import SourceBtn from '@docs_components/SourceBtn.astro';
+import SourceReference from '@docs_components/SourceReference.astro';
+import ImageViewer from '@docs_components/ImageViewer.astro';
+import TableWrapper from '@docs_components/TableWrapper.astro';
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Configuración y Dependencias
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/FitlifeAPI/.gitignore" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/pom.xml" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Esta página documenta la configuración de Maven, las dependencias y la configuración del entorno de desarrollo para FitlifeAPI. Cubre la estructura del proyecto definida en <code class="artifact-id">pom.xml</code>, el árbol de dependencias completo, los plugins de compilación y los patrones de configuración específicos de IDE. Para detalles sobre la configuración de runtime y seguridad de la aplicación, consulte <a href="/docs/fitlife-api/configuracion-seguridad" class="content-link">Configuración de Seguridad</a>. Para información sobre las capas arquitectónicas que estas dependencias soportan, consulte <a href="/docs/fitlife-api/arquitectura-aplicacion" class="content-link">Arquitectura de la Aplicación</a>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="1-112" />
+</SourceReference>
+
+## Coordenadas del Proyecto Maven
+
+<p>FitlifeAPI está configurado como un proyecto Maven estándar de Spring Boot con la siguiente identidad:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Propiedad</th>
+                <th>Valor</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Group ID</strong></td>
+                <td><code class="artifact-id">com.fitlife</code></td>
+            </tr>
+            <tr>
+                <td><strong>Artifact ID</strong></td>
+                <td><code class="artifact-id">fitlifeAPI</code></td>
+            </tr>
+            <tr>
+                <td><strong>Versión</strong></td>
+                <td><code class="artifact-id">0.0.1-SNAPSHOT</code></td>
+            </tr>
+            <tr>
+                <td><strong>Nombre</strong></td>
+                <td><code class="artifact-id">fitlifeAPI</code></td>
+            </tr>
+            <tr>
+                <td><strong>Descripción</strong></td>
+                <td>Proyecto SOA</td>
+            </tr>
+            <tr>
+                <td><strong>Padre</strong></td>
+                <td><code class="artifact-id">spring-boot-starter-parent</code> 3.5.5</td>
+            </tr>
+            <tr>
+                <td><strong>Versión de Java</strong></td>
+                <td>21</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>El proyecto hereda de <code class="artifact-id">spring-boot-starter-parent</code>, que proporciona gestión de dependencias, configuración de plugins y valores por defecto razonables para aplicaciones Spring Boot.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="5-31" />
+</SourceReference>
+
+## Dependencias Principales
+
+### Starters de Spring Boot
+
+<p>La aplicación utiliza cuatro starters de Spring Boot principales que proporcionan las capacidades fundamentales:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Dependencia</th>
+                <th>Artifact ID</th>
+                <th>Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Acceso a Datos</strong></td>
+                <td><code class="artifact-id">spring-boot-starter-data-jpa</code></td>
+                <td>JPA/Hibernate para operaciones de base de datos, proporciona repositorios y gestión de entidades</td>
+            </tr>
+            <tr>
+                <td><strong>Seguridad</strong></td>
+                <td><code class="artifact-id">spring-boot-starter-security</code></td>
+                <td>Framework de Spring Security, infraestructura de autenticación y autorización</td>
+            </tr>
+            <tr>
+                <td><strong>Validación</strong></td>
+                <td><code class="artifact-id">spring-boot-starter-validation</code></td>
+                <td>Validación de beans (JSR-380) para validación de peticiones y restricciones de entidades</td>
+            </tr>
+            <tr>
+                <td><strong>Web</strong></td>
+                <td><code class="artifact-id">spring-boot-starter-web</code></td>
+                <td>Spring MVC, Tomcat embebido, soporte para API REST</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Estos starters están definidos en <a href="https://github.com/OAQR/FitLive./blob/b2d6d9d9/Back/FitlifeAPI/pom.xml#L33-L48" class="content-link">Back/FitlifeAPI/pom.xml#L33-L48</a> e incluyen automáticamente sus dependencias transitivas.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="33-48" />
+</SourceReference>
+
+### Dependencias de la Capa de Datos
+
+<p>FitlifeAPI utiliza PostgreSQL para producción e incluye Flyway para la gestión de migraciones de esquema:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Dependencia</th>
+                <th>Versión</th>
+                <th>Ámbito</th>
+                <th>Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">flyway-core</code></td>
+                <td>(gestionada)</td>
+                <td>compile</td>
+                <td>Motor principal de migración de Flyway</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">flyway-database-postgresql</code></td>
+                <td>(gestionada)</td>
+                <td>compile</td>
+                <td>Dialecto de Flyway específico para PostgreSQL</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">postgresql</code></td>
+                <td>(gestionada)</td>
+                <td>runtime</td>
+                <td>Driver JDBC de PostgreSQL</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Las dependencias de Flyway permiten migraciones de base de datos controladas por versiones, con soporte específico para la sintaxis y características de PostgreSQL. El driver de PostgreSQL tiene el ámbito <code class="artifact-id">runtime</code>, ya que solo es necesario durante la ejecución de la aplicación, no en la compilación.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="50-62" />
+</SourceReference>
+
+### Dependencias de Documentación de API
+
+<p>La documentación de OpenAPI se proporciona a través de Springdoc:</p>
+<CodeBlock language="xml" code={`<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.5.0</version>
+</dependency>`} />
+<p>Esta dependencia genera automáticamente especificaciones OpenAPI 3.0 a partir de los controladores de Spring MVC y proporciona una interfaz de Swagger UI. Se integra con los endpoints REST de la aplicación para crear documentación interactiva accesible en tiempo de ejecución.</p>
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="63-68" />
+</SourceReference>
+
+### Dependencias de Seguridad y JWT
+
+<p>El soporte de JWT se implementa usando la librería JJWT con tres artefactos separados:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Artefacto</th>
+                <th>Versión</th>
+                <th>Ámbito</th>
+                <th>Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">jjwt-api</code></td>
+                <td>0.11.5</td>
+                <td>compile</td>
+                <td>API pública para la creación y análisis de JWT</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">jjwt-impl</code></td>
+                <td>0.11.5</td>
+                <td>runtime</td>
+                <td>Clases de implementación para operaciones de JWT</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">jjwt-jackson</code></td>
+                <td>0.11.5</td>
+                <td>runtime</td>
+                <td>Serialización JSON basada en Jackson para las reclamaciones (claims) de JWT</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>El artefacto de la API es requerido en tiempo de compilación para el código que crea o valida JWTs, mientras que los artefactos de implementación y de Jackson solo son necesarios en tiempo de ejecución. Esta separación sigue el diseño de la librería JJWT para la abstracción en tiempo de compilación.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="69-86" />
+</SourceReference>
+
+### Dependencias de Pruebas
+
+<p>Dos dependencias con ámbito de prueba soportan las pruebas unitarias y de integración:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Dependencia</th>
+                <th>Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">spring-boot-starter-test</code></td>
+                <td>Soporte para JUnit 5, Mockito, AssertJ, Spring Test</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">spring-security-test</code></td>
+                <td>Utilidades y anotaciones específicas para pruebas de seguridad</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Estas dependencias tienen el ámbito <code class="artifact-id">test</code>, lo que significa que solo están disponibles en el classpath de prueba y no se incluyen en el artefacto de producción.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="87-96" />
+</SourceReference>
+
+## Diagrama de Arquitectura de Dependencias
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-dependencias-arquitectura.svg"
+    alt="Diagrama que muestra cómo las capas de la aplicación FitlifeAPI se mapean a las dependencias de Maven. La capa de presentación depende de spring-boot-starter-web y springdoc-openapi. La capa de servicio utiliza spring-boot-starter-validation. La capa de repositorio se integra con spring-boot-starter-data-jpa y el driver de PostgreSQL. La capa de seguridad aprovecha spring-boot-starter-security y las librerías JJWT."
+/>
+
+<p><strong>Mapeo de Capas de Dependencias</strong>: Este diagrama muestra cómo las capas de la aplicación se mapean a las dependencias de Maven. La capa de presentación depende de <code class="artifact-id">spring-boot-starter-web</code> para el soporte REST y de <code class="artifact-id">springdoc-openapi-starter-webmvc-ui</code> para la documentación de la API. La capa de servicio utiliza anotaciones de validación de <code class="artifact-id">spring-boot-starter-validation</code>. La capa de repositorio se integra con <code class="artifact-id">spring-boot-starter-data-jpa</code> para la gestión de entidades y el driver JDBC de PostgreSQL. La capa de seguridad aprovecha <code class="artifact-id">spring-boot-starter-security</code> y las librerías JJWT para la autenticación basada en JWT (aunque no se aplica actualmente, como se documenta en la página 5.5).</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="32-96" />
+</SourceReference>
+
+## Configuración de la Compilación
+
+### Plugins de Maven
+
+<p>FitlifeAPI utiliza dos plugins de Maven para la compilación y el empaquetado:</p>
+<CodeBlock language="xml" code={`<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+</plugin>
+<plugin>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-maven-plugin</artifactId>
+</plugin>`} />
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Plugin</th>
+                <th>Propósito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>maven-compiler-plugin</strong></td>
+                <td>Compila el código fuente de Java 21 a bytecode, hereda la configuración del POM padre</td>
+            </tr>
+            <tr>
+                <td><strong>spring-boot-maven-plugin</strong></td>
+                <td>Empaqueta la aplicación como un JAR ejecutable con Tomcat embebido, proporciona el objetivo <code class="artifact-id">spring-boot:run</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>No se proporciona configuración explícita para estos plugins, ya que heredan valores por defecto razonables de <code class="artifact-id">spring-boot-starter-parent</code>. El plugin de compilación utiliza automáticamente Java 21 basado en la propiedad <code class="artifact-id">&lt;java.version&gt;</code>.</p>
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="99-109" />
+</SourceReference>
+
+### Ciclo de Vida de la Compilación
+<ImageViewer
+    src="/src/assets/fitlifeapi-ciclo-vida-compilacion.svg"
+    alt="Diagrama del flujo de compilación de Maven. Muestra cómo el ciclo de vida estándar de Maven compila el código fuente, ejecuta las pruebas y empaqueta la aplicación en un JAR ejecutable. Para el desarrollo, el objetivo spring-boot:run puede ser invocado directamente para ejecutar la aplicación sin empaquetar."
+/>
+<p><strong>Flujo de Compilación de Maven</strong>: El ciclo de vida estándar de Maven compila el código fuente, ejecuta las pruebas y empaqueta la aplicación en un JAR ejecutable. Para el desarrollo, el objetivo <code class="artifact-id">spring-boot:run</code> puede ser invocado directamente para ejecutar la aplicación sin empaquetar.</p>
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="99-110" />
+</SourceReference>
+
+## Soporte para Entorno de Desarrollo
+
+### Compatibilidad con IDEs
+
+<p>El archivo <code class="artifact-id">.gitignore</code> excluye artefactos específicos de IDE para mantener un repositorio limpio en diferentes entornos de desarrollo:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>IDE</th>
+                <th>Archivos/Directorios Excluidos</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>IntelliJ IDEA</strong></td>
+                <td><code class="artifact-id">.idea/modules.xml</code>, <code class="artifact-id">.idea/jarRepositories.xml</code>, <code class="artifact-id">.idea/compiler.xml</code>, <code class="artifact-id">.idea/libraries/</code>, <code class="artifact-id">*.iws</code>, <code class="artifact-id">*.iml</code>, <code class="artifact-id">*.ipr</code></td>
+            </tr>
+            <tr>
+                <td><strong>Eclipse</strong></td>
+                <td><code class="artifact-id">.apt_generated</code>, <code class="artifact-id">.classpath</code>, <code class="artifact-id">.factorypath</code>, <code class="artifact-id">.project</code>, <code class="artifact-id">.settings</code>, <code class="artifact-id">.springBeans</code>, <code class="artifact-id">.sts4-cache</code></td>
+            </tr>
+            <tr>
+                <td><strong>NetBeans</strong></td>
+                <td><code class="artifact-id">/nbproject/private/</code>, <code class="artifact-id">/nbbuild/</code>, <code class="artifact-id">/dist/</code>, <code class="artifact-id">/nbdist/</code>, <code class="artifact-id">/.nb-gradle/</code></td>
+            </tr>
+            <tr>
+                <td><strong>VS Code</strong></td>
+                <td><code class="artifact-id">.vscode/</code></td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>Adicionalmente, se excluyen los directorios de salida de compilación (<code class="artifact-id">target/</code>, <code class="artifact-id">build/</code>) y archivos específicos del sistema operativo (<code class="artifact-id">.DS_Store</code> para macOS).</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/.gitignore" lines="1-38" />
+</SourceReference>
+
+### Exclusión del Maven Wrapper
+
+<p>El archivo <code class="artifact-id">.gitignore</code> incluye específicamente el JAR del Maven Wrapper mientras excluye otros artefactos de compilación:</p>
+<CodeBlock language="text" code={`target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+`} />
+
+<p>El prefijo <code class="artifact-id">!</code> indica una excepción a la regla de exclusión. Esto asegura que <code class="artifact-id">maven-wrapper.jar</code> sea commiteado al control de versiones, permitiendo a los desarrolladores compilar el proyecto sin necesidad de una instalación de Maven preexistente. El wrapper puede ser invocado usando <code class="artifact-id">./mvnw</code> en sistemas tipo Unix o <code class="artifact-id">mvnw.cmd</code> en Windows.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/.gitignore" lines="1-4" />
+</SourceReference>
+
+## Diagrama de Propiedades de Configuración
+<ImageViewer
+    src="/src/assets/fitlifeapi-propiedades-configuracion.svg"
+    alt="Diagrama que muestra la jerarquía de configuración en FitlifeAPI. La configuración en tiempo de compilación se define en pom.xml. La configuración en tiempo de ejecución se espera en application.properties. Las propiedades del sistema y las variables de entorno pueden sobrescribir las propiedades de la aplicación, siguiendo la precedencia de fuentes de propiedades de Spring Boot."
+/>
+<p><strong>Jerarquía de Configuración</strong>: FitlifeAPI sigue el enfoque de configuración en capas de Spring Boot. La configuración en tiempo de compilación se define en <code class="artifact-id">pom.xml</code> (dependencias, plugins). La configuración en tiempo de ejecución se espera en <code class="artifact-id">application.properties</code> (no se muestra en los archivos proporcionados, pero es la práctica estándar de Spring Boot). Las propiedades del sistema y las variables de entorno pueden sobrescribir las propiedades de la aplicación, siguiendo la precedencia de fuentes de propiedades de Spring Boot.</p>
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="1-112" />
+    <SourceBtn path="Back/FitlifeAPI/.gitignore" lines="1-38" />
+</SourceReference>
+
+## Tabla Resumen de Dependencias
+### Matriz Completa de Dependencias
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Artefacto</th>
+                <th>Versión</th>
+                <th>Ámbito</th>
+                <th>Dependencias Transitivas</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Web</strong></td>
+                <td>spring-boot-starter-web</td>
+                <td>3.5.5</td>
+                <td>compile</td>
+                <td>spring-webmvc, tomcat-embed-core, jackson-databind</td>
+            </tr>
+            <tr>
+                <td><strong>Acceso a Datos</strong></td>
+                <td>spring-boot-starter-data-jpa</td>
+                <td>3.5.5</td>
+                <td>compile</td>
+                <td>hibernate-core, spring-data-jpa, HikariCP</td>
+            </tr>
+            <tr>
+                <td><strong>Seguridad</strong></td>
+                <td>spring-boot-starter-security</td>
+                <td>3.5.5</td>
+                <td>compile</td>
+                <td>spring-security-web, spring-security-config</td>
+            </tr>
+            <tr>
+                <td><strong>Validación</strong></td>
+                <td>spring-boot-starter-validation</td>
+                <td>3.5.5</td>
+                <td>compile</td>
+                <td>hibernate-validator, jakarta.validation-api</td>
+            </tr>
+            <tr>
+                <td><strong>Driver de BD</strong></td>
+                <td>postgresql</td>
+                <td>gestionada</td>
+                <td>runtime</td>
+                <td>(ninguna - driver JDBC)</td>
+            </tr>
+            <tr>
+                <td><strong>Migración</strong></td>
+                <td>flyway-core</td>
+                <td>gestionada</td>
+                <td>compile</td>
+                <td>(ninguna - standalone)</td>
+            </tr>
+            <tr>
+                <td><strong>Migración</strong></td>
+                <td>flyway-database-postgresql</td>
+                <td>gestionada</td>
+                <td>compile</td>
+                <td>flyway-core</td>
+            </tr>
+            <tr>
+                <td><strong>Documentación</strong></td>
+                <td>springdoc-openapi-starter-webmvc-ui</td>
+                <td>2.5.0</td>
+                <td>compile</td>
+                <td>swagger-ui, springdoc-openapi-webmvc-core</td>
+            </tr>
+            <tr>
+                <td><strong>API de JWT</strong></td>
+                <td>jjwt-api</td>
+                <td>0.11.5</td>
+                <td>compile</td>
+                <td>(ninguna - solo interfaz)</td>
+            </tr>
+            <tr>
+                <td><strong>Impl. de JWT</strong></td>
+                <td>jjwt-impl</td>
+                <td>0.11.5</td>
+                <td>runtime</td>
+                <td>jjwt-api</td>
+            </tr>
+            <tr>
+                <td><strong>JSON de JWT</strong></td>
+                <td>jjwt-jackson</td>
+                <td>0.11.5</td>
+                <td>runtime</td>
+                <td>jackson-databind</td>
+            </tr>
+            <tr>
+                <td><strong>Pruebas</strong></td>
+                <td>spring-boot-starter-test</td>
+                <td>3.5.5</td>
+                <td>test</td>
+                <td>junit-jupiter, mockito-core, assertj-core</td>
+            </tr>
+            <tr>
+                <td><strong>Pruebas de Seguridad</strong></td>
+                <td>spring-security-test</td>
+                <td>gestionada</td>
+                <td>test</td>
+                <td>spring-security-core</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p><strong>Gestión de Versiones</strong>: La mayoría de las dependencias omiten versiones explícitas, heredándolas del POM padre <code class="artifact-id">spring-boot-starter-parent</code>. Esto asegura combinaciones de versiones consistentes y probadas. Solo <code class="artifact-id">springdoc-openapi-starter-webmvc-ui</code> y los artefactos de JJWT especifican versiones explícitas.</p>
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="32-96" />
+</SourceReference>
+
+## Diferencias Clave con los Servicios de Facturación
+
+<p>La configuración de dependencias de FitlifeAPI difiere de la de los microservicios de facturación en varios aspectos notables:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Aspecto</th>
+                <th>FitlifeAPI (5.6)</th>
+                <th>servicio-clientes (4.1.5)</th>
+                <th>servicio-facturacion (4.2.4)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Versión de Spring Boot</strong></td>
+                <td>3.5.5</td>
+                <td>3.5.6</td>
+                <td>3.5.6</td>
+            </tr>
+            <tr>
+                <td><strong>Seguridad</strong></td>
+                <td>Spring Security + JWT</td>
+                <td>Ninguna</td>
+                <td>Ninguna</td>
+            </tr>
+            <tr>
+                <td><strong>Documentación</strong></td>
+                <td>Springdoc OpenAPI 2.5.0</td>
+                <td>Springdoc OpenAPI 2.8.13</td>
+                <td>Ninguna</td>
+            </tr>
+            <tr>
+                <td><strong>Generación de PDF</strong></td>
+                <td>Ninguna</td>
+                <td>Ninguna</td>
+                <td>OpenPDF 3.0.0</td>
+            </tr>
+            <tr>
+                <td><strong>Código QR</strong></td>
+                <td>Ninguna</td>
+                <td>Ninguna</td>
+                <td>ZXing 3.5.3</td>
+            </tr>
+            <tr>
+                <td><strong>Cliente de API Externa</strong></td>
+                <td>Ninguna</td>
+                <td>RestTemplate/WebClient</td>
+                <td>RestTemplate</td>
+            </tr>
+            <tr>
+                <td><strong>Validación</strong></td>
+                <td>Bean Validation</td>
+                <td>Bean Validation</td>
+                <td>Bean Validation</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>FitlifeAPI es el único servicio con infraestructura de Spring Security, aunque no se aplica actualmente (ver página 5.5). Los servicios de facturación utilizan versiones de Spring Boot ligeramente más nuevas (3.5.6 vs 3.5.5) y tienen dependencias especializadas para sus dominios de negocio (generación de PDF, códigos QR, integración con API externa).</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="8" />
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="39" />
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="66" />
+</SourceReference>

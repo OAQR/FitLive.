@@ -1,0 +1,326 @@
+---
+title: "Gestión de Rutinas"
+description: "Este documento describe el subsistema de Gestión de Rutinas dentro de FitlifeAPI, que proporciona operaciones CRUD para las rutinas de entrenamiento. Una rutina representa un plan de entrenamiento estructurado con un nivel de dificultad."
+---
+
+import SourceBtn from '@docs_components/SourceBtn.astro';
+import SourceReference from '@docs_components/SourceReference.astro';
+import ImageViewer from '@docs_components/ImageViewer.astro';
+import TableWrapper from '@docs_components/TableWrapper.astro';
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Gestión de Rutinas
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/RoutineController.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/RoutineRequest.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/RoutineResponse.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/entidad/RoutineEntity.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/repositorio/RoutineRepository.java" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/RoutineService.java" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento describe el subsistema de <strong>Gestión de Rutinas</strong> dentro de FitlifeAPI, que proporciona operaciones CRUD para las rutinas de entrenamiento. Una rutina representa un plan de entrenamiento estructurado con un nivel de dificultad (PRINCIPIANTE, INTERMEDIO o AVANZADO), una duración estimada y seguimiento del creador.</p>
+<p>Para información sobre los ejercicios individuales que pueden incluirse en las rutinas, consulte <a href="/docs/fitlife-api/gestion-ejercicios" class="content-link">Gestión de Ejercicios</a>. Para la documentación sobre cómo se asocian los ejercicios con las rutinas (incluyendo series, repeticiones y orden), consulte <a href="/docs/fitlife-api/asociacion-rutina-ejercicio" class="content-link">Asociación Rutina-Ejercicio</a>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/RoutineController.java" lines="1-32" />
+</SourceReference>
+
+## Modelo de Datos
+
+<p>El dominio de las rutinas está representado por la clase <code class="artifact-id">RoutineEntity</code>, que se mapea a la tabla <code class="artifact-id">routines</code> en la base de datos PostgreSQL. La entidad contiene cinco atributos principales:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Restricción</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">id</code></td>
+                <td><code class="artifact-id">Integer</code></td>
+                <td>Clave Primaria, Autoincremental</td>
+                <td>Identificador único para la rutina</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">name</code></td>
+                <td><code class="artifact-id">String</code></td>
+                <td>NOT NULL</td>
+                <td>Nombre descriptivo de la rutina de entrenamiento</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">level</code></td>
+                <td><code class="artifact-id">String</code></td>
+                <td>NOT NULL</td>
+                <td>Nivel de dificultad: PRINCIPIANTE, INTERMEDIO o AVANZADO</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">durationMinutes</code></td>
+                <td><code class="artifact-id">Integer</code></td>
+                <td>Opcional</td>
+                <td>Tiempo estimado de finalización en minutos</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">createdBy</code></td>
+                <td><code class="artifact-id">Integer</code></td>
+                <td>NOT NULL</td>
+                <td>ID de usuario del creador de la rutina</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Diagrama de Estructura de la Entidad
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-gestion-rutinas-entidad.svg"
+    alt="Diagrama de clases que muestra la entidad RoutineEntity con sus atributos (id, name, level, durationMinutes, createdBy) y sus métodos getter y setter, y cómo se mapea a la tabla de base de datos 'routines' con columnas correspondientes."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/entidad/RoutineEntity.java" lines="1-49" />
+</SourceReference>
+
+## Endpoints de la API REST
+
+<p>El <code class="artifact-id">RoutineController</code> expone dos endpoints REST bajo la ruta base <code class="artifact-id">/api/routines</code>:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Método HTTP</th>
+                <th>Endpoint</th>
+                <th>Descripción</th>
+                <th>Cuerpo de Petición</th>
+                <th>Estado de Respuesta</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">POST</code></td>
+                <td><code class="artifact-id">/api/routines</code></td>
+                <td>Crear una nueva rutina</td>
+                <td><code class="artifact-id">RoutineRequest</code> (JSON)</td>
+                <td>201 CREATED</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">GET</code></td>
+                <td><code class="artifact-id">/api/routines</code></td>
+                <td>Listar todas las rutinas</td>
+                <td>Ninguno</td>
+                <td>200 OK</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+### Flujo de Petición/Respuesta de la API
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-gestion-rutinas-flujo-api.svg"
+    alt="Diagrama de secuencia que muestra dos flujos: uno para la creación de una rutina (POST), donde el cliente envía un RoutineRequest y recibe un RoutineResponse con estado 201; y otro para listar rutinas (GET), donde el cliente no envía cuerpo y recibe una lista de RoutineResponse con estado 200."
+/>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/RoutineController.java" lines="1-32" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/RoutineService.java" lines="1-49" />
+</SourceReference>
+
+## Arquitectura de la Capa de Servicio
+
+<p>La clase <code class="artifact-id">RoutineService</code> implementa la lógica de negocio para la gestión de rutinas. Sigue un patrón de arquitectura en capas estándar con inyección de dependencias del <code class="artifact-id">RoutineRepository</code>.</p>
+
+### Diagrama de Interacción de Componentes
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-gestion-rutinas-componentes.svg"
+    alt="Diagrama de componentes que muestra cómo el RoutineController depende del RoutineService, que a su vez depende del RoutineRepository. El repositorio interactúa con la base de datos PostgreSQL. Los DTOs RoutineRequest y RoutineResponse se utilizan como contratos de API, y la RoutineEntity es el modelo de dominio."
+/>
+
+### Métodos del Servicio
+<p>La clase <code class="artifact-id">RoutineService</code> proporciona tres métodos clave:</p>
+<ol>
+    <li>
+        <p><strong><code class="artifact-id">create(RoutineRequest req)</code></strong> - Crea una nueva rutina:</p>
+        <ul>
+            <li>Instancia una nueva <code class="artifact-id">RoutineEntity</code>.</li>
+            <li>Mapea los campos de <code class="artifact-id">RoutineRequest</code> a la entidad usando métodos setter.</li>
+            <li>Persiste a través de <code class="artifact-id">repo.save()</code>.</li>
+            <li>Convierte la entidad guardada a <code class="artifact-id">RoutineResponse</code> usando <code class="artifact-id">toRes()</code>.</li>
+        </ul>
+    </li>
+    <li>
+        <p><strong><code class="artifact-id">list()</code></strong> - Recupera todas las rutinas:</p>
+        <ul>
+            <li>Consulta <code class="artifact-id">repo.findAll()</code> con ordenación por ID.</li>
+            <li>Usa un stream para mapear cada entidad a <code class="artifact-id">RoutineResponse</code>.</li>
+            <li>Devuelve la lista recolectada.</li>
+        </ul>
+    </li>
+    <li>
+        <p><strong><code class="artifact-id">toRes(RoutineEntity e)</code></strong> - Método de mapeo privado:</p>
+        <ul>
+            <li>Convierte la entidad a un DTO de respuesta.</li>
+            <li>Extrae los cinco campos usando métodos getter.</li>
+            <li>Devuelve un nuevo registro <code class="artifact-id">RoutineResponse</code>.</li>
+        </ul>
+    </li>
+</ol>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/RoutineService.java" lines="1-49" />
+</SourceReference>
+
+## Reglas de Validación
+
+<p>El DTO <code class="artifact-id">RoutineRequest</code> impone restricciones de validación usando anotaciones de Jakarta Bean Validation:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Anotación de Validación</th>
+                <th>Restricción</th>
+                <th>Caso de Error</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">name</code></td>
+                <td><code class="artifact-id">@NotBlank</code></td>
+                <td>Debe contener caracteres que no sean espacios en blanco</td>
+                <td>Cadenas vacías o nulas son rechazadas</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">level</code></td>
+                <td><code class="artifact-id">@Pattern(regexp="BEGINNER|INTERMEDIATE|ADVANCED")</code></td>
+                <td>Debe coincidir exactamente con uno de los tres valores</td>
+                <td>Niveles inválidos (ej. "EXPERT", "beginner") son rechazados</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">duration_minutes</code></td>
+                <td><code class="artifact-id">@PositiveOrZero</code></td>
+                <td>Debe ser ≥ 0</td>
+                <td>Duraciones negativas son rechazadas</td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">created_by</code></td>
+                <td><code class="artifact-id">@NotNull</code></td>
+                <td>Debe tener un valor</td>
+                <td>IDs de creador nulos son rechazados</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>La anotación <code class="artifact-id">@Valid</code> en el método <code class="artifact-id">create()</code> del controlador activa la validación automática antes de que la petición llegue a la capa de servicio. Las fallas de validación resultan en respuestas HTTP 400 Bad Request con detalles del error.</p>
+<p><strong>Nota:</strong> El patrón para el campo <code class="artifact-id">level</code> usa una cadena separada por pipes en lugar de un enum, lo que proporciona validación basada en cadenas pero sin la seguridad de tipos en tiempo de compilación.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/RoutineRequest.java" lines="1-10" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/RoutineController.java" lines="23-26" />
+</SourceReference>
+
+## DTOs de Petición y Respuesta
+
+### RoutineRequest
+<p>El registro <code class="artifact-id">RoutineRequest</code> define el contrato de la API para crear rutinas:</p>
+<CodeBlock language="java" code={`record RoutineRequest(
+    @NotBlank String name,
+    @Pattern(regexp="BEGINNER|INTERMEDIATE|ADVANCED") String level,
+    @PositiveOrZero Integer duration_minutes,
+    @NotNull Integer created_by
+)`} />
+
+<p><strong>Ejemplo de Petición JSON:</strong></p>
+<CodeBlock language="json" code={`{
+  "name": "Entrenamiento de Fuerza de Cuerpo Completo",
+  "level": "INTERMEDIATE",
+  "duration_minutes": 45,
+  "created_by": 1001
+}`} />
+
+### RoutineResponse
+<p>El registro <code class="artifact-id">RoutineResponse</code> define el contrato de la API para las representaciones de rutinas:</p>
+<CodeBlock language="java" code={`record RoutineResponse(
+    Integer id,
+    String name,
+    String level,
+    Integer duration_minutes,
+    Integer created_by
+)`} />
+
+<p><strong>Ejemplo de Respuesta JSON:</strong></p>
+<CodeBlock language="json" code={`{
+  "id": 42,
+  "name": "Entrenamiento de Fuerza de Cuerpo Completo",
+  "level": "INTERMEDIATE",
+  "duration_minutes": 45,
+  "created_by": 1001
+}`} />
+<p>La respuesta incluye el campo <code class="artifact-id">id</code> generado por la base de datos, que está ausente en el DTO de petición.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/RoutineRequest.java" lines="1-10" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/dto/RoutineResponse.java" lines="1-9" />
+</SourceReference>
+
+## Persistencia en la Base de Datos
+
+<p>La interfaz <code class="artifact-id">RoutineRepository</code> extiende <code class="artifact-id">JpaRepository&lt;RoutineEntity, Integer&gt;</code> de Spring Data JPA, proporcionando operaciones CRUD estándar sin requerir una implementación personalizada:</p>
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-gestion-rutinas-repositorio.svg"
+    alt="Diagrama de clases que muestra la interfaz RoutineRepository extendiendo la interfaz genérica JpaRepository. El RoutineService tiene una dependencia (Autowired) del RoutineRepository y lo utiliza en sus métodos create() y list()."
+/>
+
+<p>El repositorio proporciona automáticamente:</p>
+<ul>
+    <li><code class="artifact-id">save(RoutineEntity)</code> - Usado por <code class="artifact-id">RoutineService.create()</code>.</li>
+    <li><code class="artifact-id">findAll(Sort)</code> - Usado por <code class="artifact-id">RoutineService.list()</code> con <code class="artifact-id">Sort.by("id")</code>.</li>
+</ul>
+<p>No se requieren métodos de consulta personalizados para la funcionalidad actual. El repositorio se basa en las anotaciones de la entidad JPA en <code class="artifact-id">RoutineEntity</code> para el mapeo de la base de datos.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/repositorio/RoutineRepository.java" lines="1-7" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/RoutineService.java" lines="16-38" />
+</SourceReference>
+
+## Características Clave de la Implementación
+
+### Convenciones de Nomenclatura de Campos
+<p>El sistema utiliza <strong>snake_case</strong> en los DTOs (<code class="artifact-id">duration_minutes</code>, <code class="artifact-id">created_by</code>) para coincidir con las convenciones de nomenclatura de las columnas de la base de datos, mientras que la entidad usa propiedades Java en <strong>camelCase</strong> (<code class="artifact-id">durationMinutes</code>, <code class="artifact-id">createdBy</code>). Las anotaciones <code class="artifact-id">@Column(name = "...")</code> se encargan del mapeo entre estas convenciones.</p>
+
+### Comportamiento de Ordenación
+<p>El endpoint <code class="artifact-id">list()</code> devuelve las rutinas ordenadas por <code class="artifact-id">id</code> en orden ascendente. Esto proporciona un orden determinista basado en la secuencia de creación, ya que <code class="artifact-id">id</code> es una clave primaria autoincremental.</p>
+
+### Funcionalidad Faltante
+<p>La implementación actual <strong>no</strong> proporciona:</p>
+<ul>
+    <li>Operaciones de actualización (endpoints PUT/PATCH).</li>
+    <li>Operaciones de eliminación (endpoint DELETE).</li>
+    <li>Recuperación de una sola rutina por ID (GET /api/routines/{id}).</li>
+    <li>Filtrado por nivel, duración o creador.</li>
+    <li>Paginación para conjuntos de resultados grandes.</li>
+</ul>
+<p>Estas limitaciones sugieren que el subsistema de gestión de rutinas se encuentra en las primeras etapas de desarrollo o sirve para un caso de uso mínimo.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/controlador/RoutineController.java" lines="1-32" />
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/servicios/RoutineService.java" lines="35-38" />
+</SourceReference>

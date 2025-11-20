@@ -1,0 +1,269 @@
+---
+title: "Configuración de Seguridad"
+description: "Este documento cubre la configuración de seguridad del sistema FitlifeAPI, que actualmente implementa una postura de seguridad permisiva. El sistema incluye infraestructura de autenticación JWT en sus dependencias."
+---
+
+import SourceBtn from '@docs_components/SourceBtn.astro';
+import SourceReference from '@docs_components/SourceReference.astro';
+import ImageViewer from '@docs_components/ImageViewer.astro';
+import TableWrapper from '@docs_components/TableWrapper.astro';
+import CodeBlock from '@docs_components/CodeBlock.astro'
+
+# Configuración de Seguridad
+
+<div class="source-section">
+    <details>
+        <summary>Archivos fuente relevantes</summary>
+        <div class="source-buttons">
+            <SourceBtn path="Back/FitlifeAPI/pom.xml" buttonMode="custom"/>
+            <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/security/SecurityConfig.java" buttonMode="custom"/>
+        </div>
+    </details>
+</div>
+
+## Propósito y Alcance
+
+<p>Este documento cubre la configuración de seguridad del sistema <strong>FitlifeAPI</strong>, que actualmente implementa una postura de seguridad permisiva. El sistema incluye infraestructura de autenticación JWT en sus dependencias, pero no impone ningún requisito de autenticación o autorización. Todas las peticiones HTTP son permitidas sin credenciales, y la protección CSRF está deshabilitada.</p>
+<p>Para obtener información sobre la arquitectura general de FitlifeAPI, consulte <a href="/docs/fitlife-api/arquitectura-aplicacion" class="content-link">Arquitectura de la Aplicación</a>. Para detalles sobre los endpoints de la API que actualmente no están protegidos, consulte <a href="/docs/fitlife-api/referencia-api" class="content-link">Referencia de la API de FitlifeAPI</a>.</p>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/security/SecurityConfig.java" lines="1-16"/>
+</SourceReference>
+
+## Postura de Seguridad Actual
+
+<p>FitlifeAPI opera <strong>sin aplicación activa de autenticación o autorización</strong>. Esta configuración sugiere que el sistema está en las primeras etapas de desarrollo o depende de mecanismos de seguridad externos (por ejemplo, un API gateway, un proxy inverso) para gestionar la autenticación.</p>
+
+### Resumen de la Configuración de Seguridad
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Característica de Seguridad</th>
+                <th>Estado</th>
+                <th>Configuración</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Autenticación</td>
+                <td><strong>Deshabilitada</strong></td>
+                <td>Todas las peticiones son permitidas</td>
+            </tr>
+            <tr>
+                <td>Autorización</td>
+                <td><strong>Deshabilitada</strong></td>
+                <td>No hay control de acceso basado en roles</td>
+            </tr>
+            <tr>
+                <td>Protección CSRF</td>
+                <td><strong>Deshabilitada</strong></td>
+                <td>Deshabilitada explícitamente en la configuración</td>
+            </tr>
+            <tr>
+                <td>Infraestructura JWT</td>
+                <td><strong>Configurada</strong></td>
+                <td>Las librerías están presentes pero no se aplican</td>
+            </tr>
+            <tr>
+                <td>HTTPS/TLS</td>
+                <td><strong>No Configurado</strong></td>
+                <td>TLS a nivel de aplicación no está configurado</td>
+            </tr>
+            <tr>
+                <td>CORS</td>
+                <td><strong>No Configurado</strong></td>
+                <td>Política CORS por defecto de Spring Boot</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/security/SecurityConfig.java" lines="1-16" />
+</SourceReference>
+
+## Implementación de la Clase SecurityConfig
+
+<p>La clase <code class="artifact-id">SecurityConfig</code> define la cadena de filtros de Spring Security con restricciones mínimas. Esta clase se encuentra en <a href="https://github.com/OAQR/FitLive./blob/b2d6d9d9/Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/security/SecurityConfig.java" class="content-link">Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/security/SecurityConfig.java</a>.</p>
+
+### Arquitectura de la Cadena de Filtros de Seguridad
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-cadena-filtros-seguridad.svg"
+    alt="Diagrama de la cadena de filtros de seguridad. Muestra una petición HTTP entrando a la cadena, pasando a través de un filtro CSRF que está deshabilitado, y luego a un filtro de autorización que permite todas las peticiones (permitAll), para finalmente llegar a los controladores de Spring MVC sin ninguna validación de JWT."
+/>
+
+### Detalles del Método de Configuración
+<p>La clase <code class="artifact-id">SecurityConfig</code> utiliza el estilo de configuración funcional introducido en Spring Security 5.7+:</p>
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Componente</th>
+                <th>Método</th>
+                <th>Configuración</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Clase de Configuración</td>
+                <td><code class="artifact-id">SecurityConfig</code></td>
+                <td>Anotada con <code class="artifact-id">@Configuration</code> en la línea 7</td>
+            </tr>
+            <tr>
+                <td>Bean de Cadena de Filtros</td>
+                <td><code class="artifact-id">filter(HttpSecurity)</code></td>
+                <td>Devuelve <code class="artifact-id">SecurityFilterChain</code> en las líneas 10-15</td>
+            </tr>
+            <tr>
+                <td>Protección CSRF</td>
+                <td><code class="artifact-id">csrf.disable()</code></td>
+                <td>Deshabilitada en la línea 12</td>
+            </tr>
+            <tr>
+                <td>Autorización</td>
+                <td><code class="artifact-id">anyRequest().permitAll()</code></td>
+                <td>Todas las peticiones permitidas en la línea 13</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<p>La implementación completa:</p>
+
+<CodeBlock language="java" code={`@Configuration
+public class SecurityConfig {
+    @Bean
+    SecurityFilterChain filter(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+        return http.build();
+    }
+}`}/>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/src/main/java/com/fitlife/fitlifeAPI/security/SecurityConfig.java" lines="7-16" />
+</SourceReference>
+
+## Configuración de Dependencias JWT
+
+<p>A pesar de la configuración de seguridad permisiva, el proyecto incluye una pila completa de implementación de JWT (JSON Web Token) a través de la librería <code class="artifact-id">jjwt</code> de Auth0. Estas dependencias están configuradas pero <strong>no se utilizan actualmente</strong> en la aplicación.</p>
+
+### Stack de Librerías JWT
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-stack-jwt.svg"
+    alt="Diagrama del stack de librerías JWT. Muestra el archivo pom.xml proveyendo las dependencias jjwt-api, jjwt-impl y jjwt-jackson, así como las dependencias de Spring Security. Una nota indica que el stack de JWT no se utiliza en la configuración de seguridad actual."
+/>
+
+### Detalles de las Dependencias
+
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Dependencia</th>
+                <th>Versión</th>
+                <th>Ámbito</th>
+                <th>Propósito</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code class="artifact-id">jjwt-api</code></td>
+                <td>0.11.5</td>
+                <td>compile</td>
+                <td>Interfaces de la API de JWT</td>
+                <td><strong>No Utilizada</strong></td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">jjwt-impl</code></td>
+                <td>0.11.5</td>
+                <td>runtime</td>
+                <td>Implementación de JWT</td>
+                <td><strong>No Utilizada</strong></td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">jjwt-jackson</code></td>
+                <td>0.11.5</td>
+                <td>runtime</td>
+                <td>Serialización JSON</td>
+                <td><strong>No Utilizada</strong></td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">spring-boot-starter-security</code></td>
+                <td>3.5.5</td>
+                <td>compile</td>
+                <td>Framework de Spring Security</td>
+                <td><strong>Configurado (permisivo)</strong></td>
+            </tr>
+            <tr>
+                <td><code class="artifact-id">spring-security-test</code></td>
+                <td>3.5.5</td>
+                <td>test</td>
+                <td>Utilidades de prueba de seguridad</td>
+                <td>Disponible para pruebas</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+
+<SourceReference>
+    <SourceBtn path="Back/FitlifeAPI/pom.xml" lines="33-96" />
+</SourceReference>
+
+## Protección CSRF Deshabilitada
+
+<p>La protección contra Cross-Site Request Forgery (CSRF) está explícitamente deshabilitada en la configuración de seguridad. Esto se implementa utilizando el DSL basado en lambdas de Spring Security en la línea 12 de <code class="artifact-id">SecurityConfig.java</code>.</p>
+
+### Flujo de Configuración CSRF
+
+<ImageViewer
+    src="/src/assets/fitlifeapi-flujo-csrf.svg"
+    alt="Diagrama de flujo de la configuración de CSRF. Muestra cómo la clase SecurityConfig, al inicializar la seguridad, llama al método http.csrf(csrf -> csrf.disable()) en el constructor de HttpSecurity. Esto elimina el CsrfFilter de la cadena de filtros, lo que significa que no se requieren tokens CSRF para las peticiones POST, PUT o DELETE."
+/>
+
+### Implicaciones de la Deshabilitación de CSRF
+<TableWrapper>
+    <table>
+        <thead>
+            <tr>
+                <th>Aspecto</th>
+                <th>Impacto</th>
+                <th>Nivel de Riesgo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Peticiones POST</td>
+                <td>No se requiere validación de token</td>
+                <td><strong>Alto</strong></td>
+            </tr>
+            <tr>
+                <td>Peticiones PUT/PATCH</td>
+                <td>No se requiere validación de token</td>
+                <td><strong>Alto</strong></td>
+            </tr>
+            <tr>
+                <td>Peticiones DELETE</td>
+                <td>No se requiere validación de token</td>
+                <td><strong>Alto</strong></td>
+            </tr>
+            <tr>
+                <td>Operaciones que cambian el estado</td>
+                <td>Vulnerable a ataques CSRF</td>
+                <td><strong>Alto</strong></td>
+            </tr>
+            <tr>
+                <td>Clientes de API</td>
+                <td>Integración simplificada</td>
+                <td>N/A</td>
+            </tr>
+        </tbody>
+    </table>
+</TableWrapper>
+<p><strong>Nota</strong>: La protección CSRF se deshabilita típicamente para APIs REST sin estado que usan autenticación basada en t

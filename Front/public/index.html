@@ -1,267 +1,231 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitLife - Rutinas y Localizador de Gyms</title>
 
-    <!-- CSS principal -->
     <link rel="stylesheet" href="css/style.css">
 
-    <!-- Iconos y fuente -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
+<!-- ======= ELEMENTOS VISUALES DE PIXEL.PERFECT ======= -->
+<div class="spotlight"></div>
+<div class="background-container">
+    <canvas id="bg-canvas"></canvas>
+</div>
+<div class="cursor"></div>
+
 <!-- ======= NAVBAR ======= -->
-<header class="navbar">
+<header class="main-header">
     <div class="container">
+        <!-- Izquierda: Logo -->
         <a href="#" class="logo">
             <i class="bi bi-activity"></i> FitLife
         </a>
 
-        <nav class="nav-links">
-            <a href="#pricing">Precios</a>
-            <a href="#other-services">Otros Servicios</a>
-            <a href="admin.html">Admin</a>
-            <a href="cliente.html">Cliente</a>
-            <a href="docs/index">Documentacion</a>
+        <!-- Centro: Navegación Principal -->
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#pricing">Precios</a></li>
+                <li><a href="#other-services">Otros Servicios</a></li>
+                <li><a href="admin.html">Admin</a></li>
+                <li><a href="cliente.html">Cliente</a></li>
+                <li><a href="docs/index">Documentación</a>
+            </ul>
         </nav>
 
-        <div class="nav-buttons">
-            <a href="auth.html" class="btn btn-secondary">Iniciar Sesión</a>
-            <a href="auth.html" class="btn btn-green">Empezar Gratis</a>
+        <!-- Derecha: Acciones y Tema -->
+        <div class="header-actions">
+            <a href="auth.html" class="nav-link">Iniciar Sesión</a>
+            <a href="auth.html" class="nav-link">Empezar Gratis</a>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Cambiar tema">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sun">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="moon">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
         </div>
-
-        <button class="nav-toggle" id="nav-toggle">
-            <i class="bi bi-list"></i>
-        </button>
     </div>
 </header>
 
-<main>
+<main id="main-content">
 
     <!-- ======= HERO ======= -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <span class="badge">NUEVO: Rutinas & Localizador de Gyms</span>
-                <h1>Tu Entrenador Personal en Línea, Siempre Contigo.</h1>
-                <p>
-                    Crea rutinas de entrenamiento a tu medida, encuentra el mejor gym cerca de ti
-                    y revisa en tiempo real cuántas máquinas hay, cuántas personas están entrenando
-                    y cuántas máquinas están libres.
-                </p>
-                <a href="auth.html" class="btn btn-green btn-large">
-                    Únete a FitLife Ahora <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
+    <section id="hero" class="hero">
+        <div class="hero-content container">
+            <span class="badge">NUEVO: Rutinas & Localizador de Gyms</span>
+            <h1 class="hero-title">Tu Entrenador Personal en Línea, <span class="highlight">Siempre Contigo.</span></h1>
+            <p class="hero-subtitle">
+                Crea rutinas de entrenamiento a tu medida, encuentra el mejor gym cerca de ti
+                y revisa en tiempo real cuántas máquinas hay, cuántas personas están entrenando
+                y cuántas máquinas están libres.
+            </p>
+            <a href="auth.html" class="cta-button">
+                Únete a FitLife Ahora <i class="bi bi-arrow-right"></i>
+            </a>
         </div>
     </section>
 
     <!-- ======= FEATURES ======= -->
-    <section id="features" class="features-section">
-        <div class="container">
-            <h2>Todo lo que necesitas para entrenar mejor</h2>
-
-            <div class="features-grid">
-                <!-- 1: Asistente de Rutinas -->
-                <div class="feature-card">
-                    <div class="feature-icon icon-blue">
+    <section id="features" class="content-section">
+        <div class="container section-content">
+            <h2 class="section-title animate-on-scroll">Todo lo que necesitas para entrenar mejor</h2>
+            <div class="services-grid fitlife-grid">
+                <div class="service-card animate-on-scroll">
+                    <div class="card-header fitlife-header">
                         <i class="bi bi-clipboard-check"></i>
+                        <h4>Asistente de Rutinas</h4>
                     </div>
-                    <h3>Asistente de Rutinas</h3>
-                    <p>
-                        Diseña rutinas personalizadas según tu nivel, tiempo disponible y objetivo
-                        (fuerza, hipertrofia, pérdida de grasa, etc.). Actualiza tus ejercicios
-                        sin perder el seguimiento de tu progreso.
-                    </p>
+                    <p>Diseña rutinas personalizadas según tu nivel, tiempo disponible y objetivo (fuerza, hipertrofia, pérdida de grasa, etc.). Actualiza tus ejercicios sin perder el seguimiento de tu progreso.</p>
                 </div>
-
-                <!-- 2: Biblioteca de Ejercicios -->
-                <div class="feature-card">
-                    <div class="feature-icon icon-green">
+                <div class="service-card animate-on-scroll">
+                    <div class="card-header fitlife-header">
                         <i class="bi bi-barbell"></i>
+                        <h4>Biblioteca de Ejercicios</h4>
                     </div>
-                    <h3>Biblioteca de Ejercicios</h3>
-                    <p>
-                        Accede a cientos de ejercicios con explicación de técnica, músculos
-                        involucrados y recomendaciones para evitar lesiones, tanto para gym
-                        como para casa.
-                    </p>
+                    <p>Accede a cientos de ejercicios con explicación de técnica, músculos involucrados y recomendaciones para evitar lesiones, tanto para gym como para casa.</p>
                 </div>
-
-                <!-- 3: Planes por Objetivo -->
-                <div class="feature-card">
-                    <div class="feature-icon icon-blue">
+                <div class="service-card animate-on-scroll">
+                    <div class="card-header fitlife-header">
                         <i class="bi bi-calendar-check"></i>
+                        <h4>Planes por Objetivo</h4>
                     </div>
-                    <h3>Planes por Objetivo</h3>
-                    <p>
-                        Elige planes prearmados (principiante, intermedio, avanzado) o crea el
-                        tuyo combinando días de fuerza, cardio y movilidad. Ajusta el plan a tu
-                        horario y al tipo de gimnasio donde entrenas.
-                    </p>
+                    <p>Elige planes prearmados (principiante, intermedio, avanzado) o crea el tuyo combinando días de fuerza, cardio y movilidad. Ajusta el plan a tu horario y al tipo de gimnasio donde entrenas.</p>
                 </div>
-
-                <!-- 4: Estado del Gym en Tiempo Real -->
-                <div class="feature-card">
-                    <div class="feature-icon icon-green">
+                <div class="service-card animate-on-scroll">
+                    <div class="card-header fitlife-header">
                         <i class="bi bi-geo-alt-fill"></i>
+                        <h4>Estado del Gym en Tiempo Real</h4>
                     </div>
-                    <h3>Estado del Gym en Tiempo Real</h3>
-                    <p>
-                        Consulta el estado de cada gym: número total de máquinas, personas
-                        entrenando y máquinas libres. Evita las horas más llenas y elige
-                        la sede con mejor disponibilidad antes de salir de casa.
-                    </p>
+                    <p>Consulta el estado de cada gym: número total de máquinas, personas entrenando y máquinas libres. Evita las horas más llenas y elige la sede con mejor disponibilidad antes de salir de casa.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ======= SHOWCASE: PROGRESO & GYM ======= -->
-    <section class="showcase-section">
-        <div class="container showcase-container">
-            <div class="showcase-text">
-                <h2>Visualiza tu Progreso y la Ocupación del Gym</h2>
-                <p>
-                    No entrenes a ciegas. Revisa tu progreso y el estado de cada gimnasio en un
-                    solo lugar. Monitorea tus series, pesos y récords personales, junto con el
-                    número de máquinas disponibles para que entrenes sin esperas innecesarias.
-                </p>
-                <ul>
-                    <li><i class="bi bi-check-circle-fill"></i> Gráficas de volumen y peso levantado</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Seguimiento de récords por ejercicio</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Número de máquinas, personas y máquinas libres por gym</li>
-                </ul>
-                <a href="#" class="btn btn-blue">Ver mis estadísticas</a>
-            </div>
-
-            <div class="showcase-image">
-                <img src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=870&q=80"
-                     alt="Dashboard con gráficas de progreso y ocupación de gimnasios">
+    <!-- ======= SHOWCASE ======= -->
+    <section class="content-section showcase-section">
+        <div class="container section-content animate-on-scroll">
+            <div class="showcase-grid">
+                <div class="showcase-text">
+                    <h2 class="section-title">Visualiza tu Progreso y la Ocupación del Gym</h2>
+                    <p class="showcase-paragraph">
+                        No entrenes a ciegas. Revisa tu progreso y el estado de cada gimnasio en un
+                        solo lugar. Monitorea tus series, pesos y récords personales, junto con el
+                        número de máquinas disponibles para que entrenes sin esperas innecesarias.
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="bi bi-check-circle-fill"></i> Gráficas de volumen y peso levantado</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Seguimiento de récords por ejercicio</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Número de máquinas, personas y máquinas libres por gym</li>
+                    </ul>
+                    <a href="#" class="cta-button">Ver mis estadísticas</a>
+                </div>
+                <div class="showcase-image">
+                    <img src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=870&q=80" alt="Dashboard con gráficas de progreso y ocupación de gimnasios">
+                </div>
             </div>
         </div>
     </section>
 
     <!-- ======= PRICING ======= -->
-    <section id="pricing" class="pricing-section">
-        <div class="container">
-            <h2>Planes para Cada Tipo de Entrenamiento</h2>
-            <p class="section-subtitle">
+    <section id="pricing" class="content-section">
+        <div class="container section-content">
+            <h2 class="section-title animate-on-scroll">Planes para Cada Tipo de Entrenamiento</h2>
+            <p class="section-subtitle animate-on-scroll">
                 Elige el plan que mejor se adapte a cómo entrenas y a cuántos gyms quieres monitorear.
             </p>
-
             <div class="pricing-grid">
-
-                <!-- Plan Básico -->
-                <div class="pricing-card">
-                    <h3>Rutinas Básicas</h3>
-
-                    <div class="price">
-                        <span>$9.90</span> <small>/ mes</small>
-                    </div>
-
+                <div class="pricing-card animate-on-scroll">
+                    <h4>Rutinas Básicas</h4>
+                    <div class="price"><span>$9.90</span> <small>/ mes</small></div>
                     <ul class="features-list">
                         <li><i class="bi bi-check"></i> Rutinas guiadas para casa o un solo gym</li>
                         <li><i class="bi bi-check"></i> Hasta 3 rutinas activas al mismo tiempo</li>
                         <li><i class="bi bi-check"></i> Vista básica del estado de 1 gym favorito</li>
                     </ul>
-
-                    <a href="#" class="btn btn-secondary">Elegir Plan</a>
+                    <a href="#" class="cta-button-secondary">Elegir Plan</a>
                 </div>
-
-                <!-- Plan Popular -->
-                <div class="pricing-card popular">
+                <div class="pricing-card popular animate-on-scroll">
                     <span class="badge">Más Popular</span>
-                    <h3>Gym Finder Plus</h3>
-
-                    <div class="price">
-                        <span>$19.90</span> <small>/ mes</small>
-                    </div>
-
+                    <h4>Gym Finder Plus</h4>
+                    <div class="price"><span>$19.90</span> <small>/ mes</small></div>
                     <ul class="features-list">
                         <li><i class="bi bi-check"></i> Rutinas personalizadas por objetivo y nivel</li>
                         <li><i class="bi bi-check"></i> Localizador de gyms ilimitado en tu ciudad</li>
                         <li><i class="bi bi-check"></i> Detalle en tiempo real de máquinas, personas y máquinas libres por gym</li>
                     </ul>
-
-                    <a href="#" class="btn btn-green">Elegir Plan</a>
+                    <a href="#" class="cta-button">Elegir Plan</a>
                 </div>
-
-                <!-- Plan Pro -->
-                <div class="pricing-card">
-                    <h3>Multi-Gym Pro</h3>
-
-                    <div class="price">
-                        <span>$29.90</span> <small>/ mes</small>
-                    </div>
-
+                <div class="pricing-card animate-on-scroll">
+                    <h4>Multi-Gym Pro</h4>
+                    <div class="price"><span>$29.90</span> <small>/ mes</small></div>
                     <ul class="features-list">
                         <li><i class="bi bi-check"></i> Todo lo de Gym Finder Plus para varias personas (familia o equipo)</li>
                         <li><i class="bi bi-check"></i> Historial avanzado de rutinas, récords y ocupación por sede</li>
                         <li><i class="bi bi-check"></i> Soporte prioritario y acceso anticipado a nuevas funciones</li>
                     </ul>
-
-                    <a href="#" class="btn btn-secondary">Elegir Plan</a>
+                    <a href="#" class="cta-button-secondary">Elegir Plan</a>
                 </div>
-
             </div>
         </div>
     </section>
 
     <!-- ======= OTROS SERVICIOS ======= -->
-    <section id="other-services" class="other-services-section">
-        <div class="container">
-            <h2>Servicios Adicionales para Profesionales</h2>
-            <p class="section-subtitle">
+    <section id="other-services" class="content-section">
+        <div class="container section-content">
+            <h2 class="section-title animate-on-scroll">Servicios Adicionales para Profesionales</h2>
+            <p class="section-subtitle animate-on-scroll">
                 Soluciones de consulta y facturación rápidas y seguras para tus necesidades de información.
             </p>
-
-            <div class="other-services-grid">
-                <div class="service-card">
-                    <div class="service-icon"><i class="bi bi-person-badge-fill"></i></div>
-                    <h3>Consulta DNI</h3>
-                    <p>
-                        Verifica y obtén datos actualizados a partir de un número de Documento
-                        Nacional de Identidad de forma instantánea.
-                    </p>
+            <div class="services-grid fitlife-grid">
+                <div class="service-card animate-on-scroll">
+                    <div class="card-header fitlife-header"><i class="bi bi-person-badge-fill"></i>
+                        <h4>Consulta DNI</h4>
+                    </div>
+                    <p>Verifica y obtén datos actualizados a partir de un número de Documento Nacional de Identidad de forma instantánea.</p>
                 </div>
-
-                <div class="service-card">
-                    <div class="service-icon"><i class="bi bi-building"></i></div>
-                    <h3>Consulta RUC</h3>
-                    <p>
-                        Accede a información comercial y fiscal de empresas a través de su
-                        Registro Único de Contribuyentes.
-                    </p>
+                <div class="service-card animate-on-scroll">
+                    <div class="card-header fitlife-header"><i class="bi bi-building"></i>
+                        <h4>Consulta RUC</h4>
+                    </div>
+                    <p>Accede a información comercial y fiscal de empresas a través de su Registro Único de Contribuyentes.</p>
                 </div>
-
-                <div class="service-card">
-                    <div class="service-icon"><i class="bi bi-receipt"></i></div>
-                    <h3>Boletas Electrónicas</h3>
-                    <p>
-                        Emite boletas de venta electrónicas de manera sencilla para tus
-                        consumidores finales, cumpliendo con la normativa fiscal.
-                    </p>
+                <!--
+                <div class="service-card animate-on-scroll">
+                    <div class="card-header fitlife-header"><i class="bi bi-receipt"></i>
+                        <h4>Boletas Electrónicas</h4>
+                    </div>
+                    <p>Emite boletas de venta electrónicas de manera sencilla para tus consumidores finales, cumpliendo con la normativa fiscal.</p>
                 </div>
-
-                <div class="service-card">
-                    <div class="service-icon"><i class="bi bi-receipt-cutoff"></i></div>
-                    <h3>Facturas Electrónicas</h3>
-                    <p>
-                        Genera y emite comprobantes de pago electrónicos válidos para tus
-                        transacciones comerciales entre empresas.
-                    </p>
+                -->
+                <div class="service-card animate-on-scroll">
+                    <div class="card-header fitlife-header"><i class="bi bi-receipt-cutoff"></i>
+                        <h4>Facturas Electrónicas</h4>
+                    </div>
+                    <p>Genera y emite comprobantes de pago electrónicos válidos para tus transacciones comerciales entre empresas.</p>
                 </div>
             </div>
-
-            <div class="cta-container">
-                <a href="portal-servicios/index.html" class="btn btn-blue">Consultar Servicios</a>
+            <div class="cta-container animate-on-scroll">
+                <a href="portal-servicios/index.html" class="cta-button">Consultar Servicios</a>
             </div>
         </div>
     </section>
@@ -269,23 +233,23 @@
 </main>
 
 <!-- ======= FOOTER ======= -->
-<footer class="footer">
+<footer class="main-footer">
     <div class="container">
-        <div class="footer-content">
-            <a href="#" class="logo">
-                <i class="bi bi-activity"></i> FitLife
-            </a>
-            <p>&copy; 2024 FitLife. Todos los derechos reservados.</p>
-            <div class="social-links">
-                <a href="#"><i class="bi bi-twitter"></i></a>
-                <a href="#"><i class="bi bi-instagram"></i></a>
-                <a href="#"><i class="bi bi-facebook"></i></a>
-            </div>
+        <a href="#" class="logo footer-logo">
+            <i class="bi bi-activity"></i> FitLife
+        </a>
+        <p>&copy; <span id="current-year">2024</span> FitLife. Todos los derechos reservados.</p>
+        <div class="social-links">
+            <a href="#"><i class="bi bi-twitter"></i></a>
+            <a href="#"><i class="bi bi-instagram"></i></a>
+            <a href="#"><i class="bi bi-facebook"></i></a>
         </div>
     </div>
 </footer>
 
-<!-- JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
 <script src="js/script.js"></script>
 </body>
+
 </html>
